@@ -1,0 +1,38 @@
+const mongoose = require("mongoose");
+
+const coachProfileSchema = new mongoose.Schema(
+  {
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, unique: true, index: true },
+    displayName: { type: String, required: true },
+    headline: { type: String, default: "Pickleball Coach" },
+    bio: { type: String, default: "" },
+    city: { type: String, default: "" },
+    state: { type: String, default: "" },
+    specialties: [{ type: String }],
+    skillLevels: [{ type: String }],
+    yearsExperience: { type: Number, default: 0 },
+    rating: { type: Number, default: 5 },
+    reviewCount: { type: Number, default: 0 },
+    approved: { type: Boolean, default: false, index: true },
+    featured: { type: Boolean, default: false },
+    videoReviewRate: { type: Number, default: 45 },
+    liveSessionRate: { type: Number, default: 75 },
+    turnaroundHours: { type: Number, default: 48 },
+    avatarUrl: { type: String, default: "" },
+    introVideoUrl: { type: String, default: "" },
+    stripeAccountId: { type: String, default: "" },
+    stripeOnboardingComplete: { type: Boolean, default: false },
+    payoutsEnabled: { type: Boolean, default: false },
+    defaultPlatformFeePercent: { type: Number, default: 15 },
+    splitRules: [
+      {
+        label: String,
+        recipientCoachId: { type: mongoose.Schema.Types.ObjectId, ref: "CoachProfile" },
+        percentage: Number,
+      },
+    ],
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model("CoachProfile", coachProfileSchema);
