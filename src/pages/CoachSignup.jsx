@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
 import { imageFileToDataUrl } from "../lib/uploads";
 
-const skillLevels = ["Beginner (2.5–3.0)", "Intermediate (3.0–4.0)", "Advanced (4.0–5.0)", "Elite (5.0+)"];
+const COACHING_SKILL_LEVELS = ["Beginner (2.5–3.0)", "Intermediate (3.0–4.0)", "Advanced (4.0–5.0)", "Elite (5.0+)"];
 
 export default function CoachSignup() {
   const { user, token, reloadUser } = useAuth();
@@ -23,7 +23,7 @@ export default function CoachSignup() {
     organization: "",
     headline: "Online Pickleball Coach",
     specialties: "Video analysis, Match review, Strategy consultation",
-    skillLevels: skillLevels.join(", "),
+    skillLevels: COACHING_SKILL_LEVELS.join(", "),
     playingExperienceYears: 3,
     coachingExperienceYears: 1,
     duprId: "",
@@ -126,7 +126,7 @@ export default function CoachSignup() {
             <label className="block md:col-span-2">
               <span className="text-sm text-gray-400">Coaching Skill Levels</span>
               <select multiple value={form.skillLevels.split(", ").filter(Boolean)} onChange={(e) => update("skillLevels", Array.from(e.target.selectedOptions).map((o) => o.value).join(", "))} className="mt-1 min-h-36 w-full rounded-xl border border-white/10 bg-black p-3">
-                {skillLevels.map((level) => <option key={level}>{level}</option>)}
+                {COACHING_SKILL_LEVELS.map((level) => <option key={level}>{level}</option>)}
               </select>
               <span className="mt-1 block text-xs text-gray-500">Hold Ctrl/Cmd to select multiple categories.</span>
             </label>
