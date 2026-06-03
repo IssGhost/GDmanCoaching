@@ -5,7 +5,6 @@ import {
   FaClipboardList,
   FaCloudUploadAlt,
   FaExternalLinkAlt,
-  FaMapMarkerAlt,
   FaPlay,
   FaSave,
   FaVideo,
@@ -20,10 +19,6 @@ function formatTime(seconds = 0) {
   const m = Math.floor(s / 60);
   const r = Math.floor(s % 60);
   return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
-}
-
-function isInPerson(submission) {
-  return submission?.packageId?.reviewType === "live_session" || submission?.title?.toLowerCase().includes("in-person");
 }
 
 function nextPhaseStatus(status) {
@@ -43,6 +38,7 @@ export default function SubmissionDetail() {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
+  const [durationMinutes, setDurationMinutes] = useState("");
   const [busy, setBusy] = useState(false);
 
   const load = async () => {
@@ -94,12 +90,15 @@ export default function SubmissionDetail() {
 
   const saveVideo = async () => {
     if (!videoUrl.trim()) return push("Paste a video URL first.", "error");
+    const duration = Number(durationMinutes || 0);
+    if (duration > 15) return push("Videos must be 15 minutes or shorter. Please trim your clip and upload again.", "error");
 
     setBusy(true);
     try {
-      const row = await api.put(`/videos/submissions/${id}/video`, { videoUrl, status: "ready_for_review" }, token);
+      const row = await api.put(`/videos/submissions/${id}/video`, { videoUrl, durationSeconds: duration ? duration * 60 : undefined, status: "ready_for_review" }, token);
       setData((d) => ({ ...d, submission: { ...row, phase: "ready_for_review" } }));
       setVideoUrl("");
+      setDurationMinutes("");
       push("Video marked ready for coach review.", "success");
     } catch {
       setData((d) => ({
@@ -108,6 +107,7 @@ export default function SubmissionDetail() {
         review: null,
       }));
       setVideoUrl("");
+      setDurationMinutes("");
       push("Saved in demo mode. This is now the Ready For Review phase.", "success");
     } finally {
       setBusy(false);
@@ -119,7 +119,6 @@ export default function SubmissionDetail() {
   const { submission, review } = data;
   const phase = normalizePhase(requestedPhase || submission.phase || submission.status);
   const videoSrc = submission.videoUrl || (submission.playbackId ? `https://iframe.videodelivery.net/${submission.playbackId}` : "");
-  const inPerson = isInPerson(submission);
 
   return (
     <div className="space-y-6">
@@ -131,7 +130,7 @@ export default function SubmissionDetail() {
         <div>
           <Link to="/dashboard/submissions" className="text-sm font-black text-[#087f73] hover:underline">← Back to Training + Reviews</Link>
           <div className="mt-3 inline-flex rounded-full bg-[#fff1c7] px-3 py-1 text-xs font-black text-[#5f746c]">
-            {inPerson ? "In-person / hybrid coaching" : "Online video review"}
+            Online video coaching
           </div>
           <h1 className="mt-3 text-3xl font-black text-[#12372a]">{submission.title}</h1>
           <p className="mt-1 text-[#5f746c]">{submission.packageId?.title || "Coaching package"} with {submission.coachId?.displayName || "Coach"}</p>
@@ -144,6 +143,8 @@ export default function SubmissionDetail() {
           submission={submission}
           videoUrl={videoUrl}
           setVideoUrl={setVideoUrl}
+          durationMinutes={durationMinutes}
+          setDurationMinutes={setDurationMinutes}
           busy={busy}
           createUpload={createUpload}
           saveVideo={saveVideo}
@@ -151,11 +152,11 @@ export default function SubmissionDetail() {
       )}
 
       {phase === "ready_for_review" && (
-        <ReadyForReviewPage submission={submission} videoSrc={videoSrc} inPerson={inPerson} />
+        <ReadyForReviewPage submission={submission} videoSrc={videoSrc} />
       )}
 
       {phase === "reviewed" && (
-        <ReviewedPage submission={submission} review={review} videoSrc={videoSrc} inPerson={inPerson} />
+        <ReviewedPage submission={submission} review={review} videoSrc={videoSrc} />
       )}
     </div>
   );
@@ -196,7 +197,7 @@ function WorkflowStepper({ phase }) {
   );
 }
 
-function AwaitingUploadPage({ submission, videoUrl, setVideoUrl, busy, createUpload, saveVideo }) {
+function AwaitingUploadPage({ submission, videoUrl, setVideoUrl, durationMinutes, setDurationMinutes, busy, createUpload, saveVideo }) {
   return (
     <div className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
       <section className="rounded-[2rem] border border-[#12372a]/10 bg-white/82 p-6 shadow-sm">
@@ -211,17 +212,26 @@ function AwaitingUploadPage({ submission, videoUrl, setVideoUrl, busy, createUpl
         <div className="mt-6 rounded-2xl border border-dashed border-[#00a896]/30 bg-[#d9f7fb]/45 p-5">
           <h3 className="font-black text-[#12372a]">Upload options for demo</h3>
           <p className="mt-1 text-sm leading-6 text-[#5f746c]">
-            In production this would create a Cloudflare/Mux upload. For the demo, paste a private URL to move it into the Ready For Review phase.
+            In production this creates an upload capped at 15 minutes. For the demo, paste a private URL and enter the clip length to move it into the Ready For Review phase.
           </p>
           <button onClick={createUpload} disabled={busy} className="pp-btn-primary mt-5 px-5 py-3 disabled:opacity-60">
             {busy ? "Preparing..." : "Create Upload Link"}
           </button>
-          <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]">
+          <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_180px_auto]">
             <input
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
               className="pp-input px-4 py-3"
               placeholder="Paste YouTube unlisted, Google Drive, Vimeo, MP4, Mux, or Cloudflare link"
+            />
+            <input
+              type="number"
+              min="0"
+              max="15"
+              value={durationMinutes}
+              onChange={(e) => setDurationMinutes(e.target.value)}
+              className="pp-input px-4 py-3"
+              placeholder="Minutes (max 15)"
             />
             <button onClick={saveVideo} disabled={busy} className="pp-btn-secondary px-4 py-3">
               <FaSave className="mr-2" /> Save URL
@@ -254,12 +264,12 @@ function AwaitingUploadPage({ submission, videoUrl, setVideoUrl, busy, createUpl
   );
 }
 
-function ReadyForReviewPage({ submission, videoSrc, inPerson }) {
+function ReadyForReviewPage({ submission, videoSrc }) {
   return (
     <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
       <section className="rounded-[2rem] border border-[#12372a]/10 bg-white/82 p-6 shadow-sm">
         <h2 className="mb-4 flex items-center gap-2 text-2xl font-black text-[#12372a]">
-          {inPerson ? <FaMapMarkerAlt className="text-[#00a896]" /> : <FaVideo className="text-[#00a896]" />}
+          <FaVideo className="text-[#00a896]" />
           Ready for coach review
         </h2>
 
@@ -305,13 +315,13 @@ function ReadyForReviewPage({ submission, videoSrc, inPerson }) {
   );
 }
 
-function ReviewedPage({ submission, review, videoSrc, inPerson }) {
+function ReviewedPage({ submission, review, videoSrc }) {
   return (
     <div className="space-y-5">
       <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
         <section className="rounded-[2rem] border border-[#12372a]/10 bg-white/82 p-6 shadow-sm">
           <h2 className="mb-4 flex items-center gap-2 text-2xl font-black text-[#12372a]">
-            {inPerson ? <FaMapMarkerAlt className="text-[#00a896]" /> : <FaVideo className="text-[#00a896]" />}
+            <FaVideo className="text-[#00a896]" />
             Completed review
           </h2>
           {videoSrc ? <VideoViewer videoSrc={videoSrc} /> : <p className="text-[#5f746c]">No video attached.</p>}

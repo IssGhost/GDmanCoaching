@@ -56,12 +56,12 @@ async function seedPickleballDemo() {
       $set: {
         userId: coachUser._id,
         displayName: "Jordan Coach",
-        headline: "Private lessons, doubles clinics, and video breakdowns",
+        headline: "Online reviews, doubles strategy, and video breakdowns",
         bio:
-          "Jordan helps beginner and intermediate players build cleaner footwork, better kitchen positioning, stronger serves, and smarter doubles decisions. Available for in-person sessions around Round Rock/Austin and online video review.",
+          "Jordan helps beginner and intermediate players build cleaner footwork, better kitchen positioning, stronger serves, and smarter doubles decisions. Available for online coaching sessions around Round Rock/Austin and online video review.",
         city: "Round Rock",
         state: "TX",
-        specialties: ["Private Lessons", "Doubles Strategy", "Footwork", "Third-Shot Drops", "Video Review"],
+        specialties: ["Online Coaching Requests", "Doubles Strategy", "Footwork", "Third-Shot Drops", "Video Review"],
         skillLevels: ["Beginner", "Intermediate", "Tournament Prep"],
         yearsExperience: 7,
         rating: 5,
@@ -73,7 +73,7 @@ async function seedPickleballDemo() {
         turnaroundHours: 24,
         stripeAccountId: "acct_demo_jordan_coach",
         stripeOnboardingComplete: true,
-        payoutsEnabled: true,
+        recordsEnabled: true,
         defaultPlatformFeePercent: 15,
       },
     },
@@ -82,36 +82,36 @@ async function seedPickleballDemo() {
 
   const packages = await Promise.all([
     upsertPackage(coach._id, {
-      title: "1-Hour Private Lesson",
-      description: "Meet locally for on-court technique work, drilling, positioning, and a simple improvement plan.",
-      price: 85,
-      reviewType: "live_session",
+      title: "Online Coaching Request",
+      description: "Meet locally for remote technique work, drilling, positioning, and a simple improvement plan.",
+      price: 0,
+      reviewType: "strategy_consultation",
       turnaroundHours: 24,
-      maxVideoMinutes: 0,
+      maxVideoMinutes: 15,
       includesResponseVideo: false,
     }),
     upsertPackage(coach._id, {
-      title: "Doubles Clinic Seat",
-      description: "A small-group clinic focused on kitchen movement, stacking, partner communication, and point construction.",
-      price: 65,
-      reviewType: "live_session",
+      title: "Doubles Consultation Seat",
+      description: "A small-strategy consultation focused on kitchen movement, stacking, partner communication, and point construction.",
+      price: 0,
+      reviewType: "strategy_consultation",
       turnaroundHours: 24,
-      maxVideoMinutes: 0,
+      maxVideoMinutes: 15,
       includesResponseVideo: false,
     }),
     upsertPackage(coach._id, {
       title: "Single Video Review",
       description: "Upload match footage and receive timestamped notes, strengths, fixes, and recommended drills.",
-      price: 45,
+      price: 0,
       reviewType: "single_video",
       turnaroundHours: 24,
       maxVideoMinutes: 12,
       includesResponseVideo: false,
     }),
     upsertPackage(coach._id, {
-      title: "Hybrid Training Package",
-      description: "One in-person lesson plus one follow-up video review to track improvement after practice.",
-      price: 125,
+      title: "Personalized Training Plan",
+      description: "One online coaching request plus one follow-up video review to track improvement after practice.",
+      price: 0,
       reviewType: "monthly",
       turnaroundHours: 24,
       maxVideoMinutes: 15,
@@ -120,7 +120,7 @@ async function seedPickleballDemo() {
   ]);
 
   const videoPkg = packages.find((p) => p.title === "Single Video Review") || packages[2];
-  const lessonPkg = packages.find((p) => p.title === "1-Hour Private Lesson") || packages[0];
+  const planPkg = packages.find((p) => p.title === "Online Coaching Request") || packages[0];
 
   const videoOrder = await Order.findOneAndUpdate(
     { userId: customer._id, number: "PBC-DEMO-1001" },
@@ -182,7 +182,7 @@ async function seedPickleballDemo() {
         strengths: "Consistent serve depth, good patience in cross-court dinks, and smart shot selection when the point slows down.",
         improvements: "Recover forward after serving, keep paddle height above the wrist, and avoid drifting backward after a defensive reset.",
         drills: "1) Third-shot drop to kitchen transition: 50 reps.\n2) Cross-court dink target drill: 10 minutes.\n3) Reset from midcourt drill: 5 rounds of 20 balls.",
-        finalNotes: "For the next in-person session, start with transition-zone resets and finish with doubles court positioning.",
+        finalNotes: "For the next online coaching session, start with transition-zone resets and finish with doubles court positioning.",
         responseVideoUrl: "",
         status: "complete",
         completedAt: new Date(),
@@ -196,26 +196,26 @@ async function seedPickleballDemo() {
     { upsert: true, new: true }
   );
 
-  const lessonOrder = await Order.findOneAndUpdate(
+  const planOrder = await Order.findOneAndUpdate(
     { userId: customer._id, number: "PBC-DEMO-1002" },
     {
       $set: {
         userId: customer._id,
         coachId: coach._id,
-        packageId: lessonPkg._id,
+        packageId: planPkg._id,
         number: "PBC-DEMO-1002",
         orderType: "coaching",
-        items: [{ packageId: String(lessonPkg._id), name: lessonPkg.title, price: lessonPkg.price, qty: 1, tag: lessonPkg.reviewType }],
+        items: [{ packageId: String(planPkg._id), name: planPkg.title, price: planPkg.price, qty: 1, tag: planPkg.reviewType }],
         status: "paid",
-        subtotal: lessonPkg.price,
+        subtotal: planPkg.price,
         tax: 0,
-        total: lessonPkg.price,
+        total: planPkg.price,
         platformFee: 12.75,
         paymentMode: "demo",
         metadata: {
-          goals: "In-person lesson at local courts focused on footwork and kitchen positioning.",
+          goals: "Online coaching request at online submissions focused on footwork and kitchen positioning.",
           skillLevel: "Beginner/Intermediate",
-          location: "Round Rock outdoor courts",
+          location: "Round Rock video review dashboard",
         },
       },
     },
@@ -223,15 +223,15 @@ async function seedPickleballDemo() {
   );
 
   await VideoSubmission.findOneAndUpdate(
-    { orderId: lessonOrder._id },
+    { orderId: planOrder._id },
     {
       $set: {
         playerId: customer._id,
         coachId: coach._id,
-        packageId: lessonPkg._id,
-        orderId: lessonOrder._id,
+        packageId: planPkg._id,
+        orderId: planOrder._id,
         title: "In-Person Lesson: Round Rock Outdoor Courts",
-        description: "Demo in-person booking. No upload required unless the coach asks for follow-up footage.",
+        description: "Demo online booking. No upload required unless the coach asks for follow-up footage.",
         goals: "Work on split step, court positioning, and controlled resets.",
         skillLevel: "Beginner/Intermediate",
         provider: "demo",
@@ -263,17 +263,17 @@ async function seedPickleballDemo() {
           },
         ],
         status: "paid",
-        notes: "Demo destination-charge payout for online video review.",
+        notes: "Demo destination-charge record for online video review.",
       },
     },
     { upsert: true, new: true }
   );
 
   await PaymentSplit.findOneAndUpdate(
-    { orderId: lessonOrder._id },
+    { orderId: planOrder._id },
     {
       $set: {
-        orderId: lessonOrder._id,
+        orderId: planOrder._id,
         chargeType: "separate_charges_and_transfers",
         platformFee: 12.75,
         currency: "usd",
@@ -281,7 +281,7 @@ async function seedPickleballDemo() {
           {
             coachId: coach._id,
             stripeAccountId: coach.stripeAccountId,
-            label: "Main coach payout",
+            label: "Main coach record",
             role: "main_coach",
             amount: 55.25,
             percentage: 65,
@@ -289,16 +289,16 @@ async function seedPickleballDemo() {
           },
           {
             coachId: coach._id,
-            stripeAccountId: "acct_demo_facility_partner",
-            label: "Court facility split",
-            role: "facility",
+            stripeAccountId: "acct_demo_collab_partner",
+            label: "Collaborating coach split",
+            role: "coach",
             amount: 17,
             percentage: 20,
             status: "paid",
           },
         ],
         status: "paid",
-        notes: "Demo split payout for in-person lesson using coach + facility allocation.",
+        notes: "Demo split record for online coaching request using coach + collaborator allocation.",
       },
     },
     { upsert: true, new: true }
@@ -308,9 +308,9 @@ async function seedPickleballDemo() {
     {
       name: "Mia R.",
       location: "Round Rock, TX",
-      service: "Private lesson",
+      service: "Online coaching request",
       rating: 5,
-      text: "The in-person lesson helped me fix my ready position and understand where to stand during doubles points.",
+      text: "The online coaching request helped me fix my ready position and understand where to stand during doubles points.",
       status: "published",
       featured: true,
     },

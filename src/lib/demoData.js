@@ -3,9 +3,9 @@ export const DEMO_SUBMISSIONS = [
     _id: "demo-submission-awaiting-upload",
     title: "Hybrid Package: Awaiting Player Upload",
     description:
-      "The player booked a hybrid coaching package. Their in-person lesson is complete, and they still need to upload follow-up footage for review.",
+      "The player booked a online coaching package. Their online coaching request is complete, and they still need to upload follow-up footage for review.",
     goals:
-      "Upload post-lesson footage so the coach can confirm whether kitchen recovery and third-shot movement improved.",
+      "Upload post-review footage so the coach can confirm whether kitchen recovery and third-shot movement improved.",
     skillLevel: "Intermediate",
     status: "awaiting_upload",
     phase: "awaiting_upload",
@@ -16,7 +16,7 @@ export const DEMO_SUBMISSIONS = [
     coachId: {
       _id: "demo-coach-001",
       displayName: "Jordan Coach",
-      headline: "Private lessons, doubles clinics, and video breakdowns",
+      headline: "Online reviews, doubles strategy, and video breakdowns",
     },
     playerId: {
       _id: "demo-customer-001",
@@ -25,8 +25,8 @@ export const DEMO_SUBMISSIONS = [
     },
     packageId: {
       _id: "demo-package-hybrid",
-      title: "Hybrid Training Package",
-      price: 125,
+      title: "Personalized Training Plan",
+      price: 0,
       reviewType: "monthly",
       turnaroundHours: 24,
       maxVideoMinutes: 15,
@@ -47,7 +47,7 @@ export const DEMO_SUBMISSIONS = [
     _id: "demo-submission-ready-review",
     title: "Ready For Review: Third-Shot Drop and Transition Zone",
     description:
-      "The player uploaded a match clip after their in-person lesson. The coach now needs to review the footage and create feedback.",
+      "The player uploaded a match clip after their online coaching request. The coach now needs to review the footage and create feedback.",
     goals:
       "Coach should evaluate third-shot drop height, recovery steps, paddle position, and transition-zone resets.",
     skillLevel: "Intermediate",
@@ -60,7 +60,7 @@ export const DEMO_SUBMISSIONS = [
     coachId: {
       _id: "demo-coach-001",
       displayName: "Jordan Coach",
-      headline: "Private lessons, doubles clinics, and video breakdowns",
+      headline: "Online reviews, doubles strategy, and video breakdowns",
     },
     playerId: {
       _id: "demo-customer-001",
@@ -70,7 +70,7 @@ export const DEMO_SUBMISSIONS = [
     packageId: {
       _id: "demo-package-video",
       title: "Single Video Review",
-      price: 45,
+      price: 0,
       reviewType: "single_video",
       turnaroundHours: 24,
       maxVideoMinutes: 12,
@@ -104,7 +104,7 @@ export const DEMO_SUBMISSIONS = [
     coachId: {
       _id: "demo-coach-001",
       displayName: "Jordan Coach",
-      headline: "Private lessons, doubles clinics, and video breakdowns",
+      headline: "Online reviews, doubles strategy, and video breakdowns",
     },
     playerId: {
       _id: "demo-customer-001",
@@ -114,10 +114,10 @@ export const DEMO_SUBMISSIONS = [
     packageId: {
       _id: "demo-package-video-reviewed",
       title: "Tournament Match Breakdown",
-      price: 75,
+      price: 0,
       reviewType: "match_breakdown",
       turnaroundHours: 24,
-      maxVideoMinutes: 20,
+      maxVideoMinutes: 15,
     },
     orderId: {
       number: "PBC-DEMO-1004",
@@ -164,7 +164,7 @@ export const DEMO_REVIEWS_BY_PHASE = {
     drills:
       "1) Third-shot drop to kitchen transition: 50 reps.\n2) Cross-court dink target drill: 10 minutes.\n3) Reset from midcourt drill: 5 rounds of 20 balls.\n4) Doubles middle-reset drill: 10 controlled resets before speeding up.",
     finalNotes:
-      "For the next in-person session, start with transition-zone resets and finish with doubles court positioning. The video review should lead directly into the player's next lesson plan.",
+      "For the next online coaching session, start with transition-zone resets and finish with doubles court positioning. The video review should lead directly into the player's next training plan.",
     responseVideoUrl: "",
     comments: [
       {
@@ -236,7 +236,7 @@ export const DEMO_ORDERS = [
     orderType: "Video Review",
     total: 45,
     createdAt: new Date().toISOString(),
-    items: [{ name: "Single Video Review", tag: "online review", price: 45, qty: 1 }],
+    items: [{ name: "Single Video Review", tag: "online review", price: 0, qty: 1 }],
   },
   {
     _id: "order-demo-1002",
@@ -245,7 +245,7 @@ export const DEMO_ORDERS = [
     orderType: "In-Person Training",
     total: 85,
     createdAt: new Date().toISOString(),
-    items: [{ name: "1-Hour Private Lesson", tag: "local court", price: 85, qty: 1 }],
+    items: [{ name: "Online Coaching Request", tag: "online submission", price: 0, qty: 1 }],
   },
   {
     _id: "order-demo-1003",
@@ -254,14 +254,14 @@ export const DEMO_ORDERS = [
     orderType: "Hybrid Coaching",
     total: 125,
     createdAt: new Date().toISOString(),
-    items: [{ name: "Hybrid Training Package", tag: "lesson + review", price: 125, qty: 1 }],
+    items: [{ name: "Personalized Training Plan", tag: "review + plan", price: 0, qty: 1 }],
   },
 ];
 
 export const DEMO_REQUESTS = [
   {
     _id: "request-demo-1",
-    subject: "Private lesson at Round Rock courts",
+    subject: "Online coaching request at uploaded match footage",
     details: "Need one-hour session focused on footwork and court positioning.",
     status: "approved",
     estimate: 85,
@@ -269,8 +269,8 @@ export const DEMO_REQUESTS = [
   },
   {
     _id: "request-demo-2",
-    subject: "Small doubles clinic for 4 players",
-    details: "Saturday morning clinic, intermediate group, focus on partner movement.",
+    subject: "Small doubles consultation for 4 players",
+    details: "Saturday morning consultation, intermediate group, focus on partner movement.",
     status: "pending",
     estimate: 260,
     createdAt: new Date().toISOString(),

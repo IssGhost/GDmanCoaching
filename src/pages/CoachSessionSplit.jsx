@@ -15,13 +15,13 @@ import {
 const defaultRecipients = [
   { id: "lead", label: "Lead Coach", role: "main_coach", percentage: 65 },
   { id: "assistant", label: "Assistant Coach", role: "assistant_coach", percentage: 20 },
-  { id: "facility", label: "Court Facility", role: "facility", percentage: 15 },
+  { id: "collaborator", label: "Collaborating Coach", role: "coach", percentage: 15 },
 ];
 
 const roleOptions = [
   ["main_coach", "Main coach"],
   ["assistant_coach", "Assistant coach"],
-  ["facility", "Facility / court partner"],
+  ["collaborator", "Collaborating coach"],
   ["club", "Club partner"],
   ["other", "Other recipient"],
 ];
@@ -44,7 +44,7 @@ function buildShareText(session, totals, recipients) {
     `Date: ${session.date || "TBD"}`,
     `Total charge: ${money(session.totalCharge)}`,
     `Platform fee: ${money(totals.platformFee)}`,
-    `Distributable payout: ${money(totals.distributable)}`,
+    `Collaborator allocation: ${money(totals.distributable)}`,
     ``,
     `Payout split:`,
     rows,
@@ -53,14 +53,14 @@ function buildShareText(session, totals, recipients) {
 
 export default function CoachSessionSplit() {
   const [session, setSession] = useState({
-    title: "Saturday Doubles Clinic",
+    title: "Saturday Doubles Consultation",
     customerName: "Casey Customer",
-    packageType: "Group Clinic",
+    packageType: "Group Consultation",
     location: "Round Rock Outdoor Courts",
     date: new Date().toISOString().slice(0, 10),
     totalCharge: 240,
     platformFeePercent: 15,
-    notes: "Small-group doubles clinic with one lead coach, assistant coach, and court facility split.",
+    notes: "Small-group doubles consultation with one lead coach, assistant coach, and online partner split.",
   });
 
   const [recipients, setRecipients] = useState(defaultRecipients);
@@ -163,11 +163,11 @@ export default function CoachSessionSplit() {
             <p className="pp-kicker">Shared coaching session</p>
 
             <h1 className="mt-2 text-4xl font-black text-[#12372a] md:text-6xl">
-              Create a session and divide the payout.
+              Create an online coaching collaboration record.
             </h1>
 
             <p className="mt-4 max-w-3xl text-lg leading-8 text-[#5f746c]">
-              Use this when a private lesson, group clinic, partnered event, or facility-hosted session needs a clean payout split between multiple recipients.
+              Use this when an online coaching request, strategy consultation, or training plan involves more than one coach collaborator.
             </p>
           </div>
 
@@ -197,11 +197,11 @@ export default function CoachSessionSplit() {
 
               <Field label="Package type">
                 <select className="pp-input px-4 py-3" value={session.packageType} onChange={(e) => setSession((s) => ({ ...s, packageType: e.target.value }))}>
-                  <option>Private Lesson</option>
-                  <option>Group Clinic</option>
+                  <option>Online Coaching Request</option>
+                  <option>Group Consultation</option>
                   <option>Hybrid Training</option>
                   <option>Tournament Prep</option>
-                  <option>Facility Event</option>
+                  <option>Collaborator Event</option>
                   <option>Video Review Bundle</option>
                 </select>
               </Field>
@@ -288,7 +288,7 @@ export default function CoachSessionSplit() {
 
       <section className="mx-auto mt-8 grid max-w-7xl gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="rounded-[2rem] border border-[#12372a]/10 bg-gradient-to-br from-[#fffef8] via-[#d9f7fb] to-[#fff1c7] p-6 shadow-xl shadow-[#12372a]/10">
-          <h2 className="text-2xl font-black text-[#12372a]">Session payout preview</h2>
+          <h2 className="text-2xl font-black text-[#12372a]">Collaboration preview</h2>
 
           <div className="mt-5 overflow-hidden rounded-2xl border border-[#12372a]/10 bg-white/78">
             <PreviewRow label="Customer charge" value={money(totals.totalCharge)} />
@@ -334,7 +334,7 @@ export default function CoachSessionSplit() {
 
                   <div className="mt-3 grid gap-2 text-sm text-[#5f746c] sm:grid-cols-2">
                     <div>Total: <b className="text-[#12372a]">{money(record.totals.totalCharge)}</b></div>
-                    <div>Recipient payout: <b className="text-[#12372a]">{money(record.totals.distributable)}</b></div>
+                    <div>Recipient allocation: <b className="text-[#12372a]">{money(record.totals.distributable)}</b></div>
                   </div>
                 </div>
               ))
@@ -347,9 +347,9 @@ export default function CoachSessionSplit() {
         <h2 className="text-2xl font-black text-[#12372a]">Where this fits in the coaching flow</h2>
 
         <div className="mt-5 grid gap-4 md:grid-cols-4">
-          <FlowStep icon={<FaCalendarCheck />} title="Book" text="Customer books a lesson, clinic, or partnered training session." />
+          <FlowStep icon={<FaCalendarCheck />} title="Book" text="Customer requests a review, consultation, or training plan." />
           <FlowStep icon={<FaMoneyBillWave />} title="Charge" text="The full session amount is recorded as the customer charge." />
-          <FlowStep icon={<FaExchangeAlt />} title="Split" text="The payout is divided between the coach, assistant, facility, or club." />
+          <FlowStep icon={<FaExchangeAlt />} title="Split" text="The collaboration record is divided between the main coach and any assisting coaches." />
           <FlowStep icon={<FaCheckCircle />} title="Track" text="The session and split can be reviewed by the coach or admin." />
         </div>
       </section>
