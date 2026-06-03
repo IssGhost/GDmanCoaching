@@ -43,6 +43,7 @@ import DashboardAdmin from "./pages/DashboardAdmin";
 
 // Admin screens
 import AdminUsers from "./pages/AdminUsers";
+import AdminDatabase from "./pages/AdminDatabase";
 
 // Dashboard with nested tabs
 import DashboardLayout from "./pages/dashboard/DashboardLayout";
@@ -119,6 +120,15 @@ export default function App() {
                   element={
                     <RoleRoute allow={["admin"]}>
                       <AdminUsers />
+                    </RoleRoute>
+                  }
+                />
+
+                <Route
+                  path="/admin/database"
+                  element={
+                    <RoleRoute allow={["admin"]}>
+                      <AdminDatabase />
                     </RoleRoute>
                   }
                 />

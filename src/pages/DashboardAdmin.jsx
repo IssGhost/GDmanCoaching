@@ -11,6 +11,7 @@ const adminCards = [
   { title: "Blog Posts", text: "Publish home page service tips and field notes.", to: "/admin/blog", cta: "Manage Blog" },
   { title: "Testimonials", text: "Add reviews that appear on the home page.", to: "/admin/testimonials", cta: "Manage Reviews" },
   { title: "Users", text: "Promote staff accounts and manage customer access.", to: "/admin/users", cta: "Manage Users" },
+  { title: "Database Viewer", text: "See recent MongoDB records from every saved Railway collection.", to: "/admin/database", cta: "View Database" },
 ];
 
 export default function DashboardAdmin() {
