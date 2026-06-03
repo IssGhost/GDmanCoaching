@@ -77,21 +77,18 @@ export default function CoachProfile() {
     <div className="min-h-screen bg-black px-6 pt-32 pb-16 text-white">
       <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.85fr_1.15fr]">
         <aside className="space-y-5">
-          <div className="rounded-3xl border border-white/10 bg-zinc-950 p-6">
-            <div className="flex items-center gap-4">
-              {coach.avatarUrl ? (
-                <img src={coach.avatarUrl} alt={coach.displayName} className="h-20 w-20 rounded-3xl object-cover" />
-              ) : (
-                <div className="grid h-20 w-20 place-items-center rounded-3xl bg-emerald-400 text-3xl font-black text-black">
-                  {(coach.displayName || "C").slice(0, 1)}
-                </div>
-              )}
-              <div>
-                <h1 className="text-3xl font-black">{coach.displayName}</h1>
-                <p className="text-gray-400">{coach.headline}</p>
-                <div className="mt-2 flex items-center gap-2 text-amber-300"><FaStar /> {coach.rating || 5} rating • {coach.reviewCount || 0} reviews</div>
+          <div className="overflow-hidden rounded-3xl border border-white/10 bg-zinc-950">
+            {coach.avatarUrl ? (
+              <img src={coach.avatarUrl} alt={coach.displayName} className="h-[28rem] w-full object-cover" />
+            ) : (
+              <div className="grid h-[28rem] w-full place-items-center bg-emerald-400 text-7xl font-black text-black">
+                {(coach.displayName || "C").slice(0, 1)}
               </div>
-            </div>
+            )}
+            <div className="p-6">
+              <h1 className="text-3xl font-black">{coach.displayName}</h1>
+              <p className="text-gray-300">{coach.headline}</p>
+              <div className="mt-2 flex items-center gap-2 text-amber-300"><FaStar /> {coach.rating || 5} rating • {coach.reviewCount || 0} reviews</div>
             <p className="mt-6 leading-7 text-gray-300">{coach.bio || "This coach is ready to review gameplay footage and create a focused online training plan."}</p>
             <div className="mt-6 grid gap-3 rounded-2xl border border-white/10 bg-black/35 p-4 text-sm text-gray-300 sm:grid-cols-2">
               <div><span className="font-black text-emerald-300">DUPR ID:</span> {coach.duprId ? <a className="underline" href={coach.duprProfileUrl || `https://dashboard.dupr.com/dashboard/player/${coach.duprId}`} target="_blank" rel="noreferrer">{coach.duprId} <FaExternalLinkAlt className="inline" /></a> : "Not provided"}</div>
@@ -108,6 +105,7 @@ export default function CoachProfile() {
               <Social href={coach.socialLinks?.facebook} icon={<FaFacebook />} label="Facebook" />
               <Social href={coach.socialLinks?.tiktok} icon={<FaTiktok />} label="TikTok" />
               <Social href={coach.socialLinks?.website} icon={<FaGlobe />} label="Website" />
+              </div>
             </div>
           </div>
         </aside>
@@ -161,7 +159,7 @@ export default function CoachProfile() {
                 <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={6} maxLength={5000} className="mt-1 w-full rounded-xl border border-white/10 bg-black p-3" placeholder="Opponent level, what happened in the game, tournament goals, injury limitations, coaching style preferences, expectations, etc." />
               </label>
             </div>
-            <div className="mt-5 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4 text-sm font-bold text-emerald-100">
+            <div className="mt-5 rounded-2xl border border-[#087f73]/30 bg-[#d9f7fb] p-4 text-sm font-black text-[#12372a]">
               Please allow 1–3 business days for coaches to review and respond to inquiries. Uploaded videos are limited to 15 minutes. Coaches determine and communicate their own pricing directly.
             </div>
             <button onClick={checkout} disabled={busy || !selectedPackage} className="mt-6 w-full rounded-xl bg-emerald-400 px-6 py-4 font-black text-black hover:bg-emerald-300 disabled:opacity-60">

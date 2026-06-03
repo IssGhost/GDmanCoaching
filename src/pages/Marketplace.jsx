@@ -13,6 +13,7 @@ const fallbackCoaches = [
     country: "USA",
     rating: 5,
     reviewCount: 38,
+    avatarUrl: "/images/coaches/coach-alex.svg",
     duprId: "7DVMM4",
     duprSingles: 4.21,
     duprDoubles: 4.63,
@@ -33,6 +34,7 @@ const fallbackCoaches = [
     country: "USA",
     rating: 4.9,
     reviewCount: 24,
+    avatarUrl: "/images/coaches/coach-morgan.svg",
     specialties: ["Match Reviews", "Footwork", "Beginner basics", "Serve return"],
     skillLevels: ["Beginner (2.5–3.0)", "Intermediate (3.0–4.0)"],
     turnaroundHours: 72,
@@ -114,11 +116,14 @@ export default function Marketplace() {
             {list.map((coach) => {
               const isDemo = String(coach._id).startsWith("demo-");
               return (
-                <article key={coach._id} className="flex flex-col rounded-3xl border border-[#12372a]/10 bg-white/78 p-6 shadow-xl shadow-[#12372a]/10 backdrop-blur transition hover:-translate-y-1">
+                <article key={coach._id} className="flex flex-col overflow-hidden rounded-3xl border border-[#12372a]/10 bg-white/90 shadow-xl shadow-[#12372a]/10 backdrop-blur transition hover:-translate-y-1">
+                  {coach.avatarUrl ? (
+                    <img src={coach.avatarUrl} alt={coach.displayName} className="h-72 w-full object-cover" />
+                  ) : (
+                    <div className="pp-ball grid h-72 w-full place-items-center text-6xl font-black text-[#12372a]">{(coach.displayName || "C").slice(0, 1)}</div>
+                  )}
+                  <div className="flex flex-1 flex-col p-6">
                   <div className="flex items-start gap-4">
-                    {coach.avatarUrl ? <img src={coach.avatarUrl} alt={coach.displayName} className="h-14 w-14 shrink-0 rounded-2xl object-cover" /> : (
-                      <div className="pp-ball grid h-14 w-14 shrink-0 place-items-center rounded-2xl text-xl font-black text-[#12372a]">{(coach.displayName || "C").slice(0, 1)}</div>
-                    )}
                     <div>
                       <h2 className="text-xl font-black text-[#12372a]">{coach.displayName}</h2>
                       <p className="text-sm leading-5 text-[#5f746c]">{coach.headline}</p>
@@ -152,6 +157,7 @@ export default function Marketplace() {
                   <div className="mt-auto flex gap-3 pt-5">
                     {isDemo ? <Link to="/demo" className="pp-btn-secondary flex-1 px-4 py-3 text-center">Seed Demo</Link> : <Link to={`/coaches/${coach._id}`} className="pp-btn-secondary flex-1 px-4 py-3 text-center">View Profile</Link>}
                     <Link to={isDemo ? "/signin" : `/coaches/${coach._id}`} className="pp-btn-primary flex-1 px-4 py-3 text-center">Request Coaching</Link>
+                  </div>
                   </div>
                 </article>
               );

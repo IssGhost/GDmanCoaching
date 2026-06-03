@@ -122,7 +122,7 @@ export default function AdminDatabase() {
                     }}
                     className={`flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left transition ${
                       activeCollection?.key === collection.key
-                        ? "border-emerald-400 bg-emerald-400/15 text-emerald-100"
+                        ? "border-emerald-400 bg-emerald-400 text-black"
                         : "border-white/10 bg-white/[0.03] text-gray-300 hover:bg-white/[0.08]"
                     }`}
                   >

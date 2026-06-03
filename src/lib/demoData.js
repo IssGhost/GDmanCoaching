@@ -16,6 +16,7 @@ export const DEMO_SUBMISSIONS = [
     coachId: {
       _id: "demo-coach-001",
       displayName: "Jordan Coach",
+      avatarUrl: "/images/coaches/coach-jordan.svg",
       headline: "Online reviews, doubles strategy, and video breakdowns",
     },
     playerId: {
@@ -60,6 +61,7 @@ export const DEMO_SUBMISSIONS = [
     coachId: {
       _id: "demo-coach-001",
       displayName: "Jordan Coach",
+      avatarUrl: "/images/coaches/coach-jordan.svg",
       headline: "Online reviews, doubles strategy, and video breakdowns",
     },
     playerId: {
@@ -104,6 +106,7 @@ export const DEMO_SUBMISSIONS = [
     coachId: {
       _id: "demo-coach-001",
       displayName: "Jordan Coach",
+      avatarUrl: "/images/coaches/coach-jordan.svg",
       headline: "Online reviews, doubles strategy, and video breakdowns",
     },
     playerId: {

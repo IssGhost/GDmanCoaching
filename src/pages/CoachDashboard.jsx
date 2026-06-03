@@ -4,6 +4,7 @@ import { FaCheckCircle, FaCloudUploadAlt, FaClipboardList, FaPlus, FaUserEdit } 
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
+import { imageFileToDataUrl } from "../lib/uploads";
 import { DEMO_SUBMISSIONS, normalizePhase } from "../lib/demoData";
 
 const initialPackage = {
@@ -75,6 +76,7 @@ export default function CoachDashboard() {
         submissions: mergedSubmissions,
         profile: result?.profile || {
           displayName: "Jordan Coach",
+          avatarUrl: "/images/coaches/coach-jordan.svg",
           approved: true,
           payoutsEnabled: true,
         },
@@ -91,6 +93,7 @@ export default function CoachDashboard() {
       setData({
         profile: {
           displayName: "Jordan Coach",
+          avatarUrl: "/images/coaches/coach-jordan.svg",
           approved: true,
           payoutsEnabled: true,
         },
@@ -119,6 +122,16 @@ export default function CoachDashboard() {
       options: data?.packages?.length || 0,
     };
   }, [data]);
+
+  const uploadProfilePhoto = async (file) => {
+    try {
+      const dataUrl = await imageFileToDataUrl(file);
+      setProfileForm((p) => ({ ...p, avatarUrl: dataUrl }));
+      push("Profile photo selected.", "success");
+    } catch (err) {
+      push(err.message || "Could not load that image.", "error");
+    }
+  };
 
   const updateProfile = async (e) => {
     e.preventDefault();
@@ -192,7 +205,11 @@ export default function CoachDashboard() {
             <h2 className="text-2xl font-black text-[#12372a]">Edit public coach profile</h2>
             <p className="mt-1 text-sm leading-6 text-[#5f746c]">Update your profile photo, biography, DUPR ID, specializations, and social media links.</p>
             <form onSubmit={updateProfile} className="mt-5 grid gap-3 md:grid-cols-2">
-              <input className="pp-input px-4 py-3" placeholder="Profile photo URL" value={profileForm.avatarUrl || ""} onChange={(e) => setProfileForm((p) => ({ ...p, avatarUrl: e.target.value }))} />
+              <label className="block md:col-span-2">
+                <span className="mb-1 block text-sm font-black text-[#12372a]">Profile photo upload</span>
+                <input type="file" accept="image/*" onChange={(e) => uploadProfilePhoto(e.target.files?.[0])} className="pp-input px-4 py-3 file:mr-4 file:rounded-full file:border-0 file:bg-[#c6ff4a] file:px-4 file:py-2 file:font-black file:text-[#12372a]" />
+                {profileForm.avatarUrl && <img src={profileForm.avatarUrl} alt="Profile preview" className="mt-3 h-64 w-full rounded-3xl object-cover" />}
+              </label>
               <input className="pp-input px-4 py-3" placeholder="DUPR ID (example: 7DVMM4)" value={profileForm.duprId || ""} onChange={(e) => setProfileForm((p) => ({ ...p, duprId: e.target.value }))} />
               <input type="number" step="0.001" className="pp-input px-4 py-3" placeholder="DUPR singles rating" value={profileForm.duprSingles ?? ""} onChange={(e) => setProfileForm((p) => ({ ...p, duprSingles: e.target.value }))} />
               <input type="number" step="0.001" className="pp-input px-4 py-3" placeholder="DUPR doubles rating" value={profileForm.duprDoubles ?? ""} onChange={(e) => setProfileForm((p) => ({ ...p, duprDoubles: e.target.value }))} />

@@ -6,13 +6,13 @@ import {
   FaCloudUploadAlt,
   FaExternalLinkAlt,
   FaPlay,
-  FaSave,
   FaVideo,
 } from "react-icons/fa";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
 import { getDemoSubmission, normalizePhase } from "../lib/demoData";
+import { MAX_VIDEO_MINUTES, validateVideoFile } from "../lib/uploads";
 
 function formatTime(seconds = 0) {
   const s = Math.max(0, Number(seconds || 0));
@@ -37,8 +37,9 @@ export default function SubmissionDetail() {
 
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
-  const [videoUrl, setVideoUrl] = useState("");
-  const [durationMinutes, setDurationMinutes] = useState("");
+  const [selectedVideo, setSelectedVideo] = useState(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState("");
+  const [videoDurationSeconds, setVideoDurationSeconds] = useState(0);
   const [busy, setBusy] = useState(false);
 
   const load = async () => {
@@ -69,46 +70,73 @@ export default function SubmissionDetail() {
     load();
   }, [id, token, requestedPhase]);
 
-  const createUpload = async () => {
-    setBusy(true);
+  const chooseVideo = async (file) => {
+    if (videoPreviewUrl) URL.revokeObjectURL(videoPreviewUrl);
+    if (!file) {
+      setSelectedVideo(null);
+      setVideoPreviewUrl("");
+      setVideoDurationSeconds(0);
+      return;
+    }
+
     try {
-      const result = await api.post(`/videos/submissions/${id}/upload-url`, {}, token);
-      setData((d) => ({ ...d, submission: result.submission }));
-      if (result.provider === "cloudflare") {
-        push("Direct upload URL created. Open it to upload the video file.", "success");
-        window.open(result.uploadUrl, "_blank", "noopener,noreferrer");
-      } else {
-        push("Demo upload mode active. Paste an external video URL below and save it.", "success");
-      }
-    } catch {
-      setData((d) => ({ ...d, submission: { ...d.submission, status: "awaiting_upload", phase: "awaiting_upload" } }));
-      push("Demo upload mode active. Paste a private video URL below and save it.", "success");
-    } finally {
-      setBusy(false);
+      const durationSeconds = await validateVideoFile(file);
+      setSelectedVideo(file);
+      setVideoDurationSeconds(durationSeconds);
+      setVideoPreviewUrl(URL.createObjectURL(file));
+      push("Video selected and passed the 15-minute limit.", "success");
+    } catch (err) {
+      setSelectedVideo(null);
+      setVideoPreviewUrl("");
+      setVideoDurationSeconds(0);
+      push(err.message || "Please choose a different video.", "error");
     }
   };
 
-  const saveVideo = async () => {
-    if (!videoUrl.trim()) return push("Paste a video URL first.", "error");
-    const duration = Number(durationMinutes || 0);
-    if (duration > 15) return push("Videos must be 15 minutes or shorter. Please trim your clip and upload again.", "error");
+  const uploadVideo = async () => {
+    if (!selectedVideo) return push("Choose a video file first.", "error");
 
     setBusy(true);
     try {
-      const row = await api.put(`/videos/submissions/${id}/video`, { videoUrl, durationSeconds: duration ? duration * 60 : undefined, status: "ready_for_review" }, token);
-      setData((d) => ({ ...d, submission: { ...row, phase: "ready_for_review" } }));
-      setVideoUrl("");
-      setDurationMinutes("");
-      push("Video marked ready for coach review.", "success");
-    } catch {
+      const result = await api.post(`/videos/submissions/${id}/upload-url`, {}, token);
+
+      if (result.provider === "cloudflare" && result.uploadUrl) {
+        const formData = new FormData();
+        formData.append("file", selectedVideo);
+        const uploadResponse = await fetch(result.uploadUrl, { method: "POST", body: formData });
+        if (!uploadResponse.ok) throw new Error("Video upload failed. Please try again.");
+
+        const row = await api.put(
+          `/videos/submissions/${id}/video`,
+          {
+            assetId: result.uploadId,
+            playbackId: result.uploadId,
+            durationSeconds: videoDurationSeconds,
+            status: "ready_for_review",
+          },
+          token
+        );
+        setData((d) => ({ ...d, submission: { ...row, phase: "ready_for_review" } }));
+        push("Video uploaded and marked ready for coach review.", "success");
+      } else {
+        const row = await api.put(
+          `/videos/submissions/${id}/video`,
+          { videoUrl: videoPreviewUrl, durationSeconds: videoDurationSeconds, status: "ready_for_review" },
+          token
+        );
+        setData((d) => ({ ...d, submission: { ...row, videoUrl: videoPreviewUrl, phase: "ready_for_review" } }));
+        push("Demo upload saved. In production this file upload is stored by the video provider.", "success");
+      }
+
+      setSelectedVideo(null);
+      setVideoDurationSeconds(0);
+    } catch (err) {
       setData((d) => ({
         ...d,
-        submission: { ...d.submission, videoUrl, status: "ready_for_review", phase: "ready_for_review" },
+        submission: { ...d.submission, videoUrl: videoPreviewUrl, status: "ready_for_review", phase: "ready_for_review" },
         review: null,
       }));
-      setVideoUrl("");
-      setDurationMinutes("");
-      push("Saved in demo mode. This is now the Ready For Review phase.", "success");
+      push(err.message || "Demo upload saved. This is now the Ready For Review phase.", "success");
     } finally {
       setBusy(false);
     }
@@ -141,13 +169,12 @@ export default function SubmissionDetail() {
       {phase === "awaiting_upload" && (
         <AwaitingUploadPage
           submission={submission}
-          videoUrl={videoUrl}
-          setVideoUrl={setVideoUrl}
-          durationMinutes={durationMinutes}
-          setDurationMinutes={setDurationMinutes}
+          selectedVideo={selectedVideo}
+          videoPreviewUrl={videoPreviewUrl}
+          videoDurationSeconds={videoDurationSeconds}
           busy={busy}
-          createUpload={createUpload}
-          saveVideo={saveVideo}
+          chooseVideo={chooseVideo}
+          uploadVideo={uploadVideo}
         />
       )}
 
@@ -197,7 +224,7 @@ function WorkflowStepper({ phase }) {
   );
 }
 
-function AwaitingUploadPage({ submission, videoUrl, setVideoUrl, durationMinutes, setDurationMinutes, busy, createUpload, saveVideo }) {
+function AwaitingUploadPage({ submission, selectedVideo, videoPreviewUrl, videoDurationSeconds, busy, chooseVideo, uploadVideo }) {
   return (
     <div className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
       <section className="rounded-[2rem] border border-[#12372a]/10 bg-white/82 p-6 shadow-sm">
@@ -209,34 +236,26 @@ function AwaitingUploadPage({ submission, videoUrl, setVideoUrl, durationMinutes
           This is the first phase of the workflow. The player has paid for coaching, but the coach cannot complete the online review until the match footage or follow-up clip is submitted.
         </p>
 
-        <div className="mt-6 rounded-2xl border border-dashed border-[#00a896]/30 bg-[#d9f7fb]/45 p-5">
-          <h3 className="font-black text-[#12372a]">Upload options for demo</h3>
-          <p className="mt-1 text-sm leading-6 text-[#5f746c]">
-            In production this creates an upload capped at 15 minutes. For the demo, paste a private URL and enter the clip length to move it into the Ready For Review phase.
+        <div className="mt-6 rounded-2xl border border-dashed border-[#00a896]/30 bg-[#d9f7fb]/60 p-5">
+          <h3 className="font-black text-[#12372a]">Upload your video file</h3>
+          <p className="mt-1 text-sm font-bold leading-6 text-[#12372a]">
+            Choose a video from your device. We check the length before upload and block clips longer than {MAX_VIDEO_MINUTES} minutes.
           </p>
-          <button onClick={createUpload} disabled={busy} className="pp-btn-primary mt-5 px-5 py-3 disabled:opacity-60">
-            {busy ? "Preparing..." : "Create Upload Link"}
+          <input
+            type="file"
+            accept="video/*"
+            onChange={(e) => chooseVideo(e.target.files?.[0])}
+            className="mt-5 w-full rounded-xl border border-[#12372a]/10 bg-white p-3 text-sm text-[#12372a] file:mr-4 file:rounded-full file:border-0 file:bg-[#c6ff4a] file:px-4 file:py-2 file:font-black file:text-[#12372a]"
+          />
+          {selectedVideo && (
+            <div className="mt-4 rounded-2xl border border-[#087f73]/20 bg-white p-4 text-sm font-bold text-[#12372a]">
+              Selected: {selectedVideo.name} • {(videoDurationSeconds / 60).toFixed(1)} minutes
+            </div>
+          )}
+          {videoPreviewUrl && <video src={videoPreviewUrl} controls className="mt-4 aspect-video w-full rounded-2xl bg-black" />}
+          <button onClick={uploadVideo} disabled={busy || !selectedVideo} className="pp-btn-primary mt-5 px-5 py-3 disabled:opacity-60">
+            <FaCloudUploadAlt className="mr-2" /> {busy ? "Uploading..." : "Upload Video"}
           </button>
-          <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_180px_auto]">
-            <input
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-              className="pp-input px-4 py-3"
-              placeholder="Paste YouTube unlisted, Google Drive, Vimeo, MP4, Mux, or Cloudflare link"
-            />
-            <input
-              type="number"
-              min="0"
-              max="15"
-              value={durationMinutes}
-              onChange={(e) => setDurationMinutes(e.target.value)}
-              className="pp-input px-4 py-3"
-              placeholder="Minutes (max 15)"
-            />
-            <button onClick={saveVideo} disabled={busy} className="pp-btn-secondary px-4 py-3">
-              <FaSave className="mr-2" /> Save URL
-            </button>
-          </div>
         </div>
       </section>
 

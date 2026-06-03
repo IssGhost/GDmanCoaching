@@ -4,6 +4,9 @@ import { FaCheckCircle } from "react-icons/fa";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
+import { imageFileToDataUrl } from "../lib/uploads";
+
+const skillLevels = ["Beginner (2.5–3.0)", "Intermediate (3.0–4.0)", "Advanced (4.0–5.0)", "Elite (5.0+)"];
 
 const skillLevels = ["Beginner (2.5–3.0)", "Intermediate (3.0–4.0)", "Advanced (4.0–5.0)", "Elite (5.0+)"];
 
@@ -37,6 +40,16 @@ export default function CoachSignup() {
   });
 
   const update = (key, value) => setForm((f) => ({ ...f, [key]: value }));
+
+  const uploadProfilePhoto = async (file) => {
+    try {
+      const dataUrl = await imageFileToDataUrl(file);
+      update("avatarUrl", dataUrl);
+      push("Profile photo selected.", "success");
+    } catch (err) {
+      push(err.message || "Could not load that image.", "error");
+    }
+  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -79,7 +92,7 @@ export default function CoachSignup() {
         </aside>
 
         <form onSubmit={submit} className="rounded-3xl border border-white/10 bg-zinc-950 p-6 md:p-8">
-          <div className="mb-6 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4 text-sm font-bold text-emerald-100">
+          <div className="mb-6 rounded-2xl border border-[#087f73]/30 bg-[#d9f7fb] p-4 text-sm font-black text-[#12372a]">
             Please allow 1–3 business days for coaches to review and respond to inquiries.
           </div>
 
@@ -88,7 +101,11 @@ export default function CoachSignup() {
             <Field label="Full Name" value={form.displayName} onChange={(v) => update("displayName", v)} required />
             <Field label="Email Address" type="email" value={form.email} onChange={(v) => update("email", v)} />
             <Field label="Phone Number" value={form.phone} onChange={(v) => update("phone", v)} />
-            <Field label="Profile Photo URL" value={form.avatarUrl} onChange={(v) => update("avatarUrl", v)} />
+            <label className="block md:col-span-2">
+              <span className="text-sm text-gray-400">Profile Photo Upload</span>
+              <input type="file" accept="image/*" onChange={(e) => uploadProfilePhoto(e.target.files?.[0])} className="mt-1 w-full rounded-xl border border-white/10 bg-black p-3 file:mr-4 file:rounded-full file:border-0 file:bg-emerald-400 file:px-4 file:py-2 file:font-black file:text-black" />
+              {form.avatarUrl && <img src={form.avatarUrl} alt="Coach profile preview" className="mt-3 h-44 w-full rounded-2xl object-cover" />}
+            </label>
             <Field label="City" value={form.city} onChange={(v) => update("city", v)} />
             <Field label="State" value={form.state} onChange={(v) => update("state", v)} />
             <Field label="Country" value={form.country} onChange={(v) => update("country", v)} />

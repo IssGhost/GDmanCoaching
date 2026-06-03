@@ -56,6 +56,7 @@ async function seedPickleballDemo() {
       $set: {
         userId: coachUser._id,
         displayName: "Jordan Coach",
+        avatarUrl: "/images/coaches/coach-jordan.svg",
         headline: "Online reviews, doubles strategy, and video breakdowns",
         bio:
           "Jordan helps beginner and intermediate players build cleaner footwork, better kitchen positioning, stronger serves, and smarter doubles decisions. Available for online coaching sessions around Round Rock/Austin and online video review.",
