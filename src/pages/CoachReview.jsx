@@ -204,8 +204,8 @@ function CoachAwaitingUpload({ submission }) {
         <div className="mt-5 grid gap-3">
           {[
             "Message the player to upload footage.",
-            "Confirm what angle or court view is needed.",
-            "Schedule the in-person portion of the hybrid package.",
+            "Confirm what angle or camera view is needed.",
+            "Schedule the online portion of the online coaching option.",
             "Wait until status becomes Ready For Review.",
           ].map((item) => (
             <div key={item} className="flex gap-3 rounded-2xl bg-[#fff8e7] p-4 text-sm leading-6 text-[#5f746c]">
@@ -247,7 +247,7 @@ function CoachReadyReview({
         )}
 
         <form onSubmit={addComment} className="mt-5 rounded-2xl border border-[#12372a]/10 bg-[#fff8e7] p-4">
-          <h3 className="font-black text-[#12372a]">Add timestamped note or lesson note</h3>
+          <h3 className="font-black text-[#12372a]">Add timestamped note or review note</h3>
           <div className="mt-3 grid gap-3 sm:grid-cols-[120px_180px_1fr_auto]">
             <input
               type="number"
@@ -265,13 +265,13 @@ function CoachReadyReview({
               <option>Kitchen</option>
               <option>Doubles rotation</option>
               <option>Shot selection</option>
-              <option>In-person lesson</option>
+              <option>Online coaching request</option>
             </select>
             <input
               value={comment.comment}
               onChange={(e) => setComment((c) => ({ ...c, comment: e.target.value }))}
               className="pp-input px-4 py-3"
-              placeholder="Write coach feedback for this moment or lesson segment"
+              placeholder="Write coach feedback for this moment or review segment"
             />
             <button disabled={busy} className="pp-btn-secondary px-4 py-3"><FaPlus /></button>
           </div>
@@ -288,7 +288,7 @@ function CoachReadyReview({
       </section>
 
       <section className="rounded-[2rem] border border-[#12372a]/10 bg-white/84 p-5 shadow-xl shadow-[#12372a]/8 backdrop-blur">
-        <h2 className="text-xl font-black text-[#12372a]">Written review / lesson recap</h2>
+        <h2 className="text-xl font-black text-[#12372a]">Written review / review recap</h2>
         <div className="mt-4 grid gap-3">
           <Field label="Summary" value={reviewForm.summary} onChange={(value) => setReviewForm((f) => ({ ...f, summary: value }))} />
           <Field label="Strengths" value={reviewForm.strengths} onChange={(value) => setReviewForm((f) => ({ ...f, strengths: value }))} />

@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 const CoachProfile = require("../models/CoachProfile");
 const CoachingPackage = require("../models/CoachingPackage");
 const User = require("../models/User");
+const VideoSubmission = require("../models/VideoSubmission");
+const PaymentSplit = require("../models/PaymentSplit");
 const { auth, allow } = require("../middleware/auth");
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
@@ -13,11 +15,27 @@ function cleanArray(value) {
   return [];
 }
 
+function cleanSocialLinks(body = {}) {
+  const social = body.socialLinks || {};
+  return {
+    instagram: body.instagram ?? social.instagram ?? "",
+    youtube: body.youtube ?? social.youtube ?? "",
+    facebook: body.facebook ?? social.facebook ?? "",
+    tiktok: body.tiktok ?? social.tiktok ?? "",
+    website: body.website ?? social.website ?? "",
+  };
+}
+
+function duprProfileUrl(duprId) {
+  return duprId ? `https://dashboard.dupr.com/dashboard/player/${encodeURIComponent(duprId)}` : "";
+}
+
 function publicCoachPayload(profile, packages = []) {
   const obj = profile.toObject ? profile.toObject() : profile;
   return {
     ...obj,
     packages,
+    duprProfileUrl: duprProfileUrl(obj.duprId),
     stripeAccountId: undefined,
   };
 }
@@ -65,11 +83,18 @@ router.post(
       bio: body.bio || "",
       city: body.city || "",
       state: body.state || "",
+      country: body.country || "",
+      phone: body.phone || "",
+      organization: body.organization || "",
       specialties: cleanArray(body.specialties),
       skillLevels: cleanArray(body.skillLevels),
-      yearsExperience: Number(body.yearsExperience || 0),
-      videoReviewRate: Number(body.videoReviewRate || 45),
-      liveSessionRate: Number(body.liveSessionRate || 75),
+      yearsExperience: Number(body.yearsExperience || body.playingExperienceYears || 0),
+      playingExperienceYears: Number(body.playingExperienceYears || body.yearsExperience || 0),
+      coachingExperienceYears: Number(body.coachingExperienceYears || 0),
+      duprId: String(body.duprId || "").trim(),
+      duprSingles: body.duprSingles === "" || body.duprSingles === undefined ? null : Number(body.duprSingles),
+      duprDoubles: body.duprDoubles === "" || body.duprDoubles === undefined ? null : Number(body.duprDoubles),
+      socialLinks: cleanSocialLinks(body),
       turnaroundHours: Number(body.turnaroundHours || 48),
       avatarUrl: body.avatarUrl || "",
       introVideoUrl: body.introVideoUrl || "",
@@ -85,20 +110,20 @@ router.post(
 
     const starterPackages = [
       {
-        title: "Single Video Review",
-        description: "Upload one match or drill clip and receive timestamped notes, strengths, fixes, and drills.",
-        price: update.videoReviewRate,
+        title: "Single Video Analysis",
+        description: "Upload one match or drill clip and receive timestamped notes, strengths, fixes, and drills. Pricing is discussed directly with the coach.",
+        price: 0,
         reviewType: "single_video",
         turnaroundHours: update.turnaroundHours,
-        maxVideoMinutes: 10,
+        maxVideoMinutes: 15,
       },
       {
-        title: "Doubles Strategy Breakdown",
-        description: "A deeper review focused on positioning, third-shot choices, resets, and partner movement.",
-        price: Math.max(update.videoReviewRate + 20, 65),
-        reviewType: "doubles_strategy",
+        title: "Strategy Consultation",
+        description: "A remote review focused on positioning, third-shot choices, resets, and partner movement. Pricing is discussed directly with the coach.",
+        price: 0,
+        reviewType: "strategy_consultation",
         turnaroundHours: update.turnaroundHours,
-        maxVideoMinutes: 20,
+        maxVideoMinutes: 15,
       },
     ];
 
@@ -126,11 +151,18 @@ router.put(
       bio: body.bio,
       city: body.city,
       state: body.state,
+      country: body.country,
+      phone: body.phone,
+      organization: body.organization,
       specialties: body.specialties !== undefined ? cleanArray(body.specialties) : undefined,
       skillLevels: body.skillLevels !== undefined ? cleanArray(body.skillLevels) : undefined,
       yearsExperience: body.yearsExperience !== undefined ? Number(body.yearsExperience) : undefined,
-      videoReviewRate: body.videoReviewRate !== undefined ? Number(body.videoReviewRate) : undefined,
-      liveSessionRate: body.liveSessionRate !== undefined ? Number(body.liveSessionRate) : undefined,
+      playingExperienceYears: body.playingExperienceYears !== undefined ? Number(body.playingExperienceYears) : undefined,
+      coachingExperienceYears: body.coachingExperienceYears !== undefined ? Number(body.coachingExperienceYears) : undefined,
+      duprId: body.duprId !== undefined ? String(body.duprId || "").trim() : undefined,
+      duprSingles: body.duprSingles !== undefined && body.duprSingles !== "" ? Number(body.duprSingles) : body.duprSingles === "" ? null : undefined,
+      duprDoubles: body.duprDoubles !== undefined && body.duprDoubles !== "" ? Number(body.duprDoubles) : body.duprDoubles === "" ? null : undefined,
+      socialLinks: ["socialLinks", "instagram", "youtube", "facebook", "tiktok", "website"].some((key) => Object.prototype.hasOwnProperty.call(body, key)) ? cleanSocialLinks(body) : undefined,
       turnaroundHours: body.turnaroundHours !== undefined ? Number(body.turnaroundHours) : undefined,
       avatarUrl: body.avatarUrl,
       introVideoUrl: body.introVideoUrl,
@@ -148,7 +180,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const profile = await CoachProfile.findOne({ userId: req.user._id });
     if (!profile) return res.status(404).json({ error: "Coach profile not found" });
-    const pkg = await CoachingPackage.create({ ...req.body, coachId: profile._id });
+    const pkg = await CoachingPackage.create({ ...req.body, price: Number(req.body?.price || 0), maxVideoMinutes: Math.min(Number(req.body?.maxVideoMinutes || 15), 15), coachId: profile._id });
     res.json(pkg);
   })
 );
@@ -165,6 +197,37 @@ router.put(
       { new: true }
     );
     if (!pkg) return res.status(404).json({ error: "Package not found" });
+    res.json(pkg);
+  })
+);
+
+router.get(
+  "/dashboard",
+  auth,
+  asyncHandler(async (req, res) => {
+    const profile = await CoachProfile.findOne({ userId: req.user._id });
+    if (!profile && req.user.role !== "admin") {
+      return res.status(404).json({ error: "Coach profile not found" });
+    }
+
+    const filter = req.user.role === "admin" && !profile ? {} : { coachId: profile._id };
+    const [packages, submissions, splits] = await Promise.all([
+      profile ? CoachingPackage.find({ coachId: profile._id }).sort({ createdAt: -1 }) : [],
+      VideoSubmission.find(filter).sort({ status: 1, dueAt: 1, createdAt: -1 }).populate("playerId", "fullName email").populate("packageId", "title reviewType turnaroundHours maxVideoMinutes"),
+      PaymentSplit.find({}).sort({ createdAt: -1 }).limit(25),
+    ]);
+
+    res.json({ profile, packages, submissions, splits });
+  })
+);
+
+router.post(
+  "/packages",
+  auth,
+  asyncHandler(async (req, res) => {
+    const profile = await CoachProfile.findOne({ userId: req.user._id });
+    if (!profile) return res.status(404).json({ error: "Coach profile not found" });
+    const pkg = await CoachingPackage.create({ ...req.body, price: Number(req.body?.price || 0), maxVideoMinutes: Math.min(Number(req.body?.maxVideoMinutes || 15), 15), coachId: profile._id });
     res.json(pkg);
   })
 );

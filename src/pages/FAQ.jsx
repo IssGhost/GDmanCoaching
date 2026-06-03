@@ -4,9 +4,9 @@ import { FaCalendarCheck, FaCloudUploadAlt, FaCreditCard, FaExchangeAlt, FaMapMa
 
 export default function FAQ() {
   const quick = [
-    { icon: FaMapMarkerAlt, label: "In-person lessons", desc: "Private training, local courts, group clinics, and tournament prep." },
+    { icon: FaMapMarkerAlt, label: "Online coaching", desc: "Video analysis, match reviews, strategy consultations, and tournament prep." },
     { icon: FaCloudUploadAlt, label: "Video review", desc: "Upload footage and receive timestamped notes, drills, and strategy." },
-    { icon: FaExchangeAlt, label: "Split payouts", desc: "Support shared revenue between coaches, assistants, clubs, and facilities." },
+    { icon: FaExchangeAlt, label: "Coach responses", desc: "Allow 1–3 business days for coaches to review and respond." },
   ];
 
   return (
@@ -15,9 +15,9 @@ export default function FAQ() {
         <div className="pp-pill mx-auto mb-5 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-black">
           <FaQuestionCircle className="text-[#ff7b54]" /> Frequently Asked Questions
         </div>
-        <h1 className="text-4xl font-black text-[#12372a] md:text-6xl">Questions about booking coaches, video reviews, and payments.</h1>
+        <h1 className="text-4xl font-black text-[#12372a] md:text-6xl">Questions about online coaches, video reviews, and accounts.</h1>
         <p className="mx-auto mt-4 max-w-3xl text-lg leading-8 text-[#5f746c]">
-          This platform is not only for online video review. It is also designed for local in-person pickleball training, private sessions, group clinics, and hybrid coaching packages.
+          GOOD Coaching is an online marketplace for video analysis, match reviews, strategy consultations, personalized training plans, and skill development guidance.
         </p>
       </section>
 
@@ -37,8 +37,8 @@ export default function FAQ() {
 
       <section className="mx-auto grid max-w-5xl gap-5 md:grid-cols-3">
         {[
-          { icon: <FaCalendarCheck />, title: "Book training", text: "Schedule in-person sessions or video-review packages.", to: "/coaches" },
-          { icon: <FaCreditCard />, title: "Payments", text: "Coach payout and split-payment setup information.", to: "/payments" },
+          { icon: <FaCalendarCheck />, title: "Request coaching", text: "Schedule online sessions or video-review packages.", to: "/coaches" },
+          { icon: <FaCreditCard />, title: "Coach-led pricing", text: "Each coach communicates pricing directly with prospective clients.", to: "/payments" },
           { icon: <FaCloudUploadAlt />, title: "Player dashboard", text: "Track bookings, uploads, and completed coach feedback.", to: "/dashboard/submissions" },
         ].map((c) => (
           <Link key={c.title} to={c.to} className="pp-card rounded-3xl p-6 text-center transition hover:-translate-y-1">

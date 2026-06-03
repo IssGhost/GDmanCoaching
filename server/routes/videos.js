@@ -91,7 +91,7 @@ router.post(
       return res.status(400).json({ error: `Cannot upload while submission is ${row.status}` });
     }
 
-    const maxMinutes = Number(row.packageId?.maxVideoMinutes || 20);
+    const maxMinutes = Math.min(Number(row.packageId?.maxVideoMinutes || 15), 15);
     const upload = await createCloudflareUpload(maxMinutes * 60);
 
     if (upload) {
@@ -126,7 +126,13 @@ router.put(
     if (assetId !== undefined) row.assetId = assetId;
     if (playbackId !== undefined) row.playbackId = playbackId;
     if (thumbnailUrl !== undefined) row.thumbnailUrl = thumbnailUrl;
-    if (durationSeconds !== undefined) row.durationSeconds = Number(durationSeconds);
+    if (durationSeconds !== undefined) {
+      const duration = Number(durationSeconds);
+      if (duration > 15 * 60) {
+        return res.status(400).json({ error: "Videos must be 15 minutes or shorter. Please trim your clip and upload again." });
+      }
+      row.durationSeconds = duration;
+    }
     row.status = status || "ready_for_review";
     await row.save();
     res.json(row);
