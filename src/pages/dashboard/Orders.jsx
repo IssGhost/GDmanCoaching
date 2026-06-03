@@ -33,7 +33,7 @@ export default function DashboardOrders() {
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end">
         <div>
           <h1 className="text-3xl font-black text-[#12372a]">Training Orders</h1>
-          <p className="mt-1 text-sm text-[#5f746c]">Paid in-person lessons, clinics, video reviews, and hybrid coaching packages.</p>
+          <p className="mt-1 text-sm text-[#5f746c]">Paid online coaching requests, consultations, video reviews, and online coaching packages.</p>
         </div>
         <label className="flex items-center gap-2 text-sm font-bold text-[#5f746c]">
           Filter
