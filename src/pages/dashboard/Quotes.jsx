@@ -7,16 +7,16 @@ import { DEMO_REQUESTS } from "../../lib/demoData";
 
 const TEMPLATES = [
   {
-    label: "Private Lesson",
+    label: "Online Coaching Request",
     icon: FaMapMarkerAlt,
-    subject: "Private lesson at local outdoor courts",
-    details: "I want a one-hour private lesson focused on footwork, court positioning, and controlled resets.",
+    subject: "Online coaching request at online video review",
+    details: "I want a one-hour online coaching request focused on footwork, court positioning, and controlled resets.",
   },
   {
-    label: "Group Clinic",
+    label: "Group Consultation",
     icon: FaUsers,
-    subject: "Small group doubles clinic",
-    details: "We have 4 players and want a clinic focused on partner movement, kitchen positioning, and point construction.",
+    subject: "Small group doubles consultation",
+    details: "We have 4 players and want a consultation focused on partner movement, kitchen positioning, and point construction.",
   },
   {
     label: "Video Review",
@@ -72,7 +72,7 @@ export default function DashboardQuotes() {
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end">
         <div>
           <h1 className="text-3xl font-black text-[#12372a]">Training Requests</h1>
-          <p className="mt-1 text-sm text-[#5f746c]">Request custom in-person lessons, group clinics, or video-review packages.</p>
+          <p className="mt-1 text-sm text-[#5f746c]">Request custom online coaching requests, strategy consultations, or video-review packages.</p>
         </div>
         <label className="flex items-center gap-2 text-sm font-bold text-[#5f746c]">
           Filter
@@ -97,15 +97,15 @@ export default function DashboardQuotes() {
 
       <section className="rounded-[2rem] border border-[#12372a]/10 bg-white/82 p-6 shadow-xl shadow-[#12372a]/8 backdrop-blur">
         <h2 className="text-xl font-black text-[#12372a]">Request custom coaching</h2>
-        <p className="mt-1 text-sm text-[#5f746c]">Use this when a player needs a custom court location, group size, clinic date, or hybrid coaching quote.</p>
+        <p className="mt-1 text-sm text-[#5f746c]">Use this when a player needs a custom video context, group size, consultation date, or online coaching quote.</p>
         <div className="mt-5 grid gap-4">
           <label className="block">
             <span className="mb-1 block text-sm font-black text-[#12372a]">Subject</span>
-            <input className="pp-input px-4 py-3" value={form.subject} onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))} placeholder="Example: Saturday doubles clinic for 4 players" />
+            <input className="pp-input px-4 py-3" value={form.subject} onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))} placeholder="Example: Saturday doubles consultation for 4 players" />
           </label>
           <label className="block">
             <span className="mb-1 block text-sm font-black text-[#12372a]">Details</span>
-            <textarea rows={5} className="pp-input px-4 py-3" value={form.details} onChange={(e) => setForm((f) => ({ ...f, details: e.target.value }))} placeholder="Include preferred court, skill level, group size, goals, and scheduling window." />
+            <textarea rows={5} className="pp-input px-4 py-3" value={form.details} onChange={(e) => setForm((f) => ({ ...f, details: e.target.value }))} placeholder="Include preferred focus area, skill level, group size, goals, and scheduling window." />
           </label>
         </div>
         <button onClick={submit} disabled={sending} className="pp-btn-primary mt-5 px-5 py-3 disabled:opacity-60">

@@ -4,13 +4,14 @@ import { api } from "../lib/api";
 import { useToast } from "../components/Toast";
 
 const adminCards = [
-  { title: "Coaching Marketplace", text: "Approve coaches, monitor video submissions, and audit payout splits.", to: "/admin/coaching", cta: "Manage Coaching" },
+  { title: "Coaching Marketplace", text: "Approve coaches, monitor video submissions, and audit coaching records.", to: "/admin/coaching", cta: "Manage Coaching" },
   { title: "Support Requests", text: "Review contact forms and platform support requests.", to: "/admin/requests", cta: "Open Requests" },
   { title: "Quotes", text: "Approve quotes, reject requests, and save estimates.", to: "/admin/quotes", cta: "Manage Quotes" },
   { title: "Orders", text: "Track order/payment status for customer parts and invoices.", to: "/admin/orders", cta: "Manage Orders" },
   { title: "Blog Posts", text: "Publish home page service tips and field notes.", to: "/admin/blog", cta: "Manage Blog" },
   { title: "Testimonials", text: "Add reviews that appear on the home page.", to: "/admin/testimonials", cta: "Manage Reviews" },
   { title: "Users", text: "Promote staff accounts and manage customer access.", to: "/admin/users", cta: "Manage Users" },
+  { title: "Database Viewer", text: "See recent MongoDB records from every saved Railway collection.", to: "/admin/database", cta: "View Database" },
 ];
 
 export default function DashboardAdmin() {
@@ -35,9 +36,9 @@ export default function DashboardAdmin() {
         <div className="mb-8 grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-emerald-300">Admin command center</p>
-            <h1 className="mt-2 text-4xl font-extrabold">PicklePro Coach Operations</h1>
+            <h1 className="mt-2 text-4xl font-extrabold">GOOD Coaching Operations</h1>
             <p className="mt-3 max-w-3xl text-gray-300">
-              Manage coaches, video submissions, payment splits, users, support requests, home page content, and testimonials from one polished control area.
+              Manage coaches, video submissions, users, support requests, home page content, and testimonials from one polished control area.
             </p>
           </div>
           <div className="rounded-lg border border-amber-400/30 bg-amber-400/10 p-5">

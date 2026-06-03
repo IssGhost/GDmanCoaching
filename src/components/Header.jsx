@@ -20,9 +20,8 @@ export default function Header() {
   useEffect(() => setOpen(false), [pathname]);
 
   const links = [
-    { name: "Find Coaches", to: "/coaches" },
+    { name: "Coaches", to: "/coaches" },
     { name: "Training Options", to: "/services" },
-    { name: "Pricing", to: "/payments" },
     { name: "Become a Coach", to: "/coach-signup" },
     { name: "FAQ", to: "/faq" },
   ];
@@ -53,14 +52,12 @@ export default function Header() {
       }`}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6">
-        <Link to="/" className="group flex items-center gap-3">
-          <div className="pp-ball grid h-12 w-12 place-items-center rounded-2xl text-xl font-black text-[#12372a] shadow-lg shadow-lime-200/50 transition group-hover:-rotate-6">
-            PB
-          </div>
-          <div className="hidden sm:block">
-            <div className="text-sm font-black leading-tight text-[#12372a]">PicklePro Coach</div>
-            <div className="text-xs font-semibold text-[#087f73]">In-person training + video review</div>
-          </div>
+        <Link to="/" className="group flex items-center" aria-label="GOOD Coaching home">
+          <img
+            src="/good-coaching-logo.svg"
+            alt="GOOD Coaching"
+            className="h-12 w-auto rounded-2xl shadow-lg shadow-lime-200/40 transition group-hover:-rotate-1 group-hover:scale-[1.02]"
+          />
         </Link>
 
         <nav className="hidden items-center gap-1 rounded-full border border-[#12372a]/10 bg-white/60 p-1 backdrop-blur lg:flex">
@@ -76,7 +73,7 @@ export default function Header() {
             <AccountMenu />
           )}
           <Link to="/coaches" className="pp-btn-primary px-5 py-2.5 text-sm">
-            Book Training
+            Request Coaching
           </Link>
         </div>
 
@@ -107,7 +104,7 @@ export default function Header() {
                 <AccountMenu />
               )}
               <Link to="/coaches" className="pp-btn-primary px-5 py-2.5 text-sm">
-                Book Training
+                Request Coaching
               </Link>
             </div>
           </nav>

@@ -53,11 +53,6 @@ function cardCopy(row) {
   };
 }
 
-function isInPerson(row) {
-  const type = row.packageId?.reviewType || "";
-  return type === "live_session" || row.title?.toLowerCase().includes("in-person");
-}
-
 export default function PlayerSubmissions() {
   const { token } = useAuth();
   const [rows, setRows] = useState(null);
@@ -154,7 +149,6 @@ export default function PlayerSubmissions() {
         {list.map((row) => {
           const status = statusInfo(row.phase || row.status);
           const copy = cardCopy(row);
-          const inPerson = isInPerson(row);
           const phase = normalizePhase(row.phase || row.status);
 
           return (
@@ -166,13 +160,13 @@ export default function PlayerSubmissions() {
               <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                 <div className="flex gap-4">
                   <div className="grid h-14 w-14 min-w-14 place-items-center rounded-2xl bg-[#d9f7fb] text-xl text-[#00a896]">
-                    {phase === "awaiting_upload" ? <FaCloudUploadAlt /> : inPerson ? <FaMapMarkerAlt /> : <FaVideo />}
+                    {phase === "awaiting_upload" ? <FaCloudUploadAlt /> : <FaVideo />}
                   </div>
 
                   <div>
                     <div className="mb-2 flex flex-wrap gap-2">
                       <span className="inline-flex rounded-full bg-[#fff1c7] px-3 py-1 text-xs font-black text-[#5f746c]">
-                        {inPerson ? "In-person / hybrid coaching" : "Online video review"}
+                        Online video coaching
                       </span>
 
                       <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-black capitalize ${status.cls}`}>

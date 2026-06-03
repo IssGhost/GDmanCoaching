@@ -44,7 +44,7 @@ export default function Cart() {
   };
 
   const enriched = useMemo(
-    () => items.map((it) => ({ ...it, qty: it.qty ?? 1, line: (it.qty ?? 1) * (it.price ?? 0) })),
+    () => items.map((it) => ({ ...it, qty: it.qty ?? 1, line: 0 })),
     [items]
   );
 
@@ -88,7 +88,7 @@ export default function Cart() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-bold text-green-500">${it.price}</div>
+                    <div className="font-bold text-green-500">Coach sets pricing</div>
                     <div className="text-sm text-gray-400">Line: ${it.line.toFixed(2)}</div>
                     <button onClick={() => removeItem(it.id)} className="mt-2 text-red-300 hover:text-red-400 text-sm">
                       Remove

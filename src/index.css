@@ -195,7 +195,7 @@
   backface-visibility: hidden;
   will-change: transform;
 }
-/* ===== PicklePro Outdoor Court Theme =====
+/* ===== GOOD Coaching Outdoor Court Theme =====
    Palette: warm court cream, sky blue, paddle teal, pickleball yellow, sunset coral.
    Add this after the existing CSS so it overrides the old dark BPJ feel. */
 :root {
@@ -414,7 +414,7 @@ input.bg-black::placeholder,
 textarea.bg-black::placeholder {
   color: rgba(95, 116, 108, .72) !important;
 }
-/* ===== PicklePro v2 cleanup: removes remaining dark/septic visual leftovers ===== */
+/* ===== GOOD Coaching v2 cleanup: removes remaining legacy visual leftovers ===== */
 .pp-section-title {
   color: var(--pp-navy);
   font-weight: 900;
@@ -496,7 +496,7 @@ textarea:focus {
   border-color: rgba(0, 168, 150, .65) !important;
   box-shadow: 0 0 0 4px rgba(0, 168, 150, .13) !important;
 }
-/* ===== MVP DEMO FINAL POLISH: remove every remaining dark BPJ/septic surface ===== */
+/* ===== MVP DEMO FINAL POLISH: remove every remaining legacy surface ===== */
 .card-pro,
 .card-pro--grid,
 .card-pro--glow,
