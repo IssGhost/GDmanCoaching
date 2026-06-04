@@ -17,6 +17,8 @@ export default function CoachProfile() {
   const [busy, setBusy] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [inquiryMessage, setInquiryMessage] = useState("");
+  const [customRequestOpen, setCustomRequestOpen] = useState(false);
+  const [requestedServices, setRequestedServices] = useState([]);
 
   useEffect(() => {
     api.get(`/coaches/${id}`)
@@ -38,11 +40,32 @@ export default function CoachProfile() {
     if (!inquiryMessage.trim()) return push("Write a short message for the coach first.", "error");
     setBusy(true);
     try {
-      await api.post("/inquiries", { coachId: coach._id, subject: `Coaching inquiry for ${coach.displayName}`, message: inquiryMessage }, token);
+      await api.post("/inquiries", { coachId: coach._id, subject: `Coaching inquiry for ${coach.displayName}`, message: inquiryMessage, requestedServices }, token);
       push("Conversation started. You can discuss scope before purchasing.", "success");
       nav("/messages");
     } catch (e) {
       push(e.message || "Could not start conversation", "error");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const toggleRequestedService = (service) => {
+    setRequestedServices((current) => current.includes(service) ? current.filter((item) => item !== service) : [...current, service]);
+  };
+
+  const sendCustomRequest = async () => {
+    if (!user) return nav("/signin", { state: { from: { pathname: `/coaches/${id}` } } });
+    if (!requestedServices.length) return push("Select at least one training service.", "error");
+    if (!form.goals.trim() && !form.description.trim()) return push("Tell the coach what you would like help with.", "error");
+    setBusy(true);
+    try {
+      const message = [`Requested services: ${requestedServices.join(", ")}`, form.skillLevel && `Skill level: ${form.skillLevel}`, form.goals && `Goals: ${form.goals}`, form.description && `Extra notes: ${form.description}`].filter(Boolean).join("\n\n");
+      await api.post("/inquiries", { coachId: coach._id, subject: form.title.trim() || `Personalized request for ${coach.displayName}`, message, requestedServices }, token);
+      push("Personalized request sent. The coach can now chat with you and send a quote.", "success");
+      nav("/messages");
+    } catch (e) {
+      push(e.message || "Could not send personalized request", "error");
     } finally {
       setBusy(false);
     }
@@ -127,8 +150,19 @@ export default function CoachProfile() {
                 <div className="flex items-start justify-between gap-4"><div><h3 className="text-lg font-black text-[#12372a]">{pkg.title}</h3><p className="mt-2 text-sm leading-6 text-[#40584f]">{pkg.description}</p></div><div className="max-w-28 text-right text-sm font-black text-[#087f73]">{Number(pkg.price) > 0 ? `$${Number(pkg.price).toFixed(2)}` : "Request a custom quote"}{pkg.discountPercent > 0 && <div className="mt-1 text-xs text-[#9b4f00]">{pkg.discountPercent}% package discount</div>}</div></div>
                 <div className="mt-4 flex items-center gap-2 text-xs font-bold text-[#4f665d]"><FaClock /> {pkg.turnaroundHours || coach.turnaroundHours || 72} hour target response • {Math.min(pkg.maxVideoMinutes || 15, 15)} min max video</div>
               </button>)}
+              <button onClick={() => { setSelectedPackageId(""); setCustomRequestOpen(true); }} className={`rounded-2xl border-2 border-dashed p-5 text-left transition ${customRequestOpen ? "border-[#00a896] bg-[#eaf9f7]" : "border-[#00a896]/40 bg-[#fffdf6] hover:bg-[#eaf9f7]"}`}>
+                <div className="flex items-start justify-between gap-4"><div><h3 className="text-lg font-black text-[#12372a]">Personalized Request</h3><p className="mt-2 text-sm leading-6 text-[#40584f]">Combine multiple training services or ask for something not listed. No payment is collected now.</p></div><FaComments className="text-2xl text-[#087f73]" /></div>
+                <div className="mt-4 text-xs font-black text-[#087f73]">Start chat → coach creates quote → you approve or decline</div>
+              </button>
             </div>
           </section>
+
+          {customRequestOpen && <section className="rounded-3xl border-2 border-[#00a896]/30 bg-[#eaf9f7] p-6 shadow-sm">
+            <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="pp-kicker">No payment required</p><h2 className="mt-1 text-2xl font-black text-[#12372a]">Build a personalized request</h2><p className="mt-2 text-sm leading-6 text-[#40584f]">Select one or more services. Your request opens a live conversation where the coach can confirm details and send a quote for you to approve or decline.</p></div><button onClick={() => setCustomRequestOpen(false)} className="pp-btn-secondary px-4 py-2 text-sm">Close</button></div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">{[...(coach.packages || []).map((pkg) => pkg.title), "Video analysis", "Match review", "Personalized drill plan", "Monthly training program", "Strategy consultation", "Other custom service"].filter((item, index, all) => all.indexOf(item) === index).map((service) => <label key={service} className={`flex cursor-pointer items-center gap-3 rounded-2xl border p-4 font-bold ${requestedServices.includes(service) ? "border-[#00a896] bg-white" : "border-[#12372a]/10 bg-white/60"}`}><input type="checkbox" checked={requestedServices.includes(service)} onChange={() => toggleRequestedService(service)} className="h-5 w-5 accent-[#087f73]" />{service}</label>)}</div>
+            <div className="mt-5 grid gap-4 md:grid-cols-2"><Field label="Request title"><input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} className="pp-input mt-1 px-4 py-3" placeholder="Example: Tournament preparation plan" /></Field><Field label="Skill level"><select value={form.skillLevel} onChange={(e) => setForm((f) => ({ ...f, skillLevel: e.target.value }))} className="pp-input mt-1 px-4 py-3"><option value="">Select level</option><option>Beginner (2.5–3.0)</option><option>Intermediate (3.0–4.0)</option><option>Advanced (4.0–5.0)</option><option>Elite (5.0+)</option></select></Field><Field label="Goals" wide><textarea value={form.goals} onChange={(e) => setForm((f) => ({ ...f, goals: e.target.value }))} rows={3} className="pp-input mt-1 px-4 py-3" placeholder="What results are you looking for?" /></Field><Field label="Extra notes" wide><textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={4} className="pp-input mt-1 px-4 py-3" placeholder="Timing, deliverables, questions, or other details." /></Field></div>
+            <button onClick={sendCustomRequest} disabled={busy} className="pp-btn-primary mt-5 w-full px-6 py-4">{busy ? "Sending request..." : "Send request and open coach chat"}</button>
+          </section>}
 
           <section className="rounded-3xl border border-[#12372a]/10 bg-white p-6 shadow-sm">
             <h2 className="text-2xl font-black text-[#12372a]">Tell the coach what to review</h2>

@@ -9,6 +9,7 @@ const inquirySchema = new mongoose.Schema({
   coachId: { type: mongoose.Schema.Types.ObjectId, ref: "CoachProfile", required: true, index: true },
   playerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
   subject: { type: String, required: true, maxlength: 200 },
+  requestedServices: [{ type: String, maxlength: 160 }],
   status: { type: String, enum: ["open", "quoted", "approved", "closed"], default: "open", index: true },
   messages: [messageSchema],
   quote: {

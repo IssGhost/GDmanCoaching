@@ -24,10 +24,11 @@ router.post("/", auth, asyncHandler(async (req, res) => {
   const coach = await CoachProfile.findById(req.body?.coachId);
   const subject = String(req.body?.subject || "Coaching inquiry").trim();
   const body = String(req.body?.message || "").trim();
+  const requestedServices = Array.isArray(req.body?.requestedServices) ? req.body.requestedServices.map(String).map((item) => item.trim()).filter(Boolean).slice(0, 12) : [];
   if (!coach || !coach.approved) return res.status(404).json({ error: "Coach not found" });
   if (!coach.acceptingInquiries) return res.status(400).json({ error: "This coach is not accepting new inquiries right now." });
   if (!body) return res.status(400).json({ error: "Please include a message for the coach." });
-  const row = await Inquiry.create({ coachId: coach._id, playerId: req.user._id, subject, messages: [{ senderId: req.user._id, body }] });
+  const row = await Inquiry.create({ coachId: coach._id, playerId: req.user._id, subject, requestedServices, messages: [{ senderId: req.user._id, body }] });
   res.json(await populate(Inquiry.findById(row._id)));
 }));
 
@@ -70,6 +71,17 @@ router.post("/:id/quote/approve", auth, asyncHandler(async (req, res) => {
   row.quote.status = "approved"; row.quote.approvedAt = new Date(); row.status = "approved";
   await row.save();
   res.json({ inquiry: row, paymentNextStep: "Quote approved. You can now continue to secure checkout." });
+}));
+
+router.post("/:id/quote/decline", auth, asyncHandler(async (req, res) => {
+  const row = await access(req, req.params.id);
+  if (!row) return res.status(row === false ? 403 : 404).json({ error: "Inquiry not found" });
+  if (String(row.playerId?._id || row.playerId) !== String(req.user._id)) return res.status(403).json({ error: "Only the customer can decline this quote." });
+  if (row.quote?.status !== "sent") return res.status(400).json({ error: "There is no quote waiting for a response." });
+  row.quote.status = "declined"; row.status = "open";
+  row.messages.push({ senderId: req.user._id, body: String(req.body?.message || "Quote declined. Please revise the scope or amount.").trim() });
+  await row.save();
+  res.json(await populate(Inquiry.findById(row._id)));
 }));
 
 module.exports = router;

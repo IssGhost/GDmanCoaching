@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { FaCheckCircle, FaCloudUploadAlt, FaClipboardList, FaPlus, FaUserEdit } from "react-icons/fa";
+import { FaCheckCircle, FaCloudUploadAlt, FaClipboardList, FaComments, FaPlus, FaUserEdit } from "react-icons/fa";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
@@ -75,10 +75,11 @@ export default function CoachDashboard() {
         submissions: Array.isArray(result?.submissions) ? result.submissions : [],
         packages: Array.isArray(result?.packages) ? result.packages : [],
         splits: Array.isArray(result?.splits) ? result.splits : [],
+        inquiries: Array.isArray(result?.inquiries) ? result.inquiries : [],
       });
     } catch (err) {
       setLoadError(err.message || "Your coach dashboard could not be loaded.");
-      setData({ profile: null, submissions: [], packages: [], splits: [] });
+      setData({ profile: null, submissions: [], packages: [], splits: [], inquiries: [] });
     }
   };
 
@@ -94,6 +95,7 @@ export default function CoachDashboard() {
       ready: rows.filter((r) => normalizePhase(r.phase || r.status) === "ready_for_review").length,
       completed: rows.filter((r) => normalizePhase(r.phase || r.status) === "reviewed").length,
       options: data?.packages?.length || 0,
+      requests: data?.inquiries?.filter((item) => ["open", "quoted"].includes(item.status)).length || 0,
     };
   }, [data]);
 
@@ -163,17 +165,18 @@ export default function CoachDashboard() {
             </p>
           </div>
 
-          <span className="pp-btn-primary px-5 py-3 text-sm">
-            <FaUserEdit className="mr-2" /> Profile Editable
-          </span>
+          <div className="flex flex-wrap gap-3"><Link to="/messages" className="pp-btn-primary px-5 py-3 text-sm"><FaComments className="mr-2" /> Open requests</Link>{data.profile?._id && <Link to={`/coaches/${data.profile._id}`} className="pp-btn-secondary px-5 py-3 text-sm">View public profile</Link>}</div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          <Stat icon={<FaComments />} label="Open requests" value={stats.requests} />
           <Stat icon={<FaCloudUploadAlt />} label="Awaiting uploads" value={stats.awaiting} />
           <Stat icon={<FaClipboardList />} label="Ready reviews" value={stats.ready} />
           <Stat icon={<FaCheckCircle />} label="Completed reviews" value={stats.completed} />
-          <Stat icon={<FaUserEdit />} label="Online options" value={stats.options} />
+          <Stat icon={<FaUserEdit />} label="Published options" value={stats.options} />
         </div>
+
+        <section className="rounded-[2rem] border border-[#12372a]/10 bg-white/90 p-5 shadow-sm"><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-2xl font-black text-[#12372a]">Personalized request inbox</h2><p className="mt-1 text-sm text-[#40584f]">Discuss multi-service requests and send final quotes for customer approval.</p></div><Link to="/messages" className="pp-btn-primary px-4 py-2 text-sm">Open all conversations</Link></div><div className="mt-4 grid gap-3 md:grid-cols-2">{(data.inquiries || []).slice(0, 4).map((item) => <Link to="/messages" key={item._id} className="rounded-2xl border border-[#12372a]/10 bg-[#fffdf6] p-4 hover:bg-[#eaf9f7]"><div className="flex justify-between gap-3"><div className="font-black text-[#12372a]">{item.playerId?.fullName || item.playerId?.email || "Customer"}</div><span className="rounded-full bg-[#c6ff4a] px-2 py-1 text-[10px] font-black uppercase text-[#12372a]">{item.status}</span></div><div className="mt-1 text-sm font-semibold text-[#40584f]">{item.subject}</div><div className="mt-2 text-xs text-[#087f73]">{(item.requestedServices || []).join(" • ") || "General coaching request"}</div></Link>)}{!(data.inquiries || []).length && <div className="rounded-2xl bg-[#eaf9f7] p-4 text-sm font-semibold text-[#40584f] md:col-span-2">New personalized requests will appear here and in Messages.</div>}</div></section>
 
         {profileForm && (
           <section className="rounded-[2rem] border border-[#12372a]/10 bg-white/84 p-5 shadow-sm">

@@ -5,6 +5,7 @@ const CoachingPackage = require("../models/CoachingPackage");
 const User = require("../models/User");
 const VideoSubmission = require("../models/VideoSubmission");
 const PaymentSplit = require("../models/PaymentSplit");
+const Inquiry = require("../models/Inquiry");
 const { auth, allow } = require("../middleware/auth");
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
@@ -202,13 +203,14 @@ router.get(
     }
 
     const filter = req.user.role === "admin" && !profile ? {} : { coachId: profile._id };
-    const [packages, submissions, splits] = await Promise.all([
+    const [packages, submissions, splits, inquiries] = await Promise.all([
       profile ? CoachingPackage.find({ coachId: profile._id }).sort({ createdAt: -1 }) : [],
       VideoSubmission.find(filter).sort({ status: 1, dueAt: 1, createdAt: -1 }).populate("playerId", "fullName email").populate("packageId", "title reviewType turnaroundHours maxVideoMinutes"),
       PaymentSplit.find({}).sort({ createdAt: -1 }).limit(25),
+      profile ? Inquiry.find({ coachId: profile._id }).sort({ updatedAt: -1 }).limit(25).populate("playerId", "fullName email phone") : [],
     ]);
 
-    res.json({ profile, packages, submissions, splits });
+    res.json({ profile, packages, submissions, splits, inquiries });
   })
 );
 
