@@ -117,11 +117,17 @@ export default function Marketplace() {
               const isDemo = String(coach._id).startsWith("demo-");
               return (
                 <article key={coach._id} className="flex flex-col overflow-hidden rounded-3xl border border-[#12372a]/10 bg-white/90 shadow-xl shadow-[#12372a]/10 backdrop-blur transition hover:-translate-y-1">
-                  {coach.avatarUrl ? (
-                    <img src={coach.avatarUrl} alt={coach.displayName} className="h-72 w-full object-cover" />
-                  ) : (
-                    <div className="pp-ball grid h-72 w-full place-items-center text-6xl font-black text-[#12372a]">{(coach.displayName || "C").slice(0, 1)}</div>
-                  )}
+                  <div className="relative">
+                    {coach.avatarUrl ? (
+                      <img src={coach.avatarUrl} alt={coach.displayName} className="h-72 w-full object-cover" />
+                    ) : (
+                      <div className="pp-ball grid h-72 w-full place-items-center text-6xl font-black text-[#12372a]">{(coach.displayName || "C").slice(0, 1)}</div>
+                    )}
+                    <div className="absolute right-4 top-4 inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/95 px-3 py-2 text-xs font-black text-[#12372a] shadow-lg" aria-label={coach.presenceStatus === "online" ? "Coach is online" : "Coach is offline"}>
+                      <span className={`h-3 w-3 rounded-full border-2 border-white ${coach.presenceStatus === "online" ? "bg-[#20b26b]" : "bg-[#87938e]"}`} />
+                      {coach.presenceStatus === "online" ? "Online" : "Offline"}
+                    </div>
+                  </div>
                   <div className="flex flex-1 flex-col p-6">
                   <div className="flex items-start gap-4">
                     <div>
@@ -134,7 +140,7 @@ export default function Marketplace() {
                     </div>
                   </div>
 
-                  <div className="mt-5 rounded-2xl border border-[#00a896]/15 bg-[#d9f7fb]/55 p-4 text-sm font-bold text-[#5f746c]">
+                  <div className="mt-5 rounded-2xl border border-[#00a896]/15 bg-[#d9f7fb]/75 p-4 text-sm font-bold text-[#29483d]">
                     <div>DUPR ID: {coach.duprId ? <a className="text-[#087f73] underline" href={coach.duprProfileUrl || `https://dashboard.dupr.com/dashboard/player/${coach.duprId}`} target="_blank" rel="noreferrer">{coach.duprId} <FaExternalLinkAlt className="inline" /></a> : "Not provided"}</div>
                     <div className="mt-1">Singles: {coach.duprSingles || "Pending"} • Doubles: {coach.duprDoubles || "Pending"}</div>
                   </div>
@@ -147,12 +153,12 @@ export default function Marketplace() {
                     {(coach.packages || []).slice(0, 3).map((pkg) => (
                       <div key={pkg._id} className="flex items-center justify-between gap-3 rounded-xl bg-white/65 p-3 text-sm">
                         <span className="font-black text-[#12372a]">{pkg.title}</span>
-                        <span className="shrink-0 rounded-full bg-[#fff1c7] px-2 py-1 text-xs font-black text-[#5f746c]"><FaVideo className="mr-1 inline" /> {packageLabel(pkg)}</span>
+                        <span className="shrink-0 rounded-full bg-[#fff1c7] px-2 py-1 text-xs font-black text-[#29483d]"><FaVideo className="mr-1 inline" /> {packageLabel(pkg)}</span>
                       </div>
                     ))}
                   </div>
 
-                  <p className="mt-4 rounded-2xl bg-[#fff1c7]/80 p-3 text-xs font-black text-[#5f746c]">View plan price or request quote directly. Videos are limited to 15 minutes.</p>
+                  <p className="mt-4 rounded-2xl border border-[#d5b450]/30 bg-[#fff1c7] p-3 text-xs font-black text-[#29483d]">View plan price or request quote directly. Videos are limited to 15 minutes.</p>
 
                   <div className="mt-auto flex gap-3 pt-5">
                     {isDemo ? <Link to="/demo" className="pp-btn-secondary flex-1 px-4 py-3 text-center">Seed Demo</Link> : <Link to={`/coaches/${coach._id}`} className="pp-btn-secondary flex-1 px-4 py-3 text-center">View Profile</Link>}
