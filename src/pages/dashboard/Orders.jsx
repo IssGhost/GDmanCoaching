@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { FaCalendarCheck, FaCreditCard, FaMapMarkerAlt, FaReceipt, FaVideo } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
 import { api } from "../../lib/api";
-import { DEMO_ORDERS } from "../../lib/demoData";
 
 const FILTERS = ["all", "pending", "paid", "scheduled", "completed", "canceled"];
 
@@ -18,9 +17,10 @@ export default function DashboardOrders() {
   const { token } = useAuth();
   const [rows, setRows] = useState(null);
   const [filter, setFilter] = useState("all");
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    api.get("/orders/my", token).then((data) => setRows(data?.length ? data : DEMO_ORDERS)).catch(() => setRows(DEMO_ORDERS));
+    api.get("/orders/my", token).then((data) => setRows(Array.isArray(data) ? data : [])).catch((err) => { setError(err.message || "Orders could not be loaded."); setRows([]); });
   }, [token]);
 
   const list = useMemo(() => (rows || []).filter((o) => (filter === "all" ? true : o.status === filter)), [rows, filter]);
@@ -30,10 +30,11 @@ export default function DashboardOrders() {
 
   return (
     <div className="space-y-6">
+      {error && <div className="rounded-2xl border border-[#b94024]/20 bg-[#ffebe5] p-4 font-bold text-[#7a2b18]">{error}</div>}
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end">
         <div>
           <h1 className="text-3xl font-black text-[#12372a]">Training Orders</h1>
-          <p className="mt-1 text-sm text-[#5f746c]">Paid in-person lessons, clinics, video reviews, and hybrid coaching packages.</p>
+          <p className="mt-1 text-sm text-[#5f746c]">Paid online coaching requests, consultations, video reviews, and online coaching packages.</p>
         </div>
         <label className="flex items-center gap-2 text-sm font-bold text-[#5f746c]">
           Filter

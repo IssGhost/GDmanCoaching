@@ -35,8 +35,8 @@ const OrderSchema = new mongoose.Schema(
     stripeCheckoutUrl: String,
     paymentMode: {
       type: String,
-      enum: ["demo", "stripe_destination_charge", "stripe_separate_transfers", "manual"],
-      default: "demo",
+      enum: ["stripe_destination_charge", "stripe_separate_transfers", "manual"],
+      default: "stripe_destination_charge",
     },
     metadata: { type: Object, default: {} },
   },

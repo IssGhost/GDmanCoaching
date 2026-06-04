@@ -38,9 +38,9 @@ export default function AccountMenu() {
 
           <div className="grid p-2 text-sm font-bold">
             <button onClick={() => go("/dashboard/account")} className="rounded-xl px-4 py-2.5 text-left hover:bg-[#d9f7fb]">My Account</button>
+            <button onClick={() => go("/messages")} className="rounded-xl px-4 py-2.5 text-left hover:bg-[#d9f7fb]">Messages & Quotes</button>
             <button onClick={() => go("/dashboard/submissions")} className="rounded-xl px-4 py-2.5 text-left hover:bg-[#d9f7fb]">Training + Reviews</button>
             <button onClick={() => go("/coaches")} className="rounded-xl px-4 py-2.5 text-left hover:bg-[#d9f7fb]">Book Coaching</button>
-            <button onClick={() => go("/demo")} className="rounded-xl px-4 py-2.5 text-left hover:bg-[#d9f7fb]">Demo Center</button>
 
             {(user?.role === "coach" || user?.role === "admin") && (
               <button onClick={() => go("/coach/dashboard")} className="rounded-xl px-4 py-2.5 text-left hover:bg-[#d9f7fb]">Coach Dashboard</button>

@@ -1,9 +1,9 @@
 const router = require("express").Router();
-const crypto = require("crypto");
 const { auth, allow } = require("../middleware/auth");
 const CoachProfile = require("../models/CoachProfile");
 const VideoSubmission = require("../models/VideoSubmission");
 const VideoReview = require("../models/VideoReview");
+const { configuredClientOrigins } = require("../utils/runtimeConfig");
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
@@ -20,8 +20,8 @@ async function createCloudflareUpload(maxDurationSeconds = 3600) {
     },
     body: JSON.stringify({
       maxDurationSeconds,
-      requireSignedURLs: true,
-      allowedOrigins: process.env.CLIENT_URL ? process.env.CLIENT_URL.split(",").map((x) => x.trim()) : undefined,
+      requireSignedURLs: false,
+      allowedOrigins: configuredClientOrigins().map((origin) => new URL(origin).hostname),
     }),
   });
 
@@ -91,7 +91,7 @@ router.post(
       return res.status(400).json({ error: `Cannot upload while submission is ${row.status}` });
     }
 
-    const maxMinutes = Number(row.packageId?.maxVideoMinutes || 20);
+    const maxMinutes = Math.min(Number(row.packageId?.maxVideoMinutes || 15), 15);
     const upload = await createCloudflareUpload(maxMinutes * 60);
 
     if (upload) {
@@ -103,13 +103,7 @@ router.post(
       return res.json({ provider: "cloudflare", uploadUrl: upload.uploadURL, uploadId: upload.uid, submission: row });
     }
 
-    const demoUploadId = `demo_upload_${crypto.randomBytes(5).toString("hex")}`;
-    row.provider = "demo";
-    row.uploadUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/dashboard/submissions/${row._id}?demoUpload=${demoUploadId}`;
-    row.uploadId = demoUploadId;
-    row.status = "uploading";
-    await row.save();
-    res.json({ provider: "demo", uploadUrl: row.uploadUrl, uploadId: demoUploadId, submission: row });
+    return res.status(503).json({ error: "Video uploads are not configured. Please contact support." });
   })
 );
 
@@ -126,7 +120,13 @@ router.put(
     if (assetId !== undefined) row.assetId = assetId;
     if (playbackId !== undefined) row.playbackId = playbackId;
     if (thumbnailUrl !== undefined) row.thumbnailUrl = thumbnailUrl;
-    if (durationSeconds !== undefined) row.durationSeconds = Number(durationSeconds);
+    if (durationSeconds !== undefined) {
+      const duration = Number(durationSeconds);
+      if (duration > 15 * 60) {
+        return res.status(400).json({ error: "Videos must be 15 minutes or shorter. Please trim your clip and upload again." });
+      }
+      row.durationSeconds = duration;
+    }
     row.status = status || "ready_for_review";
     await row.save();
     res.json(row);
