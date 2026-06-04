@@ -4,6 +4,7 @@ const { auth, allow } = require("../middleware/auth");
 const CoachProfile = require("../models/CoachProfile");
 const VideoSubmission = require("../models/VideoSubmission");
 const VideoReview = require("../models/VideoReview");
+const Order = require("../models/Order");
 const { configuredClientOrigins, publicBaseUrl, envFlag } = require("../utils/runtimeConfig");
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
@@ -16,6 +17,23 @@ function videoUploadsMode() {
 
 function mockUploadsEnabled() {
   return envFlag("ENABLE_MOCK_UPLOADS") || videoUploadsMode() === "mock";
+}
+
+function safeId(value) {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  if (value._id) return String(value._id);
+  return String(value);
+}
+
+function currentUserId(req) {
+  return safeId(req.user?._id || req.user?.id);
+}
+
+function sameId(a, b) {
+  const left = safeId(a);
+  const right = safeId(b);
+  return Boolean(left && right && left === right);
 }
 
 function safeAllowedOriginHosts() {
@@ -66,11 +84,56 @@ async function createCloudflareUpload(maxDurationSeconds = 3600) {
 
 async function canAccessSubmission(req, submission) {
   if (!submission) return false;
-  if (req.user.role === "admin") return true;
-  if (String(submission.playerId) === String(req.user._id)) return true;
 
-  const coach = await CoachProfile.findOne({ userId: req.user._id });
-  return coach && String(submission.coachId) === String(coach._id);
+  const userId = currentUserId(req);
+  const role = String(req.user?.role || "").toLowerCase();
+
+  if (role === "admin") return true;
+
+  if (sameId(submission.playerId, userId)) return true;
+  if (sameId(submission.userId, userId)) return true;
+  if (sameId(submission.customerId, userId)) return true;
+
+  if (submission.orderId) {
+    const order = await Order.findById(safeId(submission.orderId)).select("userId customerId playerId coachId");
+
+    if (order) {
+      if (sameId(order.userId, userId)) return true;
+      if (sameId(order.customerId, userId)) return true;
+      if (sameId(order.playerId, userId)) return true;
+    }
+  }
+
+  const coach = await CoachProfile.findOne({ userId: userId }).select("_id");
+
+  if (coach && sameId(submission.coachId, coach._id)) return true;
+
+  return false;
+}
+
+async function canCustomerUpload(req, submission) {
+  if (!submission) return false;
+
+  const userId = currentUserId(req);
+  const role = String(req.user?.role || "").toLowerCase();
+
+  if (role === "admin") return true;
+
+  if (sameId(submission.playerId, userId)) return true;
+  if (sameId(submission.userId, userId)) return true;
+  if (sameId(submission.customerId, userId)) return true;
+
+  if (submission.orderId) {
+    const order = await Order.findById(safeId(submission.orderId)).select("userId customerId playerId");
+
+    if (order) {
+      if (sameId(order.userId, userId)) return true;
+      if (sameId(order.customerId, userId)) return true;
+      if (sameId(order.playerId, userId)) return true;
+    }
+  }
+
+  return false;
 }
 
 router.get("/config", (_req, res) => {
@@ -86,7 +149,20 @@ router.get(
   "/submissions/my",
   auth,
   asyncHandler(async (req, res) => {
-    const rows = await VideoSubmission.find({ playerId: req.user._id })
+    const userId = currentUserId(req);
+
+    const orderIds = await Order.find({
+      $or: [{ userId }, { customerId: userId }, { playerId: userId }],
+    }).distinct("_id");
+
+    const rows = await VideoSubmission.find({
+      $or: [
+        { playerId: userId },
+        { userId },
+        { customerId: userId },
+        { orderId: { $in: orderIds } },
+      ],
+    })
       .sort({ createdAt: -1 })
       .populate("coachId", "displayName headline avatarUrl rating")
       .populate("packageId", "title price reviewType turnaroundHours");
@@ -99,7 +175,8 @@ router.get(
   "/submissions/coach",
   auth,
   asyncHandler(async (req, res) => {
-    const coach = await CoachProfile.findOne({ userId: req.user._id });
+    const userId = currentUserId(req);
+    const coach = await CoachProfile.findOne({ userId });
 
     if (!coach && req.user.role !== "admin") return res.json([]);
 
@@ -124,7 +201,18 @@ router.get(
       .populate("playerId", "fullName email");
 
     if (!row) return res.status(404).json({ error: "Submission not found" });
-    if (!(await canAccessSubmission(req, row))) return res.status(403).json({ error: "Forbidden" });
+
+    const allowed = await canAccessSubmission(req, row);
+
+    if (!allowed) {
+      return res.status(403).json({
+        error: "Forbidden",
+        message: "This submission does not belong to the currently signed-in account.",
+        currentUserId: currentUserId(req),
+        submissionPlayerId: safeId(row.playerId),
+        submissionOrderId: safeId(row.orderId),
+      });
+    }
 
     const review = await VideoReview.findOne({ submissionId: row._id });
 
@@ -140,8 +228,16 @@ router.post(
 
     if (!row) return res.status(404).json({ error: "Submission not found" });
 
-    if (String(row.playerId) !== String(req.user._id) && req.user.role !== "admin") {
-      return res.status(403).json({ error: "Forbidden" });
+    const allowed = await canCustomerUpload(req, row);
+
+    if (!allowed) {
+      return res.status(403).json({
+        error: "Forbidden",
+        message: "Only the customer who bought this review can upload video for it.",
+        currentUserId: currentUserId(req),
+        submissionPlayerId: safeId(row.playerId),
+        submissionOrderId: safeId(row.orderId),
+      });
     }
 
     if (!["awaiting_upload", "uploading", "needs_revision"].includes(row.status)) {
@@ -226,8 +322,13 @@ router.put(
 
     if (!row) return res.status(404).json({ error: "Submission not found" });
 
-    if (String(row.playerId) !== String(req.user._id) && req.user.role !== "admin") {
-      return res.status(403).json({ error: "Forbidden" });
+    const allowed = await canCustomerUpload(req, row);
+
+    if (!allowed) {
+      return res.status(403).json({
+        error: "Forbidden",
+        message: "Only the customer who bought this review can attach video to it.",
+      });
     }
 
     const { videoUrl, assetId, playbackId, thumbnailUrl, durationSeconds, status } = req.body || {};
