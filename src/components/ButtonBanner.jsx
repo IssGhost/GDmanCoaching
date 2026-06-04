@@ -40,7 +40,7 @@ export default function ButtonBanner() {
   const buttons = [
     { label: "Home", href: "/", icon: Home },
     { label: "Book Service", href: "/contact", icon: PhoneCall },
-    { label: "Pay Bill", href: "/payments", icon: CreditCard },
+    { label: "Pricing Info", href: "/payments", icon: CreditCard },
     { label: "Services", href: "/services", icon: Wrench },
     { label: "Testimonials", href: "/testimonials", icon: Users },
     { label: "FAQ", href: "/faq", icon: MessageCircle },
@@ -49,7 +49,7 @@ export default function ButtonBanner() {
   return (
     <div
       className={`sticky top-0 z-40 backdrop-blur-sm shadow-md border-b border-gray-200 transition-all duration-300 ${
-        scrolled ? "bg-septic-green/95" : "bg-septic-beige/90"
+        scrolled ? "bg-emerald-700/95" : "bg-[#fff8e7]/90"
       }`}
     >
       <div

@@ -17,6 +17,7 @@ import FAQ from "./pages/FAQ";
 import Testimonials from "./pages/Testimonials";
 import Contact from "./pages/Contact";
 import Payments from "./pages/Payments";
+import Messages from "./pages/Messages";
 import Marketplace from "./pages/Marketplace";
 import CoachProfile from "./pages/CoachProfile";
 import CoachSignup from "./pages/CoachSignup";
@@ -43,6 +44,7 @@ import DashboardAdmin from "./pages/DashboardAdmin";
 
 // Admin screens
 import AdminUsers from "./pages/AdminUsers";
+import AdminDatabase from "./pages/AdminDatabase";
 
 // Dashboard with nested tabs
 import DashboardLayout from "./pages/dashboard/DashboardLayout";
@@ -75,6 +77,7 @@ export default function App() {
                 <Route path="/testimonials" element={<Testimonials />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/payments" element={<Payments />} />
+                <Route path="/messages" element={<PrivateRoute><Messages /></PrivateRoute>} />
                 <Route path="/marketplace" element={<Marketplace />} />
                 <Route path="/coaches" element={<Marketplace />} />
                 <Route path="/coaches/session-split" element={<CoachSessionSplit />} />
@@ -119,6 +122,15 @@ export default function App() {
                   element={
                     <RoleRoute allow={["admin"]}>
                       <AdminUsers />
+                    </RoleRoute>
+                  }
+                />
+
+                <Route
+                  path="/admin/database"
+                  element={
+                    <RoleRoute allow={["admin"]}>
+                      <AdminDatabase />
                     </RoleRoute>
                   }
                 />

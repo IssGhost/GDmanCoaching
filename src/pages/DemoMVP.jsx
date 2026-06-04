@@ -19,7 +19,7 @@ const credentials = [
     username: "coach",
     password: "coach",
     path: "/coach/dashboard",
-    description: "Coach packages, review queue, lesson notes, and payout activity.",
+    description: "Coach packages, review queue, review notes, and review activity.",
   },
   {
     role: "Admin",
@@ -27,17 +27,17 @@ const credentials = [
     username: "admin",
     password: "admin",
     path: "/admin/coaching",
-    description: "Coach approvals, submissions, platform activity, and payment splits.",
+    description: "Coach approvals, submissions, platform activity, and coach records.",
   },
 ];
 
 const featureCards = [
-  "In-person training bookings",
+  "Online coaching bookings",
   "Online video submissions",
   "Coach review workflow",
   "Timestamped feedback",
   "Package management",
-  "Split-payment tracking",
+  "Coach workflow tracking",
 ];
 
 export default function DemoMVP() {
@@ -73,7 +73,7 @@ export default function DemoMVP() {
         </div>
 
         <h1 className="text-4xl font-black text-[#12372a] md:text-6xl">
-          PicklePro Coach control center.
+          GOOD Coaching control center.
         </h1>
 
         <p className="mx-auto mt-4 max-w-3xl text-lg leading-8 text-[#5f746c]">
@@ -86,7 +86,7 @@ export default function DemoMVP() {
           <div>
             <h2 className="text-2xl font-black text-[#12372a]">System records</h2>
             <p className="mt-1 text-sm leading-6 text-[#5f746c]">
-              Prepare the platform with current customers, coaches, bookings, reviews, and payment activity.
+              Prepare the platform with current customers, coaches, bookings, reviews, and review activity.
             </p>
           </div>
 
