@@ -34,8 +34,8 @@ export default function DashboardLayout() {
                 Orders
               </NavLink>
 
-              <NavLink to="/dashboard/quotes" className={({ isActive }) => `${item} ${isActive ? active : hover}`}>
-                Requests
+              <NavLink to="/messages" className={({ isActive }) => `${item} ${isActive ? active : hover}`}>
+                Personalized Requests
               </NavLink>
 
               <NavLink to="/dashboard/submissions" className={({ isActive }) => `${item} ${isActive ? active : hover}`}>

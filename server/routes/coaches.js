@@ -109,7 +109,6 @@ router.post(
       duprDoubles: body.duprDoubles === "" || body.duprDoubles === undefined ? null : Number(body.duprDoubles),
       socialLinks: cleanSocialLinks(body),
       turnaroundHours: Number(body.turnaroundHours || 48),
-      avatarUrl: body.avatarUrl || "",
       introVideoUrl: body.introVideoUrl || "",
     };
 

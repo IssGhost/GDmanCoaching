@@ -45,17 +45,18 @@ import AdminDatabase from "./pages/AdminDatabase";
 import DashboardLayout from "./pages/dashboard/DashboardLayout";
 import DashboardAccount from "./pages/dashboard/Account";
 import DashboardOrders from "./pages/dashboard/Orders";
-import DashboardQuotes from "./pages/dashboard/Quotes";
 import AdminOrders from "./pages/AdminOrders";
 import AdminQuotes from "./pages/AdminQuotes";
 import AdminBlog from "./pages/AdminBlog";
 import AdminBlogEditor from "./pages/AdminBlogEditor";
 import AdminTestimonials from "./pages/AdminTestimonials";
 import AdminTickets from "./pages/AdminTickets";
+import ScrollToTop from "./components/ScrollToTop";
 
 export default function App() {
   return (
     <Router>
+      <ScrollToTop />
       <ToastProvider>
         <AuthProvider>
           <div className="flex min-h-screen flex-col bg-[#fff8e7] text-[#12372a]">
@@ -224,7 +225,7 @@ export default function App() {
                   <Route index element={<Navigate to="account" replace />} />
                   <Route path="account" element={<DashboardAccount />} />
                   <Route path="orders" element={<DashboardOrders />} />
-                  <Route path="quotes" element={<DashboardQuotes />} />
+                  <Route path="quotes" element={<Navigate to="/messages" replace />} />
                   <Route path="submissions" element={<PlayerSubmissions />} />
                   <Route path="submissions/:id" element={<SubmissionDetail />} />
                 </Route>

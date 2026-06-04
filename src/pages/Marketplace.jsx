@@ -50,7 +50,7 @@ export default function Marketplace() {
             <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
               <label className="relative">
                 <FaSearch className="absolute left-3 top-3.5 text-[#5f746c]" />
-                <input value={query} onChange={(e) => setQuery(e.target.value)} className="pp-input py-3 pl-10 pr-3" placeholder="Search coach, DUPR ID, skill..." />
+                <input value={query} onChange={(e) => setQuery(e.target.value)} className="pp-input py-3 pl-10 pr-3" placeholder="Search Coaches" />
               </label>
               <label className="relative">
                 <FaFilter className="absolute left-3 top-3.5 text-[#5f746c]" />
@@ -105,7 +105,8 @@ export default function Marketplace() {
 
                   <div className="mt-5 rounded-2xl border border-[#00a896]/15 bg-[#d9f7fb]/75 p-4 text-sm font-bold text-[#29483d]">
                     <div>DUPR ID: {coach.duprId ? <a className="text-[#087f73] underline" href={coach.duprProfileUrl || `https://dashboard.dupr.com/dashboard/player/${coach.duprId}`} target="_blank" rel="noreferrer">{coach.duprId} <FaExternalLinkAlt className="inline" /></a> : "Not provided"}</div>
-                    <div className="mt-1">Singles: {coach.duprSingles || "Pending"} • Doubles: {coach.duprDoubles || "Pending"}</div>
+                    <div className="mt-1">Singles: {coach.duprSingles ?? "Not provided"} • Doubles: {coach.duprDoubles ?? "Not provided"}</div>
+                    {coach.duprId && <div className="mt-1 text-xs font-semibold">Ratings are coach-entered. Open the DUPR profile to verify current ratings.</div>}
                   </div>
 
                   <div className="mt-5 flex flex-wrap gap-2">

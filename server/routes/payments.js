@@ -179,7 +179,7 @@ router.post(
     if (!clientUrl) return res.status(503).json({ error: "The public website URL is not configured yet. Please contact support." });
     const split = buildSplit({
       total,
-      platformFeePercent: coach.defaultPlatformFeePercent || 15,
+      platformFeePercent: 10,
       coach,
       manualSplits: splitRecipients,
     });
@@ -281,7 +281,7 @@ router.post(
     if (existing?.stripeCheckoutUrl && existing.status === "pending") return res.json({ checkoutUrl: existing.stripeCheckoutUrl, order: existing });
     if (existing?.status === "paid") return res.status(400).json({ error: "This quote has already been paid." });
 
-    const split = buildSplit({ total, platformFeePercent: coach.defaultPlatformFeePercent || 15, coach });
+    const split = buildSplit({ total, platformFeePercent: 10, coach });
     const order = await Order.create({ userId: req.user._id, coachId: coach._id, number: createOrderNumber(), orderType: "coaching", items: [{ name: inquiry.subject, price: total, qty: 1, tag: "custom_quote" }], status: "pending", subtotal: total, tax: 0, total, platformFee: split.platformFee, paymentMode: "stripe_destination_charge", metadata: { inquiryId: String(inquiry._id) } });
     const submission = await VideoSubmission.create({ playerId: req.user._id, coachId: coach._id, orderId: order._id, title: inquiry.subject, description: inquiry.quote.scope || "", status: "awaiting_payment", dueAt: new Date(Date.now() + Number(coach.turnaroundHours || 72) * 60 * 60 * 1000) });
     order.submissionId = submission._id;

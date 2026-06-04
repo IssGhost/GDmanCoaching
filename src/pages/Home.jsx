@@ -3,12 +3,12 @@ import { FaCheckCircle, FaCloudUploadAlt, FaCreditCard, FaPlay, FaStar, FaSun, F
 
 const steps = [
   { title: "Pick a coach", text: "Choose a coach by skill level, specialty, package, and turnaround time." },
-  { title: "Send a request", text: "Share your goals, skill level, and Extra Notes so the coach knows what to review." },
+  { title: "Send a request", text: "Share your goals, skill level, and extra notes so the coach knows what to review." },
   { title: "Upload video", text: "Submit your match footage directly through the site after booking." },
   { title: "Get reviewed", text: "Receive timestamped notes, drills, strengths, and a complete improvement plan." },
 ];
 
-const specialties = ["Doubles rotation", "Third-shot drops", "Serve + return", "Kitchen resets", "Tournament prep", "Beginner fundamentals"];
+const specialties = ["Doubles strategy", "Third-shot selection", "Serve + return", "Resets", "Tournament prep", "Beginner fundamentals", "Singles strategy", "Advanced shots"];
 
 export default function Home() {
   return (
@@ -37,8 +37,8 @@ export default function Home() {
               </Link>
             </div>
             <div className="mt-8 grid gap-3 text-sm font-bold text-[#5f746c] sm:grid-cols-3">
-              {["Direct coach communication", "Private video submissions", "Timestamped improvement plans"].map((item) => (
-                <div key={item} className="flex items-center gap-2"><FaCheckCircle className="text-[#00a896]" /> {item}</div>
+              {["Direct coach communication", "Private video submissions", "Timestamped improvement plans", "Personalized drill plans", "Live coach chat", "Training packages"].map((item) => (
+                <div key={item} className="flex items-center gap-2 whitespace-nowrap"><FaCheckCircle className="shrink-0 text-[#00a896]" /> {item}</div>
               ))}
             </div>
           </div>
@@ -79,7 +79,7 @@ export default function Home() {
         <div className="grid gap-5 md:grid-cols-3">
           {[
             { icon: FaCreditCard, title: "Coach profiles", text: "Profiles support photos, bios, DUPR details, specializations, and social links." },
-            { icon: FaCloudUploadAlt, title: "Video submission", text: "Secure video uploads with a 15-minute limit for focused coach reviews." },
+            { icon: FaCloudUploadAlt, title: "Video submission", text: "Upload up to 15 minutes of gameplay for your coach to review." },
             { icon: FaUserTie, title: "Coach dashboard", text: "Coaches manage online options, assigned videos, profile details, and completed reviews." },
           ].map((card) => (
             <div key={card.title} className="pp-card-solid rounded-3xl p-6 transition hover:-translate-y-1 hover:shadow-xl">
@@ -116,7 +116,7 @@ export default function Home() {
             <div>
               <div className="flex text-[#ff7b54]"><FaStar /><FaStar /><FaStar /><FaStar /><FaStar /></div>
               <h2 className="mt-3 text-3xl font-black text-[#12372a]">Built for busy coaches and players who want real online feedback.</h2>
-              <p className="mt-3 leading-7 text-[#5f746c]">The backend supports coach profiles, coaching options, video submissions, and reviews.</p>
+              <p className="mt-3 leading-7 text-[#5f746c]">Choose a coach, upload your gameplay, and receive clear feedback you can use in your next practice or match.</p>
             </div>
             <div className="flex flex-wrap gap-3">
               {specialties.map((item) => (

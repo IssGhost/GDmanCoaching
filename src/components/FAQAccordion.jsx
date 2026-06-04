@@ -7,11 +7,11 @@ const faqs = [
   },
   {
     q: "What do players provide when creating an account?",
-    a: "Players create an account with their name, email address, and password. When requesting coaching, they can add skill level, goals, video context, and Extra Notes for the coach.",
+    a: "Players create an account with their name, email address, and password. When requesting coaching, they can add skill level, goals, video context, and extra notes for the coach.",
   },
   {
     q: "What do coaches provide when applying?",
-    a: "Coaches create the same basic account, then submit full name, email, phone, location, playing and coaching experience, organization or club affiliation, specializations, DUPR ID, biography, profile photo, and optional social links.",
+    a: "Coaches create the same basic account, then submit full name, email, phone, location, playing and coaching experience, organization or club affiliation, specializations, DUPR ID, biography, and optional social links.",
   },
   {
     q: "What skill levels are supported?",
@@ -28,10 +28,6 @@ const faqs = [
   {
     q: "How quickly should coaches respond?",
     a: "Please allow 1–3 business days for coaches to review and respond to inquiries.",
-  },
-  {
-    q: "Will this automatically become a mobile app?",
-    a: "The website is responsive and supports a mobile-friendly browser experience. A dedicated native mobile app would be a separate project with its own design, build, app store, and maintenance work.",
   },
 ];
 

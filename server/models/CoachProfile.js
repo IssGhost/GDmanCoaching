@@ -41,7 +41,7 @@ const coachProfileSchema = new mongoose.Schema(
     stripeAccountId: { type: String, default: "" },
     stripeOnboardingComplete: { type: Boolean, default: false },
     payoutsEnabled: { type: Boolean, default: false },
-    defaultPlatformFeePercent: { type: Number, default: 15 },
+    defaultPlatformFeePercent: { type: Number, default: 10 },
     splitRules: [
       {
         label: String,

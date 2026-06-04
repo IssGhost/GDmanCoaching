@@ -29,6 +29,11 @@ const offerings = [
     text: "Use online coaching to discuss tournament preparation, doubles strategy, serve/return choices, or mental-game priorities.",
     items: ["Strategy questions", "Skill development guidance", "Goal setting", "Clear next steps"],
   },
+  {
+    title: "Personalized requests",
+    text: "Need something that is not listed? Tell a coach what you need, discuss the details, and receive a custom quote before paying.",
+    items: ["Describe your goals", "Chat with a coach", "Review the custom quote", "Approve before payment"],
+  },
 ];
 
 export default function Services() {
@@ -73,7 +78,7 @@ export default function Services() {
       <section className="mx-auto mt-10 max-w-6xl rounded-[2rem] border border-[#12372a]/10 bg-gradient-to-br from-[#fffef8] via-[#d9f7fb] to-[#fff1c7] p-8 shadow-2xl shadow-[#12372a]/10">
         <h2 className="text-3xl font-black text-[#12372a]">What coaches can deliver</h2>
         <div className="mt-6 grid gap-4 md:grid-cols-2">
-          {["Video analysis", "Match reviews", "Personalized training plans", "Strategy consultations", "Skill development guidance", "Strengths and weaknesses", "Voice-recorded analysis", "Transcript PDFs", "Downloadable drill plans", "Monthly customized programs", "Package discounts", "Player dashboard archive"].map((item) => (
+          {["Video analysis", "Match reviews", "Personalized training plans", "Strategy consultations", "Skill development guidance", "Strengths and weaknesses", "Voice-recorded analysis", "Transcript PDFs", "Downloadable drill plans", "Monthly customized programs", "Package discounts", "Personalized requests and custom quotes", "Player dashboard archive"].map((item) => (
             <div key={item} className="flex gap-3 rounded-xl bg-white/70 p-4 font-bold text-[#5f746c]"><FaCheckCircle className="mt-1 text-[#00a896]" /> {item}</div>
           ))}
         </div>

@@ -91,8 +91,9 @@ export default function CoachProfile() {
 
               <div className="mt-6 grid gap-3 rounded-2xl border border-[#00a896]/20 bg-[#eaf9f7] p-4 text-sm text-[#29483d] sm:grid-cols-2">
                 <ProfileFact label="DUPR ID" value={coach.duprId ? <a className="font-bold underline" href={coach.duprProfileUrl || `https://dashboard.dupr.com/dashboard/player/${coach.duprId}`} target="_blank" rel="noreferrer">{coach.duprId} <FaExternalLinkAlt className="inline" /></a> : "Not provided"} />
-                <ProfileFact label="Singles" value={coach.duprSingles || "Pending"} />
-                <ProfileFact label="Doubles" value={coach.duprDoubles || "Pending"} />
+                <ProfileFact label="Singles" value={coach.duprSingles ?? "Not provided"} />
+                <ProfileFact label="Doubles" value={coach.duprDoubles ?? "Not provided"} />
+                {coach.duprId && <div className="md:col-span-2 text-xs font-semibold text-[#40584f]">Ratings are entered by the coach. Open the linked DUPR profile to verify current ratings.</div>}
                 <ProfileFact label="Location" value={[coach.city, coach.state, coach.country].filter(Boolean).join(", ") || "Online"} />
               </div>
 
@@ -135,7 +136,7 @@ export default function CoachProfile() {
               <Field label="Submission title"><input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} className="pp-input mt-1 px-4 py-3" placeholder="Doubles match from Saturday" /></Field>
               <Field label="Skill level"><select value={form.skillLevel} onChange={(e) => setForm((f) => ({ ...f, skillLevel: e.target.value }))} className="pp-input mt-1 px-4 py-3"><option value="">Select level</option><option>Beginner (2.5–3.0)</option><option>Intermediate (3.0–4.0)</option><option>Advanced (4.0–5.0)</option><option>Elite (5.0+)</option></select></Field>
               <Field label="Main goals" wide><textarea value={form.goals} onChange={(e) => setForm((f) => ({ ...f, goals: e.target.value }))} rows={3} className="pp-input mt-1 px-4 py-3" placeholder="Example: help me fix my third shot drop and stop getting caught at the baseline." /></Field>
-              <Field label="Extra Notes" wide><textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={6} maxLength={5000} className="pp-input mt-1 px-4 py-3" placeholder="Opponent level, tournament goals, injury limitations, coaching preferences, and expectations." /></Field>
+              <Field label="Extra notes" wide><textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={6} maxLength={5000} className="pp-input mt-1 px-4 py-3" placeholder="Opponent level, tournament goals, injury limitations, coaching preferences, and expectations." /></Field>
             </div>
             <div className="mt-5 rounded-2xl border border-[#087f73]/25 bg-[#d9f7fb] p-4 text-sm font-bold leading-6 text-[#20483c]">Please allow 1–3 business days for coaches to review and respond. Uploaded videos are limited to 15 minutes. Pricing and scope are shown by the coach or finalized through a custom quote you approve before payment.</div>
             <button onClick={checkout} disabled={busy || !selectedPackage} className="pp-btn-primary mt-6 w-full px-6 py-4 disabled:opacity-60">{busy ? "Creating request..." : selectedPackage ? `Request ${selectedPackage.title}` : "Select an option"}</button>

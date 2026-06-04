@@ -8,6 +8,8 @@ import { imageFileToDataUrl } from "../lib/uploads";
 
 const COACHING_SKILL_LEVELS = ["Beginner (2.5–3.0)", "Intermediate (3.0–4.0)", "Advanced (4.0–5.0)", "Elite (5.0+)"];
 
+const COACHING_SKILL_LEVELS = ["Beginner (2.5–3.0)", "Intermediate (3.0–4.0)", "Advanced (4.0–5.0)", "Elite (5.0+)"];
+
 export default function CoachSignup() {
   const { user, token, reloadUser } = useAuth();
   const nav = useNavigate();
@@ -32,7 +34,6 @@ export default function CoachSignup() {
     instagram: "",
     youtube: "",
     website: "",
-    avatarUrl: "",
     bio: "",
     turnaroundHours: 72,
   });
@@ -75,10 +76,10 @@ export default function CoachSignup() {
           <p className="font-bold uppercase tracking-[0.2em] text-emerald-300">Coach application</p>
           <h1 className="mt-3 text-4xl font-black">Apply to coach online through GOOD Coaching.</h1>
           <p className="mt-4 leading-7 text-gray-300">
-            Create a public profile for remote video analysis, match reviews, strategy consultations, and personalized training plans. Coaches enter plan prices and can send a custom quote after discussing the requested scope.
+            Create a public profile for remote video analysis, match reviews, strategy consultations, and personalized training plans. Coaches receive 90% of each completed sale; GOOD Coaching withholds a 10% operating fee. Coaches enter plan prices and can send a custom quote after discussing the requested scope.
           </p>
           <div className="mt-6 space-y-3 text-sm text-gray-300">
-            {["Profile photo, bio, DUPR ID, and social links", "Skill categories based on DUPR ratings", "Online-only coaching services", "15-minute video upload limit", "1–3 business day response expectation"].map((item) => (
+            {["Bio, DUPR ID, and social links", "Skill categories based on DUPR ratings", "Online-only coaching services", "15-minute video upload limit", "1–3 business day response expectation"].map((item) => (
               <div key={item} className="flex gap-2"><FaCheckCircle className="mt-0.5 text-emerald-300" /> {item}</div>
             ))}
           </div>
@@ -99,11 +100,6 @@ export default function CoachSignup() {
             <Field label="Full Name" value={form.displayName} onChange={(v) => update("displayName", v)} required />
             <Field label="Email Address" type="email" value={form.email} onChange={(v) => update("email", v)} required />
             <Field label="Phone Number" value={form.phone} onChange={(v) => update("phone", v)} required />
-            <label className="block md:col-span-2">
-              <span className="text-sm text-gray-400">Profile Photo Upload</span>
-              <input type="file" accept="image/*" onChange={(e) => uploadProfilePhoto(e.target.files?.[0])} className="mt-1 w-full rounded-xl border border-white/10 bg-black p-3 file:mr-4 file:rounded-full file:border-0 file:bg-emerald-400 file:px-4 file:py-2 file:font-black file:text-black" />
-              {form.avatarUrl && <img src={form.avatarUrl} alt="Coach profile preview" className="mt-3 h-44 w-full rounded-2xl object-cover" />}
-            </label>
             <Field label="City" value={form.city} onChange={(v) => update("city", v)} required />
             <Field label="State" value={form.state} onChange={(v) => update("state", v)} required />
             <Field label="Country" value={form.country} onChange={(v) => update("country", v)} required />
@@ -122,6 +118,7 @@ export default function CoachSignup() {
             <Field label="DUPR ID" value={form.duprId} onChange={(v) => update("duprId", v)} placeholder="Example: 7DVMM4" />
             <Field label="DUPR Singles Rating" type="number" step="0.001" value={form.duprSingles} onChange={(v) => update("duprSingles", v)} />
             <Field label="DUPR Doubles Rating" type="number" step="0.001" value={form.duprDoubles} onChange={(v) => update("duprDoubles", v)} />
+            <p className="text-xs leading-5 text-gray-400 md:col-span-2">Enter the current ratings shown on your DUPR profile. The DUPR ID creates a verification link but does not automatically sync ratings.</p>
             <Field label="Areas of Specialization" value={form.specialties} required onChange={(v) => update("specialties", v)} className="md:col-span-2" />
             <label className="block md:col-span-2">
               <span className="text-sm text-gray-400">Coaching Skill Levels</span>

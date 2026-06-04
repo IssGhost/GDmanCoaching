@@ -23,7 +23,7 @@ export default function Payments() {
 
       <section className="mx-auto mt-10 grid max-w-6xl gap-5 md:grid-cols-3">
         <Card icon={<FaVideo />} title="Upload focused footage" text="Players submit online videos up to 15 minutes so coaches can evaluate the most important moments." />
-        <Card icon={<FaCommentDots />} title="Discuss expectations" text="Use goals and Extra Notes to explain what you want the coach to review before they respond." />
+        <Card icon={<FaCommentDots />} title="Discuss expectations" text="Use goals and extra notes to explain what you want the coach to review before they respond." />
         <Card icon={<FaCloudUploadAlt />} title="Coach responds" text="Please allow 1–3 business days for coaches to review and respond to inquiries." />
       </section>
 
