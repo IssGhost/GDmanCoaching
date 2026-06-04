@@ -161,16 +161,16 @@ router.post(
       number: createOrderNumber(),
       orderType: "coaching",
       items: [{ packageId: String(pkg._id), name: pkg.title, price: total, qty: 1, tag: pkg.reviewType }],
-      status: process.env.STRIPE_SECRET_KEY ? "pending" : "paid",
+      status: process.env.STRIPE_SECRET_KEY && total > 0 ? "pending" : "paid",
       subtotal: total,
       tax: 0,
       total,
       platformFee: split.platformFee,
-      paymentMode: process.env.STRIPE_SECRET_KEY
+      paymentMode: process.env.STRIPE_SECRET_KEY && total > 0
         ? split.chargeType === "separate_charges_and_transfers"
           ? "stripe_separate_transfers"
           : "stripe_destination_charge"
-        : "demo",
+        : "direct_coach_pricing",
       metadata: { goals, skillLevel },
     });
 
@@ -184,7 +184,7 @@ router.post(
       description: description || "",
       goals: goals || "",
       skillLevel: skillLevel || "",
-      status: process.env.STRIPE_SECRET_KEY ? "awaiting_payment" : "awaiting_upload",
+      status: process.env.STRIPE_SECRET_KEY && total > 0 ? "awaiting_payment" : "awaiting_upload",
       dueAt,
     });
 
@@ -196,14 +196,14 @@ router.post(
       chargeType: split.chargeType,
       platformFee: split.platformFee,
       recipients: split.recipients,
-      status: process.env.STRIPE_SECRET_KEY ? "pending" : "paid",
+      status: process.env.STRIPE_SECRET_KEY && total > 0 ? "pending" : "paid",
       notes: split.chargeType === "separate_charges_and_transfers" ? "Multiple recipient split configured." : "Primary coach payout configured.",
     });
 
     let checkoutUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/dashboard/submissions/${submission._id}`;
     let stripeSession = null;
 
-    if (process.env.STRIPE_SECRET_KEY) {
+    if (process.env.STRIPE_SECRET_KEY && total > 0) {
       const success = `${process.env.CLIENT_URL || "http://localhost:5173"}/dashboard/submissions/${submission._id}?paid=1`;
       const cancel = `${process.env.CLIENT_URL || "http://localhost:5173"}/coaches/${coach._id}?canceled=1`;
       const sessionBody = {

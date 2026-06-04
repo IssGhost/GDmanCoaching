@@ -4,9 +4,10 @@ import { FaCheckCircle, FaClipboardList, FaCloudUploadAlt, FaExternalLinkAlt, Fa
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
+import { documentFileToDataUrl } from "../lib/uploads";
 import { DEMO_REVIEWS_BY_PHASE, getDemoSubmission, normalizePhase } from "../lib/demoData";
 
-const blankReview = { summary: "", strengths: "", improvements: "", drills: "", finalNotes: "", responseVideoUrl: "" };
+const blankReview = { summary: "", strengths: "", improvements: "", drills: "", finalNotes: "", responseVideoUrl: "", voiceRecordingUrl: "", transcriptPdfUrl: "", drillPlanPdfUrl: "" };
 
 function formatTime(seconds = 0) {
   const s = Math.max(0, Number(seconds || 0));
@@ -204,8 +205,8 @@ function CoachAwaitingUpload({ submission }) {
         <div className="mt-5 grid gap-3">
           {[
             "Message the player to upload footage.",
-            "Confirm what angle or court view is needed.",
-            "Schedule the in-person portion of the hybrid package.",
+            "Confirm what angle or camera view is needed.",
+            "Schedule the online portion of the online coaching option.",
             "Wait until status becomes Ready For Review.",
           ].map((item) => (
             <div key={item} className="flex gap-3 rounded-2xl bg-[#fff8e7] p-4 text-sm leading-6 text-[#5f746c]">
@@ -247,7 +248,7 @@ function CoachReadyReview({
         )}
 
         <form onSubmit={addComment} className="mt-5 rounded-2xl border border-[#12372a]/10 bg-[#fff8e7] p-4">
-          <h3 className="font-black text-[#12372a]">Add timestamped note or lesson note</h3>
+          <h3 className="font-black text-[#12372a]">Add timestamped note or review note</h3>
           <div className="mt-3 grid gap-3 sm:grid-cols-[120px_180px_1fr_auto]">
             <input
               type="number"
@@ -265,13 +266,13 @@ function CoachReadyReview({
               <option>Kitchen</option>
               <option>Doubles rotation</option>
               <option>Shot selection</option>
-              <option>In-person lesson</option>
+              <option>Online coaching request</option>
             </select>
             <input
               value={comment.comment}
               onChange={(e) => setComment((c) => ({ ...c, comment: e.target.value }))}
               className="pp-input px-4 py-3"
-              placeholder="Write coach feedback for this moment or lesson segment"
+              placeholder="Write coach feedback for this moment or review segment"
             />
             <button disabled={busy} className="pp-btn-secondary px-4 py-3"><FaPlus /></button>
           </div>
@@ -288,7 +289,7 @@ function CoachReadyReview({
       </section>
 
       <section className="rounded-[2rem] border border-[#12372a]/10 bg-white/84 p-5 shadow-xl shadow-[#12372a]/8 backdrop-blur">
-        <h2 className="text-xl font-black text-[#12372a]">Written review / lesson recap</h2>
+        <h2 className="text-xl font-black text-[#12372a]">Written review / review recap</h2>
         <div className="mt-4 grid gap-3">
           <Field label="Summary" value={reviewForm.summary} onChange={(value) => setReviewForm((f) => ({ ...f, summary: value }))} />
           <Field label="Strengths" value={reviewForm.strengths} onChange={(value) => setReviewForm((f) => ({ ...f, strengths: value }))} />
@@ -296,10 +297,13 @@ function CoachReadyReview({
           <Field label="Recommended drills" value={reviewForm.drills} onChange={(value) => setReviewForm((f) => ({ ...f, drills: value }))} />
           <Field label="Final notes" value={reviewForm.finalNotes} onChange={(value) => setReviewForm((f) => ({ ...f, finalNotes: value }))} />
 
-          <label className="block">
-            <span className="text-sm font-black text-[#12372a]">Optional response video URL</span>
-            <input value={reviewForm.responseVideoUrl} onChange={(e) => setReviewForm((f) => ({ ...f, responseVideoUrl: e.target.value }))} className="pp-input mt-1 px-4 py-3" />
-          </label>
+          <div className="rounded-2xl border border-[#12372a]/10 bg-[#fff8e7] p-4">
+            <h3 className="font-black text-[#12372a]">Upload coach deliverables</h3>
+            <p className="mt-1 text-sm text-[#5f746c]">Add voice analysis, a transcript PDF, and/or a downloadable drill plan PDF. Files must be 12 MB or smaller.</p>
+            <div className="mt-3 grid gap-3">
+              {[['voiceRecordingUrl','audio','Voice analysis recording','audio/*'],['transcriptPdfUrl','pdf','Transcript PDF','application/pdf'],['drillPlanPdfUrl','pdf','Drill plan PDF','application/pdf']].map(([key,kind,label,accept]) => <label key={key} className="block text-sm font-black text-[#12372a]">{label}<input type="file" accept={accept} onChange={async(e)=>{try{const url=await documentFileToDataUrl(e.target.files?.[0],kind);setReviewForm(f=>({...f,[key]:url}));}catch(err){push(err.message,'error')}}} className="pp-input mt-1 px-4 py-3"/>{reviewForm[key] && <span className="mt-1 block text-xs text-[#087f73]">Ready to save</span>}</label>)}
+            </div>
+          </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <button onClick={saveDraft} disabled={busy} className="pp-btn-secondary px-4 py-3 disabled:opacity-60" type="button">
@@ -334,6 +338,7 @@ function CoachCompletedReview({ submission, review, videoSrc }) {
           <Info title="Needs work" value={review?.improvements} />
           <Info title="Drills" value={review?.drills} />
           <Info title="Final notes" value={review?.finalNotes} />
+          <Deliverables review={review} />
         </div>
       </section>
     </div>
@@ -372,4 +377,9 @@ function Info({ title, value }) {
       <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#5f746c]">{value || "—"}</p>
     </div>
   );
+}
+function Deliverables({ review }) {
+  const items = [[review?.voiceRecordingUrl,"Download voice analysis","coach-analysis.webm"],[review?.transcriptPdfUrl,"Download transcript PDF","coach-transcript.pdf"],[review?.drillPlanPdfUrl,"Download drill plan PDF","drill-plan.pdf"]].filter(([url])=>url);
+  if (!items.length) return null;
+  return <div className="rounded-2xl border border-[#00a896]/25 bg-[#d9f7fb] p-4"><h3 className="font-black text-[#12372a]">Downloadable deliverables</h3><div className="mt-2 flex flex-wrap gap-2">{items.map(([url,label,name])=><a key={label} href={url} download={name} className="pp-btn-secondary px-3 py-2 text-sm">{label}</a>)}</div></div>;
 }

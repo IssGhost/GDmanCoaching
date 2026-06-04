@@ -27,7 +27,7 @@ const quickAccess = [
     email: "coach",
     password: "coach",
     start: "/coach/dashboard",
-    text: "Packages, submissions, review queue, and payouts.",
+    text: "Packages, submissions, review queue, and profile tools.",
   },
   {
     role: "Admin",
@@ -102,7 +102,7 @@ export default function SignIn() {
             <h2 className="text-4xl font-black text-white">Access the full coaching platform.</h2>
 
             <p className="mt-4 leading-7 text-white/85">
-              Use quick access to enter the customer, coach, and admin workspaces for in-person training, video review, and split-payment tracking.
+              Use quick access to enter the customer, coach, and admin workspaces for online coaching, video review, and coach workflow tracking.
             </p>
 
             <div className="mt-8 grid gap-3 text-sm font-bold text-white/90">
@@ -122,7 +122,7 @@ export default function SignIn() {
             <h1 className="text-3xl font-black text-[#12372a]">Sign in</h1>
 
             <p className="mt-2 text-sm leading-6 text-[#5f746c]">
-              Access bookings, in-person sessions, video reviews, coach payouts, split payments, and admin controls.
+              Access bookings, online coaching sessions, video reviews, coach dashboards and admin controls.
             </p>
           </div>
 

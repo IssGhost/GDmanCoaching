@@ -7,9 +7,58 @@ const Quote = require("../models/Quote");
 const CoachProfile = require("../models/CoachProfile");
 const VideoSubmission = require("../models/VideoSubmission");
 const PaymentSplit = require("../models/PaymentSplit");
+const BlogPost = require("../models/BlogPost");
+const CoachingPackage = require("../models/CoachingPackage");
+const Post = require("../models/Post");
+const Testimonial = require("../models/Testimonial");
+const VideoReview = require("../models/VideoReview");
 const { auth, allow } = require("../middleware/auth");
 
 router.use(auth, allow("admin"));
+
+const databaseCollections = [
+  { key: "users", label: "Users", model: User, select: "-passwordHash" },
+  { key: "coachProfiles", label: "Coach Profiles", model: CoachProfile },
+  { key: "coachingPackages", label: "Coaching Packages", model: CoachingPackage },
+  { key: "orders", label: "Orders", model: Order },
+  { key: "paymentSplits", label: "Payment Splits", model: PaymentSplit },
+  { key: "videoSubmissions", label: "Video Submissions", model: VideoSubmission },
+  { key: "videoReviews", label: "Video Reviews", model: VideoReview },
+  { key: "quotes", label: "Quotes", model: Quote },
+  { key: "tickets", label: "Support Tickets", model: Ticket },
+  { key: "products", label: "Products", model: Product },
+  { key: "blogPosts", label: "Blog Posts", model: BlogPost },
+  { key: "posts", label: "Posts", model: Post },
+  { key: "testimonials", label: "Testimonials", model: Testimonial },
+];
+
+const serializeDoc = (doc) => {
+  const obj = doc?.toObject ? doc.toObject({ getters: true, virtuals: false }) : doc;
+  if (obj?.passwordHash) delete obj.passwordHash;
+  return obj;
+};
+
+router.get("/database", async (req, res) => {
+  const limit = Math.min(Math.max(Number(req.query.limit) || 25, 1), 100);
+
+  const collections = await Promise.all(
+    databaseCollections.map(async ({ key, label, model, select }) => {
+      let query = model.find({}).sort({ createdAt: -1, _id: -1 }).limit(limit);
+      if (select) query = query.select(select);
+
+      const [count, rows] = await Promise.all([model.countDocuments(), query]);
+
+      return {
+        key,
+        label,
+        count,
+        rows: rows.map(serializeDoc),
+      };
+    })
+  );
+
+  res.json({ limit, collections });
+});
 
 router.get("/users", async (_req, res) => {
   const users = await User.find().select("-passwordHash").sort({ createdAt: -1 });

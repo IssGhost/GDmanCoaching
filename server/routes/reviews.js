@@ -75,6 +75,9 @@ router.put(
       drills: req.body?.drills || "",
       finalNotes: req.body?.finalNotes || "",
       responseVideoUrl: req.body?.responseVideoUrl || "",
+      voiceRecordingUrl: req.body?.voiceRecordingUrl || "",
+      transcriptPdfUrl: req.body?.transcriptPdfUrl || "",
+      drillPlanPdfUrl: req.body?.drillPlanPdfUrl || "",
     };
 
     const review = await VideoReview.findOneAndUpdate(
@@ -105,6 +108,9 @@ router.post(
           drills: req.body?.drills || "",
           finalNotes: req.body?.finalNotes || "",
           responseVideoUrl: req.body?.responseVideoUrl || "",
+          voiceRecordingUrl: req.body?.voiceRecordingUrl || "",
+          transcriptPdfUrl: req.body?.transcriptPdfUrl || "",
+          drillPlanPdfUrl: req.body?.drillPlanPdfUrl || "",
           status: "complete",
           completedAt: new Date(),
         },
