@@ -8,6 +8,8 @@
   },
   "scripts": {
     "dev": "vite",
+    "check:conflicts": "node scripts/check-conflicts.mjs",
+    "prebuild": "npm run check:conflicts",
     "build": "vite build",
     "preview": "vite preview",
     "railway:build": "npm install --include=dev && npm ci --prefix server --omit=dev && npm run build",
