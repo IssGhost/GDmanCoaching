@@ -4,6 +4,13 @@ import { FaCheckCircle } from "react-icons/fa";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
+import { imageFileToDataUrl } from "../lib/uploads";
+
+const COACHING_SKILL_LEVELS = ["Beginner (2.5–3.0)", "Intermediate (3.0–4.0)", "Advanced (4.0–5.0)", "Elite (5.0+)"];
+
+const COACHING_SKILL_LEVELS = ["Beginner (2.5–3.0)", "Intermediate (3.0–4.0)", "Advanced (4.0–5.0)", "Elite (5.0+)"];
+
+const COACHING_SKILL_LEVELS = ["Beginner (2.5–3.0)", "Intermediate (3.0–4.0)", "Advanced (4.0–5.0)", "Elite (5.0+)"];
 
 export default function CoachSignup() {
   const { user, token, reloadUser } = useAuth();
@@ -34,6 +41,16 @@ export default function CoachSignup() {
   });
 
   const update = (key, value) => setForm((f) => ({ ...f, [key]: value }));
+
+  const uploadProfilePhoto = async (file) => {
+    try {
+      const dataUrl = await imageFileToDataUrl(file);
+      update("avatarUrl", dataUrl);
+      push("Profile photo selected.", "success");
+    } catch (err) {
+      push(err.message || "Could not load that image.", "error");
+    }
+  };
 
   const submit = async (e) => {
     e.preventDefault();
