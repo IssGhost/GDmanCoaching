@@ -1,18 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { FaCheckCircle, FaCloudUploadAlt, FaClipboardList, FaMoneyBillWave, FaPlus } from "react-icons/fa";
+import { FaCheckCircle, FaCloudUploadAlt, FaClipboardList, FaPlus, FaUserEdit } from "react-icons/fa";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
-import { DEMO_SUBMISSIONS, normalizePhase } from "../lib/demoData";
+import { imageFileToDataUrl } from "../lib/uploads";
+import { normalizePhase } from "../lib/workflow";
 
 const initialPackage = {
   title: "",
   description: "",
-  price: 45,
+  price: 0,
   reviewType: "single_video",
-  turnaroundHours: 48,
-  maxVideoMinutes: 10,
+  turnaroundHours: 72,
+  maxVideoMinutes: 15,
+  discountPercent: 0,
+  packageDeal: false,
+  includesVoiceAnalysis: true,
+  includesTranscriptPdf: false,
+  includesDrillPlanPdf: true,
 };
 
 function phaseMeta(row) {
@@ -50,50 +56,29 @@ export default function CoachDashboard() {
 
   const [data, setData] = useState(null);
   const [pkg, setPkg] = useState(initialPackage);
+  const [profileForm, setProfileForm] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [loadError, setLoadError] = useState("");
 
   const load = async () => {
+    setLoadError("");
     try {
       const result = await api.get("/coaches/dashboard", token);
-
-      const liveSubmissions = Array.isArray(result?.submissions) ? result.submissions : [];
-      const mergedSubmissions = [
-        ...DEMO_SUBMISSIONS,
-        ...liveSubmissions.filter((row) => !DEMO_SUBMISSIONS.some((demoRow) => demoRow._id === row._id)),
-      ];
-
+      setProfileForm({
+        ...(result?.profile || {}),
+        instagram: result?.profile?.socialLinks?.instagram || "",
+        youtube: result?.profile?.socialLinks?.youtube || "",
+        website: result?.profile?.socialLinks?.website || "",
+      });
       setData({
         ...result,
-        submissions: mergedSubmissions,
-        profile: result?.profile || {
-          displayName: "Jordan Coach",
-          approved: true,
-          payoutsEnabled: true,
-        },
-        packages: result?.packages?.length
-          ? result.packages
-          : [
-              { _id: "pkg-1", title: "1-Hour Private Lesson", price: 85, reviewType: "live_session", turnaroundHours: 24 },
-              { _id: "pkg-2", title: "Single Video Review", price: 45, reviewType: "single_video", turnaroundHours: 24 },
-              { _id: "pkg-3", title: "Hybrid Training Package", price: 125, reviewType: "monthly", turnaroundHours: 24 },
-            ],
-        splits: result?.splits || [],
+        submissions: Array.isArray(result?.submissions) ? result.submissions : [],
+        packages: Array.isArray(result?.packages) ? result.packages : [],
+        splits: Array.isArray(result?.splits) ? result.splits : [],
       });
-    } catch {
-      setData({
-        profile: {
-          displayName: "Jordan Coach",
-          approved: true,
-          payoutsEnabled: true,
-        },
-        submissions: DEMO_SUBMISSIONS,
-        packages: [
-          { _id: "pkg-1", title: "1-Hour Private Lesson", price: 85, reviewType: "live_session", turnaroundHours: 24 },
-          { _id: "pkg-2", title: "Single Video Review", price: 45, reviewType: "single_video", turnaroundHours: 24 },
-          { _id: "pkg-3", title: "Hybrid Training Package", price: 125, reviewType: "monthly", turnaroundHours: 24 },
-        ],
-        splits: [],
-      });
+    } catch (err) {
+      setLoadError(err.message || "Your coach dashboard could not be loaded.");
+      setData({ profile: null, submissions: [], packages: [], splits: [] });
     }
   };
 
@@ -108,16 +93,41 @@ export default function CoachDashboard() {
       awaiting: rows.filter((r) => normalizePhase(r.phase || r.status) === "awaiting_upload").length,
       ready: rows.filter((r) => normalizePhase(r.phase || r.status) === "ready_for_review").length,
       completed: rows.filter((r) => normalizePhase(r.phase || r.status) === "reviewed").length,
-      payout: 182.75,
+      options: data?.packages?.length || 0,
     };
   }, [data]);
+
+  const uploadProfilePhoto = async (file) => {
+    try {
+      const dataUrl = await imageFileToDataUrl(file);
+      setProfileForm((p) => ({ ...p, avatarUrl: dataUrl }));
+      push("Profile photo selected.", "success");
+    } catch (err) {
+      push(err.message || "Could not load that image.", "error");
+    }
+  };
+
+  const updateProfile = async (e) => {
+    e.preventDefault();
+    setBusy(true);
+
+    try {
+      await api.put("/coaches/me", profileForm, token);
+      push("Coach profile updated.", "success");
+      load();
+    } catch (err) {
+      push(err.message || "Profile update failed", "error");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const createPackage = async (e) => {
     e.preventDefault();
     setBusy(true);
 
     try {
-      await api.post("/coaches/packages", pkg, token);
+      await api.post("/coaches/packages", { ...pkg, price: Math.max(Number(pkg.price || 0), 0), maxVideoMinutes: Math.min(Number(pkg.maxVideoMinutes || 15), 15) }, token);
       push("Package created.", "success");
       setPkg(initialPackage);
       load();
@@ -135,12 +145,13 @@ export default function CoachDashboard() {
   };
 
   if (!data) {
-    return <div className="pp-demo-shell px-6 pt-32 text-[#5f746c]">Loading coach dashboard...</div>;
+    return <div className="pp-app-shell px-6 pt-32 text-[#5f746c]">Loading coach dashboard...</div>;
   }
 
   return (
-    <div className="pp-demo-shell px-6 pt-32 pb-16">
+    <div className="pp-app-shell px-6 pt-32 pb-16">
       <div className="mx-auto max-w-7xl space-y-6">
+        {loadError && <div className="rounded-2xl border border-[#b94024]/20 bg-[#ffebe5] p-4 font-bold text-[#7a2b18]">{loadError}</div>}
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div>
             <p className="pp-kicker">Coach dashboard</p>
@@ -148,12 +159,12 @@ export default function CoachDashboard() {
               {data.profile?.displayName || "Coach"}
             </h1>
             <p className="mt-1 text-[#5f746c]">
-              Manage player uploads, active reviews, completed feedback, coaching packages, and payout activity.
+              Manage your public profile, player uploads, active reviews, completed feedback, and online coaching options.
             </p>
           </div>
 
           <span className="pp-btn-primary px-5 py-3 text-sm">
-            <FaMoneyBillWave className="mr-2" /> Payouts Enabled
+            <FaUserEdit className="mr-2" /> Profile Editable
           </span>
         </div>
 
@@ -161,8 +172,34 @@ export default function CoachDashboard() {
           <Stat icon={<FaCloudUploadAlt />} label="Awaiting uploads" value={stats.awaiting} />
           <Stat icon={<FaClipboardList />} label="Ready reviews" value={stats.ready} />
           <Stat icon={<FaCheckCircle />} label="Completed reviews" value={stats.completed} />
-          <Stat icon={<FaMoneyBillWave />} label="Tracked payouts" value={`$${stats.payout.toFixed(2)}`} />
+          <Stat icon={<FaUserEdit />} label="Online options" value={stats.options} />
         </div>
+
+        {profileForm && (
+          <section className="rounded-[2rem] border border-[#12372a]/10 bg-white/84 p-5 shadow-sm">
+            <h2 className="text-2xl font-black text-[#12372a]">Edit public coach profile</h2>
+            <p className="mt-1 text-sm leading-6 text-[#5f746c]">Update your profile photo, biography, DUPR ID, specializations, and social media links.</p>
+            <form onSubmit={updateProfile} className="mt-5 grid gap-3 md:grid-cols-2">
+              <label className="block md:col-span-2">
+                <span className="mb-1 block text-sm font-black text-[#12372a]">Profile photo upload</span>
+                <input type="file" accept="image/*" onChange={(e) => uploadProfilePhoto(e.target.files?.[0])} className="pp-input px-4 py-3 file:mr-4 file:rounded-full file:border-0 file:bg-[#c6ff4a] file:px-4 file:py-2 file:font-black file:text-[#12372a]" />
+                {profileForm.avatarUrl && <img src={profileForm.avatarUrl} alt="Profile preview" className="mt-3 h-64 w-full rounded-3xl object-cover" />}
+              </label>
+              <input className="pp-input px-4 py-3" placeholder="DUPR ID (example: 7DVMM4)" value={profileForm.duprId || ""} onChange={(e) => setProfileForm((p) => ({ ...p, duprId: e.target.value }))} />
+              <input type="number" step="0.001" className="pp-input px-4 py-3" placeholder="DUPR singles rating" value={profileForm.duprSingles ?? ""} onChange={(e) => setProfileForm((p) => ({ ...p, duprSingles: e.target.value }))} />
+              <input type="number" step="0.001" className="pp-input px-4 py-3" placeholder="DUPR doubles rating" value={profileForm.duprDoubles ?? ""} onChange={(e) => setProfileForm((p) => ({ ...p, duprDoubles: e.target.value }))} />
+              <input className="pp-input px-4 py-3 md:col-span-2" placeholder="Areas of specialization, comma-separated" value={Array.isArray(profileForm.specialties) ? profileForm.specialties.join(", ") : profileForm.specialties || ""} onChange={(e) => setProfileForm((p) => ({ ...p, specialties: e.target.value }))} />
+              <input className="pp-input px-4 py-3" placeholder="Instagram URL" value={profileForm.instagram || ""} onChange={(e) => setProfileForm((p) => ({ ...p, instagram: e.target.value }))} />
+              <input className="pp-input px-4 py-3" placeholder="YouTube URL" value={profileForm.youtube || ""} onChange={(e) => setProfileForm((p) => ({ ...p, youtube: e.target.value }))} />
+              <input className="pp-input px-4 py-3" type="email" placeholder="Public contact email" value={profileForm.contactEmail || ""} onChange={(e) => setProfileForm((p) => ({ ...p, contactEmail: e.target.value }))} />
+              <select className="pp-input px-4 py-3" value={profileForm.presenceStatus || "offline"} onChange={(e) => setProfileForm((p) => ({ ...p, presenceStatus: e.target.value }))}><option value="online">Online / available to chat</option><option value="offline">Offline / reply when available</option></select>
+              <label className="flex items-center gap-2 rounded-xl border border-[#12372a]/10 bg-white px-4 py-3 font-bold text-[#12372a]"><input type="checkbox" checked={profileForm.acceptingInquiries !== false} onChange={(e) => setProfileForm((p) => ({ ...p, acceptingInquiries: e.target.checked }))} /> Accepting new inquiries</label>
+              <input className="pp-input px-4 py-3" placeholder="Personal website" value={profileForm.website || ""} onChange={(e) => setProfileForm((p) => ({ ...p, website: e.target.value }))} />
+              <textarea maxLength={5000} rows={6} className="pp-input px-4 py-3 md:col-span-2" placeholder="Biography and coaching expectations" value={profileForm.bio || ""} onChange={(e) => setProfileForm((p) => ({ ...p, bio: e.target.value }))} />
+              <button className="pp-btn-primary px-4 py-3 md:col-span-2 disabled:opacity-60" disabled={busy}>Save Profile</button>
+            </form>
+          </section>
+        )}
 
         <div className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
           <section className="rounded-[2rem] border border-[#12372a]/10 bg-white/84 p-5 shadow-sm">
@@ -206,7 +243,7 @@ export default function CoachDashboard() {
           </section>
 
           <section className="rounded-[2rem] border border-[#12372a]/10 bg-white/84 p-5 shadow-sm">
-            <h2 className="text-2xl font-black text-[#12372a]">Create coaching package</h2>
+            <h2 className="text-2xl font-black text-[#12372a]">Create online coaching option</h2>
 
             <form onSubmit={createPackage} className="mt-5 grid gap-3">
               <input
@@ -225,28 +262,24 @@ export default function CoachDashboard() {
                 required
               />
 
-              <div className="grid gap-3 sm:grid-cols-2">
-                <input
-                  type="number"
-                  className="pp-input px-4 py-3"
-                  value={pkg.price}
-                  onChange={(e) => setPkg((p) => ({ ...p, price: Number(e.target.value) }))}
-                />
-
+              <div className="grid gap-3 sm:grid-cols-1">
                 <select
                   className="pp-input px-4 py-3"
                   value={pkg.reviewType}
                   onChange={(e) => setPkg((p) => ({ ...p, reviewType: e.target.value }))}
                 >
-                  <option value="live_session">In-person lesson</option>
                   <option value="single_video">Single video review</option>
                   <option value="match_breakdown">Match breakdown</option>
-                  <option value="monthly">Hybrid package</option>
+                  <option value="strategy_consultation">Strategy consultation</option>
+                  <option value="training_plan">Personalized training plan</option>
+                  <option value="monthly">Customized monthly program</option>
                   <option value="doubles_strategy">Doubles strategy</option>
                 </select>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
+                <input type="number" min="0" step="0.01" className="pp-input px-4 py-3" value={pkg.price} onChange={(e) => setPkg((p) => ({ ...p, price: e.target.value }))} placeholder="Price" required />
+                <input type="number" min="0" max="100" className="pp-input px-4 py-3" value={pkg.discountPercent} onChange={(e) => setPkg((p) => ({ ...p, discountPercent: e.target.value, packageDeal: Number(e.target.value) > 0 }))} placeholder="Package discount %" />
                 <input
                   type="number"
                   className="pp-input px-4 py-3"
@@ -258,8 +291,13 @@ export default function CoachDashboard() {
                   type="number"
                   className="pp-input px-4 py-3"
                   value={pkg.maxVideoMinutes}
-                  onChange={(e) => setPkg((p) => ({ ...p, maxVideoMinutes: Number(e.target.value) }))}
+                  max="15"
+                  onChange={(e) => setPkg((p) => ({ ...p, maxVideoMinutes: Math.min(Number(e.target.value), 15) }))}
                 />
+              </div>
+
+              <div className="grid gap-2 rounded-2xl border border-[#12372a]/10 bg-white p-4 text-sm font-bold text-[#12372a]">
+                {[['includesVoiceAnalysis','Voice-recorded analysis'],['includesTranscriptPdf','Transcript PDF'],['includesDrillPlanPdf','Downloadable drill-plan PDF']].map(([key,label]) => <label key={key} className="flex items-center gap-2"><input type="checkbox" checked={Boolean(pkg[key])} onChange={(e)=>setPkg((p)=>({...p,[key]:e.target.checked}))}/>{label}</label>)}
               </div>
 
               <button className="pp-btn-primary px-4 py-3 disabled:opacity-60" disabled={busy}>
@@ -273,11 +311,11 @@ export default function CoachDashboard() {
               {(data.packages || []).map((pkg) => (
                 <div key={pkg._id} className="rounded-2xl border border-[#12372a]/10 bg-[#fff8e7] p-4">
                   <div className="font-black text-[#12372a]">
-                    {pkg.title} — ${pkg.price}
+                    {pkg.title} — ${Number(pkg.price || 0).toFixed(2)}{pkg.discountPercent > 0 ? ` (${pkg.discountPercent}% package discount)` : ""}
                   </div>
 
                   <div className="mt-1 text-sm text-[#5f746c]">
-                    {String(pkg.reviewType || "").replaceAll("_", " ")} • {pkg.turnaroundHours || 24}h
+                    {String(pkg.reviewType || "").replaceAll("_", " ")} • {pkg.turnaroundHours || 72}h • {Math.min(pkg.maxVideoMinutes || 15, 15)} min max video
                   </div>
                 </div>
               ))}
