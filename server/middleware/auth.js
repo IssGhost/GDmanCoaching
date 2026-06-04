@@ -1,7 +1,9 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const { normalizeRole } = require("../utils/roles");
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
+if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) throw new Error("JWT_SECRET is required in production.");
 
 const auth = async (req, res, next) => {
   try {
@@ -10,22 +12,12 @@ const auth = async (req, res, next) => {
     if (!token) return res.status(401).json({ error: "Missing token" });
 
     const payload = jwt.verify(token, JWT_SECRET);
-    if (payload.demoAdmin) {
-      req.user = {
-        _id: "temp_admin",
-        id: "temp_admin",
-        email: "admin@bpj.local",
-        fullName: "Temporary Admin",
-        role: "admin",
-        demoAdmin: true,
-      };
-      return next();
-    }
     const userId = payload._id || payload.id;
     const user = await User.findById(userId).select("-passwordHash");
     if (!user) return res.status(401).json({ error: "Invalid token" });
 
     req.user = user;
+    req.user.role = normalizeRole(user.role);
     next();
   } catch {
     return res.status(401).json({ error: "Unauthorized" });
@@ -33,12 +25,12 @@ const auth = async (req, res, next) => {
 };
 
 const isAdmin = (req, res, next) => {
-  if (req.user?.role !== "admin") return res.status(403).json({ error: "Forbidden" });
+  if (normalizeRole(req.user?.role) !== "admin") return res.status(403).json({ error: "Forbidden" });
   next();
 };
 
 const isStaff = (req, res, next) => {
-  if (!["admin", "employee"].includes(req.user?.role)) {
+  if (!["admin", "employee"].includes(normalizeRole(req.user?.role))) {
     return res.status(403).json({ error: "Forbidden" });
   }
   next();
@@ -47,14 +39,14 @@ const isStaff = (req, res, next) => {
 const isEmployee = isStaff;
 
 const isCoach = (req, res, next) => {
-  if (!["admin", "coach"].includes(req.user?.role)) {
+  if (!["admin", "coach"].includes(normalizeRole(req.user?.role))) {
     return res.status(403).json({ error: "Forbidden" });
   }
   next();
 };
 
 const allow = (...roles) => (req, res, next) => {
-  if (!req.user || !roles.includes(req.user.role)) {
+  if (!req.user || !roles.map(normalizeRole).includes(normalizeRole(req.user.role))) {
     return res.status(403).json({ error: "Forbidden" });
   }
   next();

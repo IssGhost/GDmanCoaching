@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { api, API_BASE } from "../lib/api";
+import { normalizeRole } from "../lib/roles";
 
 const ACCESS_KEY = "bpj_access_token";
 const REFRESH_KEY = "bpj_refresh_token";
@@ -31,6 +32,22 @@ function setTokens({ accessToken, refreshToken }) {
 function clearTokens() {
   localStorage.removeItem(ACCESS_KEY);
   localStorage.removeItem(REFRESH_KEY);
+}
+
+
+function roleFromToken(token) {
+  try {
+    const payload = JSON.parse(atob(String(token || "").split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    return payload?.role;
+  } catch {
+    return undefined;
+  }
+}
+
+function normalizeUser(user, token) {
+  if (!user && !token) return null;
+  const nextUser = user || {};
+  return { ...nextUser, role: normalizeRole(nextUser.role || roleFromToken(token)) };
 }
 
 const AuthContext = createContext(null);
@@ -81,12 +98,12 @@ export function AuthProvider({ children }) {
         if (getAccessToken() || getRefreshToken()) {
           try {
             const me = await api.get(AUTH_PATHS.me, getAccessToken());
-            setUser(me?.user || me);
+            setUser(normalizeUser(me?.user || me, getAccessToken()));
           } catch {
             const refreshed = await tryRefresh();
             if (refreshed) {
               const me = await api.get(AUTH_PATHS.me, getAccessToken());
-              setUser(me?.user || me);
+              setUser(normalizeUser(me?.user || me, getAccessToken()));
             } else {
               clearTokens();
               setUser(null);
@@ -103,7 +120,7 @@ export function AuthProvider({ children }) {
 
   const reloadUser = async () => {
     const me = await api.get(AUTH_PATHS.me, getAccessToken());
-    const nextUser = me?.user || me;
+    const nextUser = normalizeUser(me?.user || me, getAccessToken());
     setUser(nextUser);
     return nextUser;
   };
@@ -121,8 +138,9 @@ export function AuthProvider({ children }) {
           const data = await api.post(p, { email, password });
           const accessToken = data?.accessToken || data?.token;
           if (accessToken) setTokens({ accessToken, refreshToken: data.refreshToken });
-          setUser(data?.user || null);
-          return data?.user;
+          const nextUser = normalizeUser(data?.user, accessToken);
+          setUser(nextUser);
+          return nextUser;
         } catch (err) {
           if (!/not\s*found|404/i.test(String(err?.message))) throw err;
         }
@@ -136,14 +154,15 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const signup = async (email, password, fullName, accountType) => {
+  const signup = async (email, password, fullName, phone, accountType) => {
     setAuthBusy(true);
     try {
-      const data = await api.post(AUTH_PATHS.signup, { email, password, fullName, accountType });
+      const data = await api.post(AUTH_PATHS.signup, { email, password, fullName, phone, accountType });
       const accessToken = data?.accessToken || data?.token;
       if (accessToken) setTokens({ accessToken, refreshToken: data.refreshToken });
-      setUser(data?.user || null);
-      return data?.user;
+      const nextUser = normalizeUser(data?.user, accessToken);
+      setUser(nextUser);
+      return nextUser;
     } finally {
       setAuthBusy(false);
     }

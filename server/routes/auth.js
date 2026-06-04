@@ -3,17 +3,12 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-
-let seedPickleballDemo = null;
-try {
-  seedPickleballDemo = require("../utils/seedPickleballDemo").seedPickleballDemo;
-} catch {
-  seedPickleballDemo = null;
-}
+const { normalizeRole } = require("../utils/roles");
 
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
+if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) throw new Error("JWT_SECRET is required in production.");
 const TOKEN_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 
 function signToken(user) {
@@ -21,17 +16,11 @@ function signToken(user) {
     {
       _id: user._id,
       id: user._id,
-      role: user.role,
+      role: normalizeRole(user.role),
     },
     JWT_SECRET,
     { expiresIn: TOKEN_EXPIRES_IN }
   );
-}
-
-function normalizeRole(role) {
-  if (role === "customer") return "user";
-  if (role === "player") return "user";
-  return role || "user";
 }
 
 function presentUser(user) {
@@ -50,57 +39,22 @@ function presentUser(user) {
 
 function startPathForRole(role) {
   const normalized = normalizeRole(role);
-  if (normalized === "admin") return "/admin/coaching";
+  if (normalized === "admin") return "/admin";
+  if (normalized === "employee") return "/employee";
   if (normalized === "coach") return "/coach/dashboard";
-  return "/dashboard/submissions";
+  return "/dashboard/account";
 }
 
 function normalizeLoginEmail(value) {
-  const raw = String(value || "").trim().toLowerCase();
-
-  const aliases = {
-    customer: "customer@picklepro.demo",
-    player: "customer@picklepro.demo",
-    user: "customer@picklepro.demo",
-
-    coach: "coach@picklepro.demo",
-
-    admin: "admin@picklepro.demo",
-  };
-
-  return aliases[raw] || raw;
+  return String(value || "").trim().toLowerCase();
 }
 
-async function maybeSeedDemo(email) {
-  const demoEmails = [
-    "customer@picklepro.demo",
-    "coach@picklepro.demo",
-    "admin@picklepro.demo",
-  ];
-
-  if (demoEmails.includes(email) && typeof seedPickleballDemo === "function") {
-    await seedPickleballDemo();
-  }
-}
 
 async function comparePassword(inputPassword, user) {
-  if (!user) return false;
-
-  const storedHash = user.passwordHash || user.password;
-
-  if (!storedHash) return false;
-
-  // Supports hashed passwords.
-  try {
-    const hashedMatch = await bcrypt.compare(inputPassword, storedHash);
-    if (hashedMatch) return true;
-  } catch {
-    // Ignore and try plain fallback below.
-  }
-
-  // Demo/dev fallback only.
-  return storedHash === inputPassword;
+  if (!user?.passwordHash) return false;
+  return bcrypt.compare(inputPassword, user.passwordHash);
 }
+
 
 function auth(req, res, next) {
   const hdr = req.headers.authorization || "";
@@ -127,10 +81,14 @@ async function handleSignup(req, res, next) {
     const password = String(req.body?.password || req.body?.pw || "");
     const fullName = req.body?.fullName || req.body?.name || "";
     const phone = req.body?.phone || "";
-    const accountType = req.body?.accountType || req.body?.role || "user";
+    const requestedType = req.body?.accountType || req.body?.role || "user";
+    const accountType = requestedType === "coach" ? "coach" : "user";
 
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required." });
+    if (!fullName || !email || !phone || !password) {
+      return res.status(400).json({ error: "Full name, email, phone number, and password are required." });
+    }
+    if (password.length < 8 || !/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/\d/.test(password)) {
+      return res.status(400).json({ error: "Password must be at least 8 characters and include uppercase, lowercase, and a number." });
     }
 
     const existing = await User.findOne({ email });
@@ -170,9 +128,7 @@ async function handleSignin(req, res, next) {
       return res.status(400).json({ error: "Email/username and password are required." });
     }
 
-    await maybeSeedDemo(email);
-
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ $or: [{ email }, { username: email }] });
 
     if (!user) {
       return res.status(400).json({
@@ -187,6 +143,12 @@ async function handleSignin(req, res, next) {
       return res.status(400).json({
         error: "Invalid credentials.",
       });
+    }
+
+    const normalizedRole = normalizeRole(user.role);
+    if (user.role !== normalizedRole) {
+      user.role = normalizedRole;
+      await user.save();
     }
 
     const token = signToken(user);
