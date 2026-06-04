@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { FaCheckCircle, FaCloudUploadAlt, FaClipboardList, FaComments, FaPlus, FaUserEdit } from "react-icons/fa";
+import { FaCheckCircle, FaCloudUploadAlt, FaClipboardList, FaComments, FaDollarSign, FaPlus, FaUserEdit } from "react-icons/fa";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
@@ -58,6 +58,7 @@ export default function CoachDashboard() {
   const [pkg, setPkg] = useState(initialPackage);
   const [profileForm, setProfileForm] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [payoutBusy, setPayoutBusy] = useState(false);
   const [loadError, setLoadError] = useState("");
 
   const load = async () => {
@@ -124,6 +125,18 @@ export default function CoachDashboard() {
     }
   };
 
+  const openPayoutSetup = async () => {
+    setPayoutBusy(true);
+    try {
+      const result = await api.post("/payments/connect/account", {}, token);
+      if (!result?.onboardingUrl) throw new Error("Payout setup link was not returned.");
+      window.location.assign(result.onboardingUrl);
+    } catch (err) {
+      push(err.message || "Payout setup is not available yet.", "error");
+      setPayoutBusy(false);
+    }
+  };
+
   const createPackage = async (e) => {
     e.preventDefault();
     setBusy(true);
@@ -156,17 +169,24 @@ export default function CoachDashboard() {
         {loadError && <div className="rounded-2xl border border-[#b94024]/20 bg-[#ffebe5] p-4 font-bold text-[#7a2b18]">{loadError}</div>}
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div>
-            <p className="pp-kicker">Coach dashboard</p>
+            <p className="pp-kicker">Coach operations center</p>
             <h1 className="mt-2 text-4xl font-black text-[#12372a]">
               {data.profile?.displayName || "Coach"}
             </h1>
             <p className="mt-1 text-[#5f746c]">
-              Manage your public profile, player uploads, active reviews, completed feedback, and online coaching options.
+              Run your coaching business: answer client requests, complete reviews, publish services, and manage payouts.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-3"><Link to="/messages" className="pp-btn-primary px-5 py-3 text-sm"><FaComments className="mr-2" /> Open requests</Link>{data.profile?._id && <Link to={`/coaches/${data.profile._id}`} className="pp-btn-secondary px-5 py-3 text-sm">View public profile</Link>}</div>
         </div>
+
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4" aria-label="Coach workflow shortcuts">
+          <a href="#request-inbox" className="rounded-3xl border border-[#12372a]/10 bg-white p-5 shadow-sm transition hover:-translate-y-1"><FaComments className="text-2xl text-[#087f73]"/><h2 className="mt-3 font-black text-[#12372a]">Respond to clients</h2><p className="mt-1 text-sm text-[#40584f]">Discuss goals and prepare custom quotes.</p></a>
+          <a href="#review-queue" className="rounded-3xl border border-[#12372a]/10 bg-white p-5 shadow-sm transition hover:-translate-y-1"><FaClipboardList className="text-2xl text-[#087f73]"/><h2 className="mt-3 font-black text-[#12372a]">Complete reviews</h2><p className="mt-1 text-sm text-[#40584f]">Open uploaded videos and deliver feedback.</p></a>
+          <a href="#offerings" className="rounded-3xl border border-[#12372a]/10 bg-white p-5 shadow-sm transition hover:-translate-y-1"><FaPlus className="text-2xl text-[#087f73]"/><h2 className="mt-3 font-black text-[#12372a]">Manage services</h2><p className="mt-1 text-sm text-[#40584f]">Publish packages, pricing, and deliverables.</p></a>
+          <button type="button" onClick={openPayoutSetup} disabled={payoutBusy} className="rounded-3xl border border-[#12372a]/10 bg-[#12372a] p-5 text-left text-white shadow-sm transition hover:-translate-y-1 disabled:opacity-60"><FaDollarSign className="text-2xl text-[#c6ff4a]"/><h2 className="mt-3 font-black text-white">{data.profile?.stripeAccountId ? "Manage payouts" : "Set up payouts"}</h2><p className="mt-1 text-sm text-white/75">{payoutBusy ? "Opening secure Stripe setup..." : "Connect the account used to receive earnings."}</p></button>
+        </section>
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <Stat icon={<FaComments />} label="Open requests" value={stats.requests} />
@@ -176,11 +196,11 @@ export default function CoachDashboard() {
           <Stat icon={<FaUserEdit />} label="Published options" value={stats.options} />
         </div>
 
-        <section className="rounded-[2rem] border border-[#12372a]/10 bg-white/90 p-5 shadow-sm"><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-2xl font-black text-[#12372a]">Personalized request inbox</h2><p className="mt-1 text-sm text-[#40584f]">Discuss multi-service requests and send final quotes for customer approval.</p></div><Link to="/messages" className="pp-btn-primary px-4 py-2 text-sm">Open all conversations</Link></div><div className="mt-4 grid gap-3 md:grid-cols-2">{(data.inquiries || []).slice(0, 4).map((item) => <Link to="/messages" key={item._id} className="rounded-2xl border border-[#12372a]/10 bg-[#fffdf6] p-4 hover:bg-[#eaf9f7]"><div className="flex justify-between gap-3"><div className="font-black text-[#12372a]">{item.playerId?.fullName || item.playerId?.email || "Customer"}</div><span className="rounded-full bg-[#c6ff4a] px-2 py-1 text-[10px] font-black uppercase text-[#12372a]">{item.status}</span></div><div className="mt-1 text-sm font-semibold text-[#40584f]">{item.subject}</div><div className="mt-2 text-xs text-[#087f73]">{(item.requestedServices || []).join(" • ") || "General coaching request"}</div></Link>)}{!(data.inquiries || []).length && <div className="rounded-2xl bg-[#eaf9f7] p-4 text-sm font-semibold text-[#40584f] md:col-span-2">New personalized requests will appear here and in Messages.</div>}</div></section>
+        <section id="request-inbox" className="scroll-mt-28 rounded-[2rem] border border-[#12372a]/10 bg-white/90 p-5 shadow-sm"><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-2xl font-black text-[#12372a]">Personalized request inbox</h2><p className="mt-1 text-sm text-[#40584f]">Discuss multi-service requests and send final quotes for customer approval.</p></div><Link to="/messages" className="pp-btn-primary px-4 py-2 text-sm">Open all conversations</Link></div><div className="mt-4 grid gap-3 md:grid-cols-2">{(data.inquiries || []).slice(0, 4).map((item) => <Link to="/messages" key={item._id} className="rounded-2xl border border-[#12372a]/10 bg-[#fffdf6] p-4 hover:bg-[#eaf9f7]"><div className="flex justify-between gap-3"><div className="font-black text-[#12372a]">{item.playerId?.fullName || item.playerId?.email || "Customer"}</div><span className="rounded-full bg-[#c6ff4a] px-2 py-1 text-[10px] font-black uppercase text-[#12372a]">{item.status}</span></div><div className="mt-1 text-sm font-semibold text-[#40584f]">{item.subject}</div><div className="mt-2 text-xs text-[#087f73]">{(item.requestedServices || []).join(" • ") || "General coaching request"}</div></Link>)}{!(data.inquiries || []).length && <div className="rounded-2xl bg-[#eaf9f7] p-4 text-sm font-semibold text-[#40584f] md:col-span-2">New personalized requests will appear here and in Messages.</div>}</div></section>
 
         {profileForm && (
-          <section className="rounded-[2rem] border border-[#12372a]/10 bg-white/84 p-5 shadow-sm">
-            <h2 className="text-2xl font-black text-[#12372a]">Edit public coach profile</h2>
+          <section id="profile" className="scroll-mt-28 rounded-[2rem] border border-[#12372a]/10 bg-white/84 p-5 shadow-sm">
+            <h2 className="text-2xl font-black text-[#12372a]">Public profile and business details</h2>
             <p className="mt-1 text-sm leading-6 text-[#5f746c]">Update your profile photo, biography, DUPR ID, specializations, and social media links.</p>
             <form onSubmit={updateProfile} className="mt-5 grid gap-3 md:grid-cols-2">
               <label className="block md:col-span-2">
@@ -206,7 +226,7 @@ export default function CoachDashboard() {
         )}
 
         <div className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
-          <section className="rounded-[2rem] border border-[#12372a]/10 bg-white/84 p-5 shadow-sm">
+          <section id="review-queue" className="scroll-mt-28 rounded-[2rem] border border-[#12372a]/10 bg-white/84 p-5 shadow-sm">
             <h2 className="text-2xl font-black text-[#12372a]">Review queue</h2>
 
             <p className="mt-1 text-sm leading-6 text-[#5f746c]">
@@ -246,7 +266,7 @@ export default function CoachDashboard() {
             </div>
           </section>
 
-          <section className="rounded-[2rem] border border-[#12372a]/10 bg-white/84 p-5 shadow-sm">
+          <section id="offerings" className="scroll-mt-28 rounded-[2rem] border border-[#12372a]/10 bg-white/84 p-5 shadow-sm">
             <h2 className="text-2xl font-black text-[#12372a]">Create online coaching option</h2>
 
             <form onSubmit={createPackage} className="mt-5 grid gap-3">
