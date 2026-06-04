@@ -1,5 +1,13 @@
+import { FaClipboardCheck, FaComments, FaCreditCard, FaUser, FaVideo } from "react-icons/fa";
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+
+const links = [
+  { to: "/dashboard/account", label: "Overview", icon: FaUser },
+  { to: "/dashboard/orders", label: "Orders & payments", icon: FaCreditCard },
+  { to: "/messages", label: "Personalized requests", icon: FaComments },
+  { to: "/dashboard/submissions", label: "Training & reviews", icon: FaVideo },
+];
 
 export default function DashboardLayout() {
   const { user } = useAuth();

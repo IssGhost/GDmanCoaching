@@ -22,13 +22,25 @@ const auth = async (req, res, next) => {
   }
 };
 
+// Helper to check if user has a specific role
+const hasRole = (user, role) => {
+  if (!user || !user.roles) return false;
+  return user.roles.includes(role);
+};
+
+// Helper to check if user has any of the specified roles
+const hasAnyRole = (user, roles) => {
+  if (!user || !user.roles) return false;
+  return roles.some(role => user.roles.includes(role));
+};
+
 const isAdmin = (req, res, next) => {
-  if (req.user?.role !== "admin") return res.status(403).json({ error: "Forbidden" });
+  if (!hasRole(req.user, "admin")) return res.status(403).json({ error: "Forbidden" });
   next();
 };
 
 const isStaff = (req, res, next) => {
-  if (!["admin", "employee"].includes(req.user?.role)) {
+  if (!hasAnyRole(req.user, ["admin", "employee"])) {
     return res.status(403).json({ error: "Forbidden" });
   }
   next();
@@ -37,17 +49,18 @@ const isStaff = (req, res, next) => {
 const isEmployee = isStaff;
 
 const isCoach = (req, res, next) => {
-  if (!["admin", "coach"].includes(req.user?.role)) {
+  if (!hasAnyRole(req.user, ["admin", "coach"])) {
     return res.status(403).json({ error: "Forbidden" });
   }
   next();
 };
 
 const allow = (...roles) => (req, res, next) => {
-  if (!req.user || !roles.includes(req.user.role)) {
+  if (!req.user || !hasAnyRole(req.user, roles)) {
     return res.status(403).json({ error: "Forbidden" });
   }
   next();
 };
 
-module.exports = { auth, isAdmin, isStaff, isEmployee, isCoach, allow };
+module.exports = { auth, isAdmin, isStaff, isEmployee, isCoach, allow, hasRole, hasAnyRole };
+
