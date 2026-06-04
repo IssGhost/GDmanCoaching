@@ -11,7 +11,7 @@ import {
 } from "react-icons/fa";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
-import { DEMO_SUBMISSIONS, normalizePhase, phasePathForSubmission } from "../lib/demoData";
+import { normalizePhase, phasePathForSubmission } from "../lib/workflow";
 
 function statusInfo(status) {
   const phase = normalizePhase(status);
@@ -33,7 +33,7 @@ function cardCopy(row) {
   if (phase === "awaiting_upload") {
     return {
       title: "Upload needed",
-      body: "The player still needs to submit footage or paste a private video link before the coach can review.",
+      body: "Upload your video before the coach can begin the review.",
       cta: "Open Upload Page",
     };
   }
@@ -53,15 +53,11 @@ function cardCopy(row) {
   };
 }
 
-function isInPerson(row) {
-  const type = row.packageId?.reviewType || "";
-  return type === "live_session" || row.title?.toLowerCase().includes("in-person");
-}
-
 export default function PlayerSubmissions() {
   const { token } = useAuth();
   const [rows, setRows] = useState(null);
   const [filter, setFilter] = useState("all");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let alive = true;
@@ -70,17 +66,12 @@ export default function PlayerSubmissions() {
       .then((data) => {
         if (!alive) return;
 
-        const liveRows = Array.isArray(data) ? data : [];
-        const merged = [
-          ...DEMO_SUBMISSIONS,
-          ...liveRows.filter((row) => !DEMO_SUBMISSIONS.some((demoRow) => demoRow._id === row._id)),
-        ];
-
-        setRows(merged);
+        setRows(Array.isArray(data) ? data : []);
       })
-      .catch(() => {
+      .catch((err) => {
         if (!alive) return;
-        setRows(DEMO_SUBMISSIONS);
+        setError(err.message || "Your coaching requests could not be loaded.");
+        setRows([]);
       });
 
     return () => {
@@ -105,15 +96,16 @@ export default function PlayerSubmissions() {
     };
   }, [rows]);
 
-  if (!rows) return <div className="text-[#5f746c]">Loading training and review workflow...</div>;
+  if (!rows) return <div className="text-[#5f746c]">Loading training and reviews...</div>;
 
   return (
     <div className="space-y-6">
+      {error && <div className="rounded-2xl border border-[#b94024]/20 bg-[#ffebe5] p-4 font-bold text-[#7a2b18]">{error}</div>}
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <h1 className="text-3xl font-black text-[#12372a]">Training + Review Workflow</h1>
+          <h1 className="text-3xl font-black text-[#12372a]">Training + Reviews</h1>
           <p className="mt-1 max-w-3xl text-sm leading-6 text-[#5f746c]">
-            Track the full coaching workflow from upload required, to coach review, to completed feedback.
+            Track video uploads, coach reviews, and completed feedback.
           </p>
         </div>
 
@@ -154,7 +146,6 @@ export default function PlayerSubmissions() {
         {list.map((row) => {
           const status = statusInfo(row.phase || row.status);
           const copy = cardCopy(row);
-          const inPerson = isInPerson(row);
           const phase = normalizePhase(row.phase || row.status);
 
           return (
@@ -166,13 +157,13 @@ export default function PlayerSubmissions() {
               <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                 <div className="flex gap-4">
                   <div className="grid h-14 w-14 min-w-14 place-items-center rounded-2xl bg-[#d9f7fb] text-xl text-[#00a896]">
-                    {phase === "awaiting_upload" ? <FaCloudUploadAlt /> : inPerson ? <FaMapMarkerAlt /> : <FaVideo />}
+                    {phase === "awaiting_upload" ? <FaCloudUploadAlt /> : <FaVideo />}
                   </div>
 
                   <div>
                     <div className="mb-2 flex flex-wrap gap-2">
                       <span className="inline-flex rounded-full bg-[#fff1c7] px-3 py-1 text-xs font-black text-[#5f746c]">
-                        {inPerson ? "In-person / hybrid coaching" : "Online video review"}
+                        Online video coaching
                       </span>
 
                       <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-black capitalize ${status.cls}`}>

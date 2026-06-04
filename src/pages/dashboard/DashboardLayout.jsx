@@ -21,7 +21,7 @@ export default function DashboardLayout() {
               </h1>
 
               <p className="mt-1 text-sm text-[#5f746c]">
-                Signed in as {user?.fullName || user?.email}. Track in-person bookings, video submissions, coach notes, and payment history.
+                Signed in as {user?.fullName || user?.email}. Track online bookings, video submissions, coach notes, and payment history.
               </p>
             </div>
 
@@ -42,9 +42,6 @@ export default function DashboardLayout() {
                 Training + Reviews
               </NavLink>
 
-              <NavLink to="/demo" className={({ isActive }) => `${item} ${isActive ? active : hover}`}>
-                Access
-              </NavLink>
             </div>
           </div>
         </div>
