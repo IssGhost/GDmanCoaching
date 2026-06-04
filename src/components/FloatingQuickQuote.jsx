@@ -15,7 +15,7 @@ export default function FloatingQuickQuote() {
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <h3 className="font-black">Start pickleball coaching</h3>
-                <p className="text-xs leading-5 text-[#5f746c]">Book an in-person lesson, group clinic, or video review.</p>
+                <p className="text-xs leading-5 text-[#5f746c]">Book an online coaching request, strategy consultation, or video review.</p>
               </div>
               <button onClick={() => setOpen(false)} className="rounded-full px-3 py-1 text-sm font-black text-[#5f746c] hover:bg-[#d9f7fb]">Close</button>
             </div>
