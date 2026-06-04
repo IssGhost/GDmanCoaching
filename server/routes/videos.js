@@ -3,6 +3,7 @@ const { auth, allow } = require("../middleware/auth");
 const CoachProfile = require("../models/CoachProfile");
 const VideoSubmission = require("../models/VideoSubmission");
 const VideoReview = require("../models/VideoReview");
+const { configuredClientOrigins } = require("../utils/runtimeConfig");
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
@@ -20,7 +21,7 @@ async function createCloudflareUpload(maxDurationSeconds = 3600) {
     body: JSON.stringify({
       maxDurationSeconds,
       requireSignedURLs: false,
-      allowedOrigins: process.env.CLIENT_URL ? process.env.CLIENT_URL.split(",").map((x) => new URL(x.trim()).hostname) : undefined,
+      allowedOrigins: configuredClientOrigins().map((origin) => new URL(origin).hostname),
     }),
   });
 

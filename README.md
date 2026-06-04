@@ -33,21 +33,26 @@ If Railway MongoDB is used instead of Atlas, provision the MongoDB service insid
 1. Create a new Railway project for production.
 2. Connect the GitHub repository and select the production branch.
 3. Confirm Railway uses the repository’s existing build and start configuration.
-4. Add the production environment variables listed below in the Railway web service’s Variables section.
-5. Deploy the service and wait for the deployment to become healthy. The production server intentionally refuses to start if any required production variable is missing, so read the Railway error log if the first deployment stops.
-6. Open the Railway service health address ending in `/health`. Confirm the response reports that MongoDB is connected.
+4. Add the core production environment variables listed below in the Railway web service’s Variables section.
+5. Deploy the service and wait for the deployment to become healthy. The production server refuses to start only when a core variable is missing. Stripe, Cloudflare Stream, and a custom domain can be connected afterward without keeping the website offline.
+6. Open the Railway service health address ending in `/health`. Confirm the response reports that MongoDB is connected. The `integrations` section shows which optional services are ready.
 
-### Required Railway variables
+### Core Railway variables required to start
 
 - `NODE_ENV`: Set to production.
 - `MONGO_URI`: Paste the private production MongoDB connection string.
 - `JWT_SECRET`: Use a long, randomly generated secret that is unique to production. Changing it later signs every user out.
 - `JWT_EXPIRES_IN`: Choose the desired login duration, such as seven days.
-- `CLIENT_URL`: Set this to the final public website address using HTTPS. After the custom domain is active, do not leave this set to localhost.
-- `STRIPE_SECRET_KEY`: Use the Stripe live-mode secret key only after live payments are approved.
-- `STRIPE_WEBHOOK_SECRET`: Use the signing secret from the Stripe production webhook.
-- `CLOUDFLARE_ACCOUNT_ID`: Use the Cloudflare account ID that owns Stream.
+
+### Optional variables that activate additional features
+
+- `CLIENT_URL`: Set this to the final public website address using HTTPS when the custom domain is ready. Until then, the app automatically uses Railway’s public domain.
+- `STRIPE_SECRET_KEY`: Activates Stripe Connect onboarding and checkout. Use a Stripe test-mode key until live payments are approved.
+- `STRIPE_WEBHOOK_SECRET`: Activates verified Stripe payment completion webhooks.
+- `CLOUDFLARE_ACCOUNT_ID`: Used with the Stream token to activate customer video uploads.
 - `CLOUDFLARE_STREAM_TOKEN`: Use a restricted Cloudflare API token that can create and manage Stream uploads.
+
+If an optional integration is missing, the website still starts and its unrelated pages remain available. A customer who attempts to use that unavailable feature receives a clear setup message instead of the whole deployment failing.
 
 Do not put secrets in GitHub files, screenshots, support tickets, or the public website.
 

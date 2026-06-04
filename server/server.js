@@ -3,14 +3,13 @@ const cors = require("cors");
 const morgan = require("morgan");
 const mongoose = require("mongoose");
 const path = require("path");
+const { configuredClientOrigins, integrationStatus, normalizeOrigin } = require("./utils/runtimeConfig");
 require("dotenv").config();
 
 const app = express();
+app.set("trust proxy", 1);
 
-const configuredOrigins = String(process.env.CLIENT_URL || process.env.FRONTEND_URL || "")
-  .split(",")
-  .map((origin) => origin.trim().replace(/\/$/, ""))
-  .filter(Boolean);
+const configuredOrigins = configuredClientOrigins();
 
 const isAllowedOrigin = (origin) => {
   if (!origin) return true;
@@ -24,7 +23,8 @@ const isAllowedOrigin = (origin) => {
 
   const hostname = parsed.hostname;
   if (process.env.NODE_ENV !== "production" && ["localhost", "127.0.0.1", "0.0.0.0"].includes(hostname)) return true;
-  return configuredOrigins.includes(origin.replace(/\/$/, ""));
+  if (hostname.endsWith(".up.railway.app") || hostname.endsWith(".railway.app")) return true;
+  return configuredOrigins.includes(normalizeOrigin(origin));
 };
 
 app.use(
@@ -53,12 +53,7 @@ const healthPayload = () => ({
   message: "GOOD Coaching API running",
   mongo: mongoConnectionState(),
   configuredMongoVariable: mongoEnvName,
-  integrations: {
-    stripe: Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET),
-    cloudflareStream: Boolean(process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_STREAM_TOKEN),
-    clientUrl: Boolean(process.env.CLIENT_URL),
-    jwtSecret: Boolean(process.env.JWT_SECRET),
-  },
+  integrations: integrationStatus(),
 });
 
 app.get("/health", (_req, res) => res.json(healthPayload()));
@@ -77,17 +72,14 @@ const [mongoEnvName, MONGO_URI] =
   mongoEnvCandidates.find(([, value]) => /^mongodb(\+srv)?:\/\//i.test(String(value || "").trim())) || [null, ""];
 
 if (process.env.NODE_ENV === "production") {
-  const required = {
-    MONGO_URI: Boolean(MONGO_URI),
-    JWT_SECRET: Boolean(process.env.JWT_SECRET),
-    CLIENT_URL: /^https:\/\//i.test(String(process.env.CLIENT_URL || "")),
-    STRIPE_SECRET_KEY: Boolean(process.env.STRIPE_SECRET_KEY),
-    STRIPE_WEBHOOK_SECRET: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
-    CLOUDFLARE_ACCOUNT_ID: Boolean(process.env.CLOUDFLARE_ACCOUNT_ID),
-    CLOUDFLARE_STREAM_TOKEN: Boolean(process.env.CLOUDFLARE_STREAM_TOKEN),
-  };
-  const missing = Object.entries(required).filter(([, ready]) => !ready).map(([name]) => name);
-  if (missing.length) throw new Error(`Production configuration is incomplete: ${missing.join(", ")}`);
+  const missingCore = [!MONGO_URI && "MONGO_URI", !process.env.JWT_SECRET && "JWT_SECRET"].filter(Boolean);
+  if (missingCore.length) throw new Error(`Production core configuration is incomplete: ${missingCore.join(", ")}`);
+
+  const optional = integrationStatus();
+  const unavailable = Object.entries(optional).filter(([, ready]) => !ready).map(([name]) => name);
+  if (unavailable.length) {
+    console.warn(`Optional integrations are unavailable: ${unavailable.join(", ")}. The app will start, but related features will return clear setup errors.`);
+  }
 }
 
 let mongoConnectAttempt = null;
