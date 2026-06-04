@@ -44,9 +44,10 @@ function presentUser(user) {
 
 function startPathForRole(role) {
   const normalized = normalizeRole(role);
-  if (normalized === "admin") return "/admin/coaching";
+  if (normalized === "admin") return "/admin";
+  if (normalized === "employee") return "/employee";
   if (normalized === "coach") return "/coach/dashboard";
-  return "/dashboard/submissions";
+  return "/dashboard/account";
 }
 
 function normalizeLoginEmail(value) {

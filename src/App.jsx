@@ -7,7 +7,7 @@ import FloatingQuickQuote from "./components/FloatingQuickQuote";
 import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./components/Toast";
 
-import { PrivateRoute, RoleRoute } from "./components/RouteGuards";
+import { PrivateRoute, PortalRedirect, RoleRoute } from "./components/RouteGuards";
 
 // Core pages
 import Home from "./pages/Home";
@@ -194,7 +194,7 @@ export default function App() {
                 <Route
                   path="/coach/dashboard"
                   element={
-                    <RoleRoute allow={["coach", "admin"]}>
+                    <RoleRoute allow={["coach"]}>
                       <CoachDashboard />
                     </RoleRoute>
                   }
@@ -203,7 +203,7 @@ export default function App() {
                 <Route
                   path="/coach/submissions/:id/review"
                   element={
-                    <RoleRoute allow={["coach", "admin"]}>
+                    <RoleRoute allow={["coach"]}>
                       <CoachReview />
                     </RoleRoute>
                   }
@@ -211,15 +211,16 @@ export default function App() {
 
                 {/* Auth */}
                 <Route path="/signin" element={<SignIn />} />
+                <Route path="/portal" element={<PortalRedirect />} />
                 <Route path="/signup" element={<SignUp />} />
 
                 {/* User Dashboard with nested tabs */}
                 <Route
                   path="/dashboard"
                   element={
-                    <PrivateRoute>
+                    <RoleRoute allow={["user"]}>
                       <DashboardLayout />
-                    </PrivateRoute>
+                    </RoleRoute>
                   }
                 >
                   <Route index element={<Navigate to="account" replace />} />
@@ -235,9 +236,9 @@ export default function App() {
                 <Route
                   path="/dashboard-legacy"
                   element={
-                    <PrivateRoute>
+                    <RoleRoute allow={["user"]}>
                       <DashboardUser />
-                    </PrivateRoute>
+                    </RoleRoute>
                   }
                 />
               </Routes>

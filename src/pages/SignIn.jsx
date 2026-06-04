@@ -2,18 +2,22 @@ import { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { FaLock, FaMapMarkerAlt } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
+import { normalizeRole, portalPathForRole } from "../lib/roles";
 
-function routeFor(user, fallback = "/dashboard/submissions") {
-  if (user?.role === "admin") return "/admin/coaching";
-  if (user?.role === "coach") return "/coach/dashboard";
-  return fallback;
+function routeFor(user, requestedPath) {
+  const role = normalizeRole(user?.role);
+  const isCustomerPath = requestedPath?.startsWith("/dashboard");
+  const isCoachPath = requestedPath?.startsWith("/coach/");
+  const isAdminPath = requestedPath?.startsWith("/admin") || requestedPath?.startsWith("/employee");
+  if ((role === "user" && isCustomerPath) || (role === "coach" && isCoachPath) || (["admin", "employee"].includes(role) && isAdminPath)) return requestedPath;
+  return portalPathForRole(role);
 }
 
 export default function SignIn() {
   const { signin, authBusy } = useAuth();
   const nav = useNavigate();
   const location = useLocation();
-  const from = location.state?.from?.pathname || "/dashboard/submissions";
+  const from = location.state?.from?.pathname;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

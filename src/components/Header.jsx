@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
 import AccountMenu from "./AccountMenu";
 import { useAuth } from "../context/AuthContext";
+import { portalLabelForRole, portalPathForRole } from "../lib/roles";
 
 export default function Header() {
   const { pathname } = useLocation();
@@ -72,8 +73,8 @@ export default function Header() {
           ) : (
             <AccountMenu />
           )}
-          <Link to="/coaches" className="pp-btn-primary px-5 py-2.5 text-sm">
-            Request Coaching
+          <Link to={user ? portalPathForRole(user.role) : "/coaches"} className="pp-btn-primary px-5 py-2.5 text-sm">
+            {user ? portalLabelForRole(user.role) : "Request Coaching"}
           </Link>
         </div>
 
@@ -103,8 +104,8 @@ export default function Header() {
               ) : (
                 <AccountMenu />
               )}
-              <Link to="/coaches" className="pp-btn-primary px-5 py-2.5 text-sm">
-                Request Coaching
+              <Link to={user ? portalPathForRole(user.role) : "/coaches"} className="pp-btn-primary px-5 py-2.5 text-sm">
+                {user ? portalLabelForRole(user.role) : "Request Coaching"}
               </Link>
             </div>
           </nav>

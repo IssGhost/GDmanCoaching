@@ -1,6 +1,12 @@
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { normalizeRole, portalLabelForRole, portalPathForRole } from "../lib/roles";
 
 export default function Footer() {
+  const { user } = useAuth();
+  const role = normalizeRole(user?.role);
+  const supportPath = role === "admin" || role === "employee" ? "/admin/requests" : role === "coach" ? "/messages" : "/dashboard/requests";
+  const supportLabel = role === "admin" || role === "employee" ? "Support Inbox" : role === "coach" ? "Client Requests" : "Personalized Requests";
   return (
     <footer className="mt-0 border-t border-[#12372a]/10 bg-[#fff8e7] text-[#5f746c]">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-6 py-12 md:grid-cols-4">
@@ -24,7 +30,7 @@ export default function Footer() {
           <ul className="space-y-2 text-sm font-semibold">
             <li><Link to="/signup" className="hover:text-[#00a896]">Player Signup</Link></li>
             <li><Link to="/coach-signup" className="hover:text-[#00a896]">Coach Signup</Link></li>
-            <li><Link to="/dashboard" className="hover:text-[#00a896]">Dashboard</Link></li>
+            <li><Link to={user ? portalPathForRole(user.role) : "/signin"} className="hover:text-[#00a896]">{user ? portalLabelForRole(user.role) : "Sign In"}</Link></li>
           </ul>
         </div>
         <div>
@@ -32,7 +38,7 @@ export default function Footer() {
           <ul className="space-y-2 text-sm font-semibold">
             <li><Link to="/faq" className="hover:text-[#00a896]">Frequently Asked Questions</Link></li>
             <li><Link to="/contact" className="hover:text-[#00a896]">Contact GOOD Coaching</Link></li>
-            <li><Link to="/dashboard/requests" className="hover:text-[#00a896]">Personalized Requests</Link></li>
+            <li><Link to={supportPath} className="hover:text-[#00a896]">{supportLabel}</Link></li>
           </ul>
         </div>
       </div>
