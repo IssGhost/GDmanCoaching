@@ -13,7 +13,6 @@ const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, ne
 
 const STRIPE_API = "https://api.stripe.com/v1";
 const CENTS = (amount) => Math.round(Number(amount || 0) * 100);
-const DOLLARS = (cents) => Math.round(Number(cents || 0)) / 100;
 
 function paymentsMode() {
   const raw = String(process.env.PAYMENTS_MODE || process.env.PAYMENT_MODE || "").trim().toLowerCase();
@@ -21,8 +20,16 @@ function paymentsMode() {
   return "stripe";
 }
 
+function envFlag(name) {
+  return ["true", "1", "yes", "on"].includes(String(process.env[name] || "").trim().toLowerCase());
+}
+
 function mockPaymentsEnabled() {
-  return ["true", "1", "yes", "on"].includes(String(process.env.ENABLE_MOCK_PAYMENTS || "").trim().toLowerCase());
+  return envFlag("ENABLE_MOCK_PAYMENTS");
+}
+
+function platformOnlyStripeTestEnabled() {
+  return envFlag("ALLOW_PLATFORM_ONLY_STRIPE_TEST");
 }
 
 function stripeConfigured() {
@@ -211,9 +218,14 @@ function providerStatus(req) {
     stripeTestMode: isStripeTestKey(),
     mockAllowed,
     usingMock: mode === "mock" || (!stripeConfigured() && mockAllowed),
+    platformOnlyStripeTest: platformOnlyStripeTestEnabled(),
     publicBaseUrl: publicBaseUrl(req),
     integrations: integrationStatus(),
   };
+}
+
+function shouldUsePlatformOnlyStripe(coach) {
+  return paymentsMode() === "stripe" && platformOnlyStripeTestEnabled() && !coach?.stripeAccountId;
 }
 
 async function createSubmissionForOrder({ req, coach, pkg, order, title, description, goals, skillLevel }) {
@@ -403,6 +415,8 @@ router.post(
     });
 
     profile.stripeAccountId = accountId;
+    profile.stripeOnboardingComplete = false;
+    profile.payoutsEnabled = false;
 
     await profile.save();
 
@@ -441,11 +455,12 @@ router.post(
       _id: packageId,
       coachId: coach._id,
       active: true,
+      price: { $gt: 0 },
     });
 
     if (!pkg) {
       return res.status(404).json({
-        error: "Coaching package not found.",
+        error: "Coaching package not found or does not have a valid public price.",
       });
     }
 
@@ -465,6 +480,8 @@ router.post(
       coach,
       manualSplits: splitRecipients,
     });
+
+    const platformOnly = shouldUsePlatformOnlyStripe(coach);
 
     const order = await Order.create({
       userId: req.user._id,
@@ -486,10 +503,15 @@ router.post(
       tax: 0,
       total,
       platformFee: split.platformFee,
-      paymentMode: split.chargeType === "separate_charges_and_transfers" ? "stripe_separate_transfers" : "stripe_destination_charge",
+      paymentMode: platformOnly
+        ? "stripe_platform_only_test"
+        : split.chargeType === "separate_charges_and_transfers"
+        ? "stripe_separate_transfers"
+        : "stripe_destination_charge",
       metadata: {
         goals,
         skillLevel,
+        platformOnlyStripeTest: platformOnly,
       },
     });
 
@@ -510,11 +532,15 @@ router.post(
 
     const paymentSplit = await PaymentSplit.create({
       orderId: order._id,
-      chargeType: split.chargeType,
+      chargeType: platformOnly ? "platform_only_manual_payout" : split.chargeType,
       platformFee: split.platformFee,
       recipients: split.recipients,
       status: "pending",
-      notes: split.chargeType === "separate_charges_and_transfers" ? "Multiple recipient split configured." : "Primary coach payout configured.",
+      notes: platformOnly
+        ? "Stripe platform-only test payment. No connected coach payout was attempted."
+        : split.chargeType === "separate_charges_and_transfers"
+        ? "Multiple recipient split configured."
+        : "Primary coach payout configured.",
     });
 
     const mode = paymentsMode();
@@ -536,9 +562,9 @@ router.post(
       });
     }
 
-    if (split.chargeType === "destination_charge" && !coach.stripeAccountId) {
+    if (!platformOnly && split.chargeType === "destination_charge" && !coach.stripeAccountId) {
       return res.status(400).json({
-        error: "This coach has not finished payment setup yet.",
+        error: "This coach has not finished payment setup yet. For Stripe testing without coach payouts, set ALLOW_PLATFORM_ONLY_STRIPE_TEST=true.",
       });
     }
 
@@ -556,12 +582,14 @@ router.post(
       "line_items[0][quantity]": 1,
       "metadata[orderId]": String(order._id),
       "metadata[submissionId]": String(submission._id),
+      "metadata[platformOnlyStripeTest]": platformOnly ? "true" : "false",
       "payment_intent_data[metadata][orderId]": String(order._id),
       "payment_intent_data[metadata][submissionId]": String(submission._id),
+      "payment_intent_data[metadata][platformOnlyStripeTest]": platformOnly ? "true" : "false",
       "payment_intent_data[transfer_group]": `ORDER_${order._id}`,
     };
 
-    if (split.chargeType === "destination_charge" && coach.stripeAccountId) {
+    if (!platformOnly && split.chargeType === "destination_charge" && coach.stripeAccountId) {
       sessionBody["payment_intent_data[application_fee_amount]"] = CENTS(split.platformFee);
       sessionBody["payment_intent_data[transfer_data][destination]"] = coach.stripeAccountId;
     }
@@ -581,6 +609,7 @@ router.post(
       paymentSplit,
       stripeSession,
       mock: false,
+      platformOnlyStripeTest: platformOnly,
     });
   })
 );
@@ -638,6 +667,8 @@ router.post(
       coach,
     });
 
+    const platformOnly = shouldUsePlatformOnlyStripe(coach);
+
     const order = await Order.create({
       userId: req.user._id,
       coachId: coach._id,
@@ -656,9 +687,10 @@ router.post(
       tax: 0,
       total,
       platformFee: split.platformFee,
-      paymentMode: "stripe_destination_charge",
+      paymentMode: platformOnly ? "stripe_platform_only_test" : "stripe_destination_charge",
       metadata: {
         inquiryId: String(inquiry._id),
+        platformOnlyStripeTest: platformOnly,
       },
     });
 
@@ -680,11 +712,13 @@ router.post(
 
     const paymentSplit = await PaymentSplit.create({
       orderId: order._id,
-      chargeType: split.chargeType,
+      chargeType: platformOnly ? "platform_only_manual_payout" : split.chargeType,
       platformFee: split.platformFee,
       recipients: split.recipients,
       status: "pending",
-      notes: "Custom quote payment.",
+      notes: platformOnly
+        ? "Stripe platform-only test payment. No connected coach payout was attempted."
+        : "Custom quote payment.",
     });
 
     const mode = paymentsMode();
@@ -706,16 +740,16 @@ router.post(
       });
     }
 
-    if (!coach?.stripeAccountId) {
+    if (!platformOnly && !coach?.stripeAccountId) {
       return res.status(400).json({
-        error: "This coach has not finished payment setup yet.",
+        error: "This coach has not finished payment setup yet. For Stripe testing without coach payouts, set ALLOW_PLATFORM_ONLY_STRIPE_TEST=true.",
       });
     }
 
     const success = `${clientUrl}/dashboard/submissions/${submission._id}?paid=1`;
     const cancel = `${clientUrl}/messages`;
 
-    const session = await stripeRequest("/checkout/sessions", {
+    const sessionBody = {
       mode: "payment",
       success_url: success,
       cancel_url: cancel,
@@ -726,12 +760,19 @@ router.post(
       "line_items[0][quantity]": 1,
       "metadata[orderId]": String(order._id),
       "metadata[submissionId]": String(submission._id),
+      "metadata[platformOnlyStripeTest]": platformOnly ? "true" : "false",
       "payment_intent_data[metadata][orderId]": String(order._id),
       "payment_intent_data[metadata][submissionId]": String(submission._id),
+      "payment_intent_data[metadata][platformOnlyStripeTest]": platformOnly ? "true" : "false",
       "payment_intent_data[transfer_group]": `ORDER_${order._id}`,
-      "payment_intent_data[application_fee_amount]": CENTS(split.platformFee),
-      "payment_intent_data[transfer_data][destination]": coach.stripeAccountId,
-    });
+    };
+
+    if (!platformOnly && coach.stripeAccountId) {
+      sessionBody["payment_intent_data[application_fee_amount]"] = CENTS(split.platformFee);
+      sessionBody["payment_intent_data[transfer_data][destination]"] = coach.stripeAccountId;
+    }
+
+    const session = await stripeRequest("/checkout/sessions", sessionBody);
 
     order.stripeCheckoutSessionId = session.id;
     order.stripeCheckoutUrl = session.url;
@@ -745,6 +786,7 @@ router.post(
       submission,
       paymentSplit,
       mock: false,
+      platformOnlyStripeTest: platformOnly,
     });
   })
 );
@@ -762,11 +804,18 @@ router.post(
         sessionId: session.id,
       });
 
+      const existingSplit = await PaymentSplit.findOne({ orderId: session.metadata.orderId });
+
+      const splitStatus =
+        existingSplit?.chargeType === "platform_only_manual_payout"
+          ? "requires_manual_review"
+          : "paid";
+
       const paymentSplit = await PaymentSplit.findOneAndUpdate(
         { orderId: session.metadata.orderId },
         {
           $set: {
-            status: "paid",
+            status: splitStatus,
             stripePaymentIntentId: session.payment_intent,
             stripeCheckoutSessionId: session.id,
           },
