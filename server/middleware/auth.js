@@ -24,6 +24,18 @@ const auth = async (req, res, next) => {
   }
 };
 
+// Helper to check if user has a specific role
+const hasRole = (user, role) => {
+  if (!user || !user.roles) return false;
+  return user.roles.includes(role);
+};
+
+// Helper to check if user has any of the specified roles
+const hasAnyRole = (user, roles) => {
+  if (!user || !user.roles) return false;
+  return roles.some(role => user.roles.includes(role));
+};
+
 const isAdmin = (req, res, next) => {
   if (normalizeRole(req.user?.role) !== "admin") return res.status(403).json({ error: "Forbidden" });
   next();
@@ -52,4 +64,5 @@ const allow = (...roles) => (req, res, next) => {
   next();
 };
 
-module.exports = { auth, isAdmin, isStaff, isEmployee, isCoach, allow };
+module.exports = { auth, isAdmin, isStaff, isEmployee, isCoach, allow, hasRole, hasAnyRole };
+
