@@ -29,10 +29,6 @@ const faqs = [
     q: "How quickly should coaches respond?",
     a: "Please allow 1–3 business days for coaches to review and respond to inquiries.",
   },
-  {
-    q: "Will this automatically become a mobile app?",
-    a: "The website is responsive and supports a mobile-friendly browser experience. A dedicated native mobile app would be a separate project with its own design, build, app store, and maintenance work.",
-  },
 ];
 
 export default function FAQAccordion() {
