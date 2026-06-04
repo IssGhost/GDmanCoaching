@@ -3,7 +3,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const { normalizeRole } = require("../utils/roles");
+const { normalizeRole, requireRole } = require("../utils/roles");
 
 const router = express.Router();
 
@@ -16,7 +16,7 @@ function signToken(user) {
     {
       _id: user._id,
       id: user._id,
-      role: normalizeRole(user.role),
+      role: requireRole(user.role),
     },
     JWT_SECRET,
     { expiresIn: TOKEN_EXPIRES_IN }
@@ -31,14 +31,14 @@ function presentUser(user) {
     fullName: user.fullName || user.name || "",
     name: user.fullName || user.name || "",
     phone: user.phone || "",
-    role: normalizeRole(user.role),
+    role: requireRole(user.role),
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
 }
 
 function startPathForRole(role) {
-  const normalized = normalizeRole(role);
+  const normalized = requireRole(role);
   if (normalized === "admin") return "/admin";
   if (normalized === "employee") return "/employee";
   if (normalized === "coach") return "/coach/dashboard";
@@ -145,7 +145,7 @@ async function handleSignin(req, res, next) {
       });
     }
 
-    const normalizedRole = normalizeRole(user.role);
+    const normalizedRole = requireRole(user.role);
     if (user.role !== normalizedRole) {
       user.role = normalizedRole;
       await user.save();

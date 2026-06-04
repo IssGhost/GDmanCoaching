@@ -11,10 +11,21 @@ const ROLE_ALIASES = new Map([
 
 const VALID_ROLES = new Set(["user", "coach", "admin", "employee"]);
 
-function normalizeRole(value) {
-  const role = String(value || "user").trim().toLowerCase();
+function normalizeRole(value, fallback = null) {
+  if (value === undefined || value === null || String(value).trim() === "") return fallback;
+  const role = String(value).trim().toLowerCase();
   const normalized = ROLE_ALIASES.get(role) || role;
-  return VALID_ROLES.has(normalized) ? normalized : "user";
+  return VALID_ROLES.has(normalized) ? normalized : fallback;
 }
 
-module.exports = { normalizeRole, VALID_ROLES };
+function requireRole(value) {
+  const role = normalizeRole(value);
+  if (!role) {
+    const error = new Error(`Account role is missing or unsupported: ${String(value || "not set")}`);
+    error.statusCode = 409;
+    throw error;
+  }
+  return role;
+}
+
+module.exports = { normalizeRole, requireRole, VALID_ROLES };

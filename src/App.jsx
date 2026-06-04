@@ -52,6 +52,7 @@ import AdminBlogEditor from "./pages/AdminBlogEditor";
 import AdminTestimonials from "./pages/AdminTestimonials";
 import AdminTickets from "./pages/AdminTickets";
 import ScrollToTop from "./components/ScrollToTop";
+import RoleError from "./pages/RoleError";
 
 export default function App() {
   return (
@@ -212,6 +213,7 @@ export default function App() {
                 {/* Auth */}
                 <Route path="/signin" element={<SignIn />} />
                 <Route path="/portal" element={<PortalRedirect />} />
+                <Route path="/role-error" element={<PrivateRoute><RoleError /></PrivateRoute>} />
                 <Route path="/signup" element={<SignUp />} />
 
                 {/* User Dashboard with nested tabs */}

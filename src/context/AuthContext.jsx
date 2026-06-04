@@ -47,7 +47,9 @@ function roleFromToken(token) {
 function normalizeUser(user, token) {
   if (!user && !token) return null;
   const nextUser = user || {};
-  return { ...nextUser, role: normalizeRole(nextUser.role || roleFromToken(token)) };
+  const role = normalizeRole(nextUser.role ?? nextUser.accountType ?? nextUser.userRole ?? roleFromToken(token));
+  if (!role) throw new Error("This account does not have a valid role. Ask an admin to set it to user, coach, or admin.");
+  return { ...nextUser, role };
 }
 
 const AuthContext = createContext(null);
@@ -127,6 +129,8 @@ export function AuthProvider({ children }) {
 
   const signin = async ({ email, password }) => {
     setAuthBusy(true);
+    clearTokens();
+    setUser(null);
     const candidates = [AUTH_PATHS.signin, ...SIGNIN_FALLBACKS.filter((p) => p !== AUTH_PATHS.signin)];
 
     console.info("[Auth] API_BASE:", API_BASE);
@@ -137,8 +141,11 @@ export function AuthProvider({ children }) {
         try {
           const data = await api.post(p, { email, password });
           const accessToken = data?.accessToken || data?.token;
-          if (accessToken) setTokens({ accessToken, refreshToken: data.refreshToken });
-          const nextUser = normalizeUser(data?.user, accessToken);
+          if (!accessToken) throw new Error("Sign-in succeeded without an access token.");
+          clearTokens();
+          setTokens({ accessToken, refreshToken: data.refreshToken });
+          const session = await api.get(AUTH_PATHS.me, accessToken);
+          const nextUser = normalizeUser(session?.user || session, accessToken);
           setUser(nextUser);
           return nextUser;
         } catch (err) {
@@ -149,6 +156,10 @@ export function AuthProvider({ children }) {
       throw new Error(
         `Sign-in endpoint not found. Tried: ${candidates.map((p) => `${API_BASE}${p}`).join(", ")}.`
       );
+    } catch (error) {
+      clearTokens();
+      setUser(null);
+      throw error;
     } finally {
       setAuthBusy(false);
     }

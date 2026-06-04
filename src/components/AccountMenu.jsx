@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { normalizeRole, roleBadgeClass, roleLabel as getRoleLabel } from "../lib/roles";
+import { normalizeRole, roleBadgeStyle, roleLabel as getRoleLabel } from "../lib/roles";
 
 const ROLE_PORTAL_LINKS = {
   user: [
@@ -47,7 +47,7 @@ export default function AccountMenu() {
 
   const role = normalizeRole(user?.role);
   const roleLabel = getRoleLabel(role);
-  const links = ROLE_PORTAL_LINKS[role] || ROLE_PORTAL_LINKS.user;
+  const links = ROLE_PORTAL_LINKS[role] || [];
   const go = (path) => { setOpen(false); nav(path); };
 
   return (
@@ -60,10 +60,11 @@ export default function AccountMenu() {
       {open && (
         <div className="absolute right-0 z-[60] mt-2 w-72 overflow-hidden rounded-2xl border border-[#12372a]/10 bg-[#fffef8]/95 text-[#12372a] shadow-2xl shadow-[#12372a]/15 backdrop-blur-xl">
           <div className="border-b border-[#12372a]/10 bg-[#d9f7fb]/50 px-4 py-4">
-            <div className="flex items-center justify-between gap-3"><div className="truncate text-sm font-black">{user?.fullName || user?.email}</div><span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${roleBadgeClass(role)}`}>{roleLabel}</span></div>
+            <div className="flex items-center justify-between gap-3"><div className="truncate text-sm font-black">{user?.fullName || user?.email}</div><span style={roleBadgeStyle(role)} className="shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wider">{roleLabel}</span></div>
           </div>
 
           <div className="grid p-2 text-sm font-bold">
+            {links.length === 0 && <div className="rounded-xl bg-[#fee2e2] px-4 py-3 text-sm font-bold text-[#7f1d1d]">Account role unavailable. Contact an administrator.</div>}
             {links.map(([label, path]) => <button key={path} onClick={() => go(path)} className="rounded-xl px-4 py-2.5 text-left hover:bg-[#d9f7fb]">{label}</button>)}
           </div>
 
