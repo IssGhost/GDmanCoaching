@@ -136,10 +136,10 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const signup = async (email, password, fullName, accountType) => {
+  const signup = async (email, password, fullName, phone, accountType) => {
     setAuthBusy(true);
     try {
-      const data = await api.post(AUTH_PATHS.signup, { email, password, fullName, accountType });
+      const data = await api.post(AUTH_PATHS.signup, { email, password, fullName, phone, accountType });
       const accessToken = data?.accessToken || data?.token;
       if (accessToken) setTokens({ accessToken, refreshToken: data.refreshToken });
       setUser(data?.user || null);
