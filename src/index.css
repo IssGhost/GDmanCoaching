@@ -496,11 +496,7 @@ textarea:focus {
   border-color: rgba(0, 168, 150, .65) !important;
   box-shadow: 0 0 0 4px rgba(0, 168, 150, .13) !important;
 }
-<<<<<<< HEAD
-/* ===== MVP DEMO FINAL POLISH: remove every remaining legacy surface ===== */
-=======
 /* ===== GOOD Coaching application surfaces ===== */
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
 .card-pro,
 .card-pro--grid,
 .card-pro--glow,

@@ -11,11 +11,7 @@ import {
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
-<<<<<<< HEAD
-import { getDemoSubmission, normalizePhase } from "../lib/demoData";
-=======
 import { normalizePhase } from "../lib/workflow";
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
 import { MAX_VIDEO_MINUTES, validateVideoFile } from "../lib/uploads";
 
 function formatTime(seconds = 0) {
@@ -72,56 +68,6 @@ export default function SubmissionDetail() {
       return;
     }
 
-<<<<<<< HEAD
-    try {
-      const durationSeconds = await validateVideoFile(file);
-      setSelectedVideo(file);
-      setVideoDurationSeconds(durationSeconds);
-      setVideoPreviewUrl(URL.createObjectURL(file));
-      push("Video selected and passed the 15-minute limit.", "success");
-    } catch (err) {
-      setSelectedVideo(null);
-      setVideoPreviewUrl("");
-      setVideoDurationSeconds(0);
-      push(err.message || "Please choose a different video.", "error");
-    }
-  };
-
-  const uploadVideo = async () => {
-    if (!selectedVideo) return push("Choose a video file first.", "error");
-
-    setBusy(true);
-    try {
-      const result = await api.post(`/videos/submissions/${id}/upload-url`, {}, token);
-
-      if (result.provider === "cloudflare" && result.uploadUrl) {
-        const formData = new FormData();
-        formData.append("file", selectedVideo);
-        const uploadResponse = await fetch(result.uploadUrl, { method: "POST", body: formData });
-        if (!uploadResponse.ok) throw new Error("Video upload failed. Please try again.");
-
-        const row = await api.put(
-          `/videos/submissions/${id}/video`,
-          {
-            assetId: result.uploadId,
-            playbackId: result.uploadId,
-            durationSeconds: videoDurationSeconds,
-            status: "ready_for_review",
-          },
-          token
-        );
-        setData((d) => ({ ...d, submission: { ...row, phase: "ready_for_review" } }));
-        push("Video uploaded and marked ready for coach review.", "success");
-      } else {
-        const row = await api.put(
-          `/videos/submissions/${id}/video`,
-          { videoUrl: videoPreviewUrl, durationSeconds: videoDurationSeconds, status: "ready_for_review" },
-          token
-        );
-        setData((d) => ({ ...d, submission: { ...row, videoUrl: videoPreviewUrl, phase: "ready_for_review" } }));
-        push("Demo upload saved. In production this file upload is stored by the video provider.", "success");
-      }
-=======
     try {
       const durationSeconds = await validateVideoFile(file);
       setSelectedVideo(file);
@@ -151,21 +97,11 @@ export default function SubmissionDetail() {
       const row = await api.put(`/videos/submissions/${id}/video`, { assetId: result.uploadId, playbackId: result.uploadId, durationSeconds: videoDurationSeconds, status: "ready_for_review" }, token);
       setData((d) => ({ ...d, submission: { ...row, phase: "ready_for_review" } }));
       push("Video uploaded and marked ready for coach review.", "success");
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
 
       setSelectedVideo(null);
       setVideoDurationSeconds(0);
     } catch (err) {
-<<<<<<< HEAD
-      setData((d) => ({
-        ...d,
-        submission: { ...d.submission, videoUrl: videoPreviewUrl, status: "ready_for_review", phase: "ready_for_review" },
-        review: null,
-      }));
-      push(err.message || "Demo upload saved. This is now the Ready For Review phase.", "success");
-=======
       push(err.message || "Video could not be uploaded.", "error");
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
     } finally {
       setBusy(false);
     }

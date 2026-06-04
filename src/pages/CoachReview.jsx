@@ -5,11 +5,7 @@ import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
 import { documentFileToDataUrl } from "../lib/uploads";
-<<<<<<< HEAD
-import { DEMO_REVIEWS_BY_PHASE, getDemoSubmission, normalizePhase } from "../lib/demoData";
-=======
 import { normalizePhase } from "../lib/workflow";
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
 
 const blankReview = { summary: "", strengths: "", improvements: "", drills: "", finalNotes: "", responseVideoUrl: "", voiceRecordingUrl: "", transcriptPdfUrl: "", drillPlanPdfUrl: "" };
 
@@ -282,11 +278,7 @@ function CoachReadyReview({
 
           <div className="rounded-2xl border border-[#12372a]/10 bg-[#fff8e7] p-4">
             <h3 className="font-black text-[#12372a]">Upload coach deliverables</h3>
-<<<<<<< HEAD
-            <p className="mt-1 text-sm text-[#5f746c]">Add voice analysis, a transcript PDF, and/or a downloadable drill plan PDF. Files must be 12 MB or smaller.</p>
-=======
             <p className="mt-1 text-sm text-[#5f746c]">Add voice analysis, a transcript PDF, and/or a downloadable drill plan PDF. Files must be 3 MB or smaller.</p>
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
             <div className="mt-3 grid gap-3">
               {[['voiceRecordingUrl','audio','Voice analysis recording','audio/*'],['transcriptPdfUrl','pdf','Transcript PDF','application/pdf'],['drillPlanPdfUrl','pdf','Drill plan PDF','application/pdf']].map(([key,kind,label,accept]) => <label key={key} className="block text-sm font-black text-[#12372a]">{label}<input type="file" accept={accept} onChange={async(e)=>{try{const url=await documentFileToDataUrl(e.target.files?.[0],kind);setReviewForm(f=>({...f,[key]:url}));}catch(err){push(err.message,'error')}}} className="pp-input mt-1 px-4 py-3"/>{reviewForm[key] && <span className="mt-1 block text-xs text-[#087f73]">Ready to save</span>}</label>)}
             </div>

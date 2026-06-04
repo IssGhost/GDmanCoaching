@@ -37,11 +37,7 @@ export default function Home() {
               </Link>
             </div>
             <div className="mt-8 grid gap-3 text-sm font-bold text-[#5f746c] sm:grid-cols-3">
-<<<<<<< HEAD
-              {["Coach-led communication", "Private video submissions", "Timestamped improvement plans"].map((item) => (
-=======
               {["Direct coach communication", "Private video submissions", "Timestamped improvement plans"].map((item) => (
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
                 <div key={item} className="flex items-center gap-2"><FaCheckCircle className="text-[#00a896]" /> {item}</div>
               ))}
             </div>
@@ -83,11 +79,7 @@ export default function Home() {
         <div className="grid gap-5 md:grid-cols-3">
           {[
             { icon: FaCreditCard, title: "Coach profiles", text: "Profiles support photos, bios, DUPR details, specializations, and social links." },
-<<<<<<< HEAD
-            { icon: FaCloudUploadAlt, title: "Video submission", text: "Direct upload workflow with a no-key demo fallback for online testing." },
-=======
             { icon: FaCloudUploadAlt, title: "Video submission", text: "Secure video uploads with a 15-minute limit for focused coach reviews." },
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
             { icon: FaUserTie, title: "Coach dashboard", text: "Coaches manage online options, assigned videos, profile details, and completed reviews." },
           ].map((card) => (
             <div key={card.title} className="pp-card-solid rounded-3xl p-6 transition hover:-translate-y-1 hover:shadow-xl">

@@ -3,48 +3,6 @@ import { Link } from "react-router-dom";
 import { FaExternalLinkAlt, FaFilter, FaSearch, FaStar, FaVideo } from "react-icons/fa";
 import { api } from "../lib/api";
 
-<<<<<<< HEAD
-const fallbackCoaches = [
-  {
-    _id: "demo-1",
-    displayName: "Alex Rivera",
-    headline: "Online video analysis, doubles strategy, and tournament prep",
-    city: "Austin",
-    state: "TX",
-    country: "USA",
-    rating: 5,
-    reviewCount: 38,
-    avatarUrl: "/images/coaches/coach-alex.svg",
-    duprId: "7DVMM4",
-    duprSingles: 4.21,
-    duprDoubles: 4.63,
-    specialties: ["Video Analysis", "Doubles Strategy", "Third-shot drops", "Kitchen resets"],
-    skillLevels: ["Intermediate (3.0–4.0)", "Advanced (4.0–5.0)"],
-    turnaroundHours: 72,
-    packages: [
-      { _id: "demo-pkg-1", title: "Single Video Analysis", price: 0, reviewType: "single_video", maxVideoMinutes: 15 },
-      { _id: "demo-pkg-2", title: "Strategy Consultation", price: 0, reviewType: "strategy_consultation", maxVideoMinutes: 15 },
-    ],
-  },
-  {
-    _id: "demo-2",
-    displayName: "Morgan Chen",
-    headline: "Remote match reviews, fundamentals, and personalized training plans",
-    city: "Round Rock",
-    state: "TX",
-    country: "USA",
-    rating: 4.9,
-    reviewCount: 24,
-    avatarUrl: "/images/coaches/coach-morgan.svg",
-    specialties: ["Match Reviews", "Footwork", "Beginner basics", "Serve return"],
-    skillLevels: ["Beginner (2.5–3.0)", "Intermediate (3.0–4.0)"],
-    turnaroundHours: 72,
-    packages: [{ _id: "demo-pkg-3", title: "Personalized Training Plan", price: 0, reviewType: "training_plan", maxVideoMinutes: 15 }],
-  },
-];
-
-=======
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
 function packageLabel(pkg) {
   const type = String(pkg?.reviewType || "").replaceAll("_", " ");
   if (["single_video", "match_breakdown", "doubles_strategy"].includes(pkg?.reviewType)) return "Video review";
@@ -85,11 +43,7 @@ export default function Marketplace() {
             <p className="pp-kicker">Coach marketplace</p>
             <h1 className="mt-2 text-4xl font-black text-[#12372a] md:text-6xl">Find online pickleball coaching for your next level.</h1>
             <p className="mt-4 max-w-3xl text-lg leading-8 text-[#5f746c]">
-<<<<<<< HEAD
-              Browse coaches for video analysis, match reviews, personalized training plans, strategy consultations, and skill development guidance. Coaches set and communicate pricing directly with prospective clients.
-=======
               Browse coaches for video analysis, match reviews, personalized training plans, strategy consultations, and skill development guidance. Review each coach’s plans and pricing, then message them if you need a custom option.
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
             </p>
           </div>
           <div className="rounded-3xl border border-[#12372a]/10 bg-white/75 p-4 shadow-xl shadow-[#12372a]/10 backdrop-blur">
@@ -124,10 +78,6 @@ export default function Marketplace() {
         ) : (
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {list.map((coach) => {
-<<<<<<< HEAD
-              const isDemo = String(coach._id).startsWith("demo-");
-=======
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
               return (
                 <article key={coach._id} className="flex flex-col overflow-hidden rounded-3xl border border-[#12372a]/10 bg-white/90 shadow-xl shadow-[#12372a]/10 backdrop-blur transition hover:-translate-y-1">
                   <div className="relative">
@@ -174,13 +124,8 @@ export default function Marketplace() {
                   <p className="mt-4 rounded-2xl border border-[#d5b450]/30 bg-[#fff1c7] p-3 text-xs font-black text-[#29483d]">View plan price or request quote directly. Videos are limited to 15 minutes.</p>
 
                   <div className="mt-auto flex gap-3 pt-5">
-<<<<<<< HEAD
-                    {isDemo ? <Link to="/demo" className="pp-btn-secondary flex-1 px-4 py-3 text-center">Seed Demo</Link> : <Link to={`/coaches/${coach._id}`} className="pp-btn-secondary flex-1 px-4 py-3 text-center">View Profile</Link>}
-                    <Link to={isDemo ? "/signin" : `/coaches/${coach._id}`} className="pp-btn-primary flex-1 px-4 py-3 text-center">Request Coaching</Link>
-=======
                     <Link to={`/coaches/${coach._id}`} className="pp-btn-secondary flex-1 px-4 py-3 text-center">View Profile</Link>
                     <Link to={`/coaches/${coach._id}`} className="pp-btn-primary flex-1 px-4 py-3 text-center">Request Coaching</Link>
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
                   </div>
                   </div>
                 </article>

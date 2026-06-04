@@ -5,11 +5,7 @@ import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
 import { imageFileToDataUrl } from "../lib/uploads";
-<<<<<<< HEAD
-import { DEMO_SUBMISSIONS, normalizePhase } from "../lib/demoData";
-=======
 import { normalizePhase } from "../lib/workflow";
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
 
 const initialPackage = {
   title: "",
@@ -68,64 +64,17 @@ export default function CoachDashboard() {
     setLoadError("");
     try {
       const result = await api.get("/coaches/dashboard", token);
-<<<<<<< HEAD
-
-      const liveSubmissions = Array.isArray(result?.submissions) ? result.submissions : [];
-      const mergedSubmissions = [
-        ...DEMO_SUBMISSIONS,
-        ...liveSubmissions.filter((row) => !DEMO_SUBMISSIONS.some((demoRow) => demoRow._id === row._id)),
-      ];
-
-=======
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
       setProfileForm({
         ...(result?.profile || {}),
         instagram: result?.profile?.socialLinks?.instagram || "",
         youtube: result?.profile?.socialLinks?.youtube || "",
         website: result?.profile?.socialLinks?.website || "",
       });
-<<<<<<< HEAD
-
-      setData({
-        ...result,
-        submissions: mergedSubmissions,
-        profile: result?.profile || {
-          displayName: "Jordan Coach",
-          avatarUrl: "/images/coaches/coach-jordan.svg",
-          approved: true,
-          payoutsEnabled: true,
-        },
-        packages: result?.packages?.length
-          ? result.packages
-          : [
-              { _id: "pkg-1", title: "Single Video Analysis", price: 0, reviewType: "single_video", turnaroundHours: 72, maxVideoMinutes: 15 },
-              { _id: "pkg-2", title: "Match Review", price: 0, reviewType: "match_breakdown", turnaroundHours: 72, maxVideoMinutes: 15 },
-              { _id: "pkg-3", title: "Strategy Consultation", price: 0, reviewType: "strategy_consultation", turnaroundHours: 72, maxVideoMinutes: 15 },
-            ],
-        splits: result?.splits || [],
-      });
-    } catch {
-      setData({
-        profile: {
-          displayName: "Jordan Coach",
-          avatarUrl: "/images/coaches/coach-jordan.svg",
-          approved: true,
-          payoutsEnabled: true,
-        },
-        submissions: DEMO_SUBMISSIONS,
-        packages: [
-          { _id: "pkg-1", title: "Single Video Analysis", price: 0, reviewType: "single_video", turnaroundHours: 72, maxVideoMinutes: 15 },
-          { _id: "pkg-2", title: "Match Review", price: 0, reviewType: "match_breakdown", turnaroundHours: 72, maxVideoMinutes: 15 },
-          { _id: "pkg-3", title: "Strategy Consultation", price: 0, reviewType: "strategy_consultation", turnaroundHours: 72, maxVideoMinutes: 15 },
-        ],
-        splits: [],
-=======
       setData({
         ...result,
         submissions: Array.isArray(result?.submissions) ? result.submissions : [],
         packages: Array.isArray(result?.packages) ? result.packages : [],
         splits: Array.isArray(result?.splits) ? result.splits : [],
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
       });
     } catch (err) {
       setLoadError(err.message || "Your coach dashboard could not be loaded.");
@@ -243,11 +192,7 @@ export default function CoachDashboard() {
               <input className="pp-input px-4 py-3" placeholder="Instagram URL" value={profileForm.instagram || ""} onChange={(e) => setProfileForm((p) => ({ ...p, instagram: e.target.value }))} />
               <input className="pp-input px-4 py-3" placeholder="YouTube URL" value={profileForm.youtube || ""} onChange={(e) => setProfileForm((p) => ({ ...p, youtube: e.target.value }))} />
               <input className="pp-input px-4 py-3" type="email" placeholder="Public contact email" value={profileForm.contactEmail || ""} onChange={(e) => setProfileForm((p) => ({ ...p, contactEmail: e.target.value }))} />
-<<<<<<< HEAD
-              <select className="pp-input px-4 py-3" value={profileForm.presenceStatus || "offline"} onChange={(e) => setProfileForm((p) => ({ ...p, presenceStatus: e.target.value }))}><option value="online">Online / available to chat</option><option value="offline">Offline / asynchronous replies</option></select>
-=======
               <select className="pp-input px-4 py-3" value={profileForm.presenceStatus || "offline"} onChange={(e) => setProfileForm((p) => ({ ...p, presenceStatus: e.target.value }))}><option value="online">Online / available to chat</option><option value="offline">Offline / reply when available</option></select>
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
               <label className="flex items-center gap-2 rounded-xl border border-[#12372a]/10 bg-white px-4 py-3 font-bold text-[#12372a]"><input type="checkbox" checked={profileForm.acceptingInquiries !== false} onChange={(e) => setProfileForm((p) => ({ ...p, acceptingInquiries: e.target.checked }))} /> Accepting new inquiries</label>
               <input className="pp-input px-4 py-3" placeholder="Personal website" value={profileForm.website || ""} onChange={(e) => setProfileForm((p) => ({ ...p, website: e.target.value }))} />
               <textarea maxLength={5000} rows={6} className="pp-input px-4 py-3 md:col-span-2" placeholder="Biography and coaching expectations" value={profileForm.bio || ""} onChange={(e) => setProfileForm((p) => ({ ...p, bio: e.target.value }))} />

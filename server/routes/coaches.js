@@ -26,8 +26,6 @@ function cleanSocialLinks(body = {}) {
   };
 }
 
-<<<<<<< HEAD
-=======
 function packageInput(body = {}) {
   const price = Number(body.price);
   if (!Number.isFinite(price) || price <= 0) {
@@ -38,7 +36,6 @@ function packageInput(body = {}) {
   return { ...body, price, discountPercent: Math.min(Math.max(Number(body.discountPercent || 0), 0), 100), maxVideoMinutes: Math.min(Number(body.maxVideoMinutes || 15), 15) };
 }
 
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
 function duprProfileUrl(duprId) {
   return duprId ? `https://dashboard.dupr.com/dashboard/player/${encodeURIComponent(duprId)}` : "";
 }
@@ -124,33 +121,6 @@ router.post(
 
     const user = await User.findByIdAndUpdate(req.user._id, { $set: { role: "coach" } }, { new: true }).select("-passwordHash");
 
-<<<<<<< HEAD
-    const starterPackages = [
-      {
-        title: "Single Video Analysis",
-        description: "Upload one match or drill clip and receive timestamped notes, strengths, fixes, and drills. Includes coach-entered pricing and can be adjusted through a custom quote after discussion.",
-        price: 0,
-        reviewType: "single_video",
-        turnaroundHours: update.turnaroundHours,
-        maxVideoMinutes: 15,
-      },
-      {
-        title: "Strategy Consultation",
-        description: "A remote review focused on positioning, third-shot choices, resets, and partner movement. Includes coach-entered pricing and can be adjusted through a custom quote after discussion.",
-        price: 0,
-        reviewType: "strategy_consultation",
-        turnaroundHours: update.turnaroundHours,
-        maxVideoMinutes: 15,
-      },
-    ];
-
-    const existingPackages = await CoachingPackage.countDocuments({ coachId: profile._id });
-    if (!existingPackages) {
-      await CoachingPackage.insertMany(starterPackages.map((pkg) => ({ ...pkg, coachId: profile._id })));
-    }
-
-=======
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
     const packages = await CoachingPackage.find({ coachId: profile._id }).sort({ price: 1 });
     res.json({ profile, packages, user });
   })
@@ -202,11 +172,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const profile = await CoachProfile.findOne({ userId: req.user._id });
     if (!profile) return res.status(404).json({ error: "Coach profile not found" });
-<<<<<<< HEAD
-    const pkg = await CoachingPackage.create({ ...req.body, price: Math.max(Number(req.body?.price || 0), 0), discountPercent: Math.min(Math.max(Number(req.body?.discountPercent || 0), 0), 100), maxVideoMinutes: Math.min(Number(req.body?.maxVideoMinutes || 15), 15), coachId: profile._id });
-=======
     const pkg = await CoachingPackage.create({ ...packageInput(req.body), coachId: profile._id });
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
     res.json(pkg);
   })
 );
@@ -253,11 +219,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const profile = await CoachProfile.findOne({ userId: req.user._id });
     if (!profile) return res.status(404).json({ error: "Coach profile not found" });
-<<<<<<< HEAD
-    const pkg = await CoachingPackage.create({ ...req.body, price: Math.max(Number(req.body?.price || 0), 0), discountPercent: Math.min(Math.max(Number(req.body?.discountPercent || 0), 0), 100), maxVideoMinutes: Math.min(Number(req.body?.maxVideoMinutes || 15), 15), coachId: profile._id });
-=======
     const pkg = await CoachingPackage.create({ ...packageInput(req.body), coachId: profile._id });
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
     res.json(pkg);
   })
 );

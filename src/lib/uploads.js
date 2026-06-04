@@ -13,10 +13,7 @@ export function readFileAsDataUrl(file) {
 export async function imageFileToDataUrl(file) {
   if (!file) return "";
   if (!file.type?.startsWith("image/")) throw new Error("Please choose an image file.");
-<<<<<<< HEAD
-=======
   if (file.size > 3 * 1024 * 1024) throw new Error("Images must be 3 MB or smaller.");
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
   return readFileAsDataUrl(file);
 }
 
@@ -54,10 +51,6 @@ export async function documentFileToDataUrl(file, kind = "file") {
   if (!file) return "";
   const allowed = kind === "audio" ? file.type?.startsWith("audio/") : file.type === "application/pdf";
   if (!allowed) throw new Error(kind === "audio" ? "Please choose an audio recording." : "Please choose a PDF file.");
-<<<<<<< HEAD
-  if (file.size > 12 * 1024 * 1024) throw new Error("Files must be 12 MB or smaller.");
-=======
   if (file.size > 3 * 1024 * 1024) throw new Error("Files must be 3 MB or smaller.");
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
   return readFileAsDataUrl(file);
 }

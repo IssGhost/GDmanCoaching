@@ -2,37 +2,6 @@ import { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { FaLock, FaMapMarkerAlt } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
-<<<<<<< HEAD
-import { api } from "../lib/api";
-
-const quickAccess = [
-  {
-    role: "Customer",
-    icon: FaUser,
-    email: "customer",
-    password: "customer",
-    start: "/dashboard/submissions",
-    text: "Bookings, uploads, reviews, and training requests.",
-  },
-  {
-    role: "Coach",
-    icon: FaUserTie,
-    email: "coach",
-    password: "coach",
-    start: "/coach/dashboard",
-    text: "Packages, submissions, review queue, and profile tools.",
-  },
-  {
-    role: "Admin",
-    icon: FaUserShield,
-    email: "admin",
-    password: "admin",
-    start: "/admin/coaching",
-    text: "Coach approvals, platform activity, and split payments.",
-  },
-];
-=======
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
 
 function routeFor(user, fallback = "/dashboard/submissions") {
   if (user?.role === "admin") return "/admin/coaching";
@@ -83,11 +52,7 @@ export default function SignIn() {
             <h2 className="text-4xl font-black text-white">Access the full coaching platform.</h2>
 
             <p className="mt-4 leading-7 text-white/85">
-<<<<<<< HEAD
-              Use quick access to enter the customer, coach, and admin workspaces for online coaching, video review, and coach workflow tracking.
-=======
               Sign in to manage bookings, messages, video reviews, and coaching plans.
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
             </p>
 
             <div className="mt-8 grid gap-3 text-sm font-bold text-white/90">

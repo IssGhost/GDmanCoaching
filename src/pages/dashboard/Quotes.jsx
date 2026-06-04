@@ -10,15 +10,6 @@ const TEMPLATES = [
     icon: FaMapMarkerAlt,
     subject: "Online coaching request at online video review",
     details: "I want a one-hour online coaching request focused on footwork, court positioning, and controlled resets.",
-<<<<<<< HEAD
-  },
-  {
-    label: "Group Consultation",
-    icon: FaUsers,
-    subject: "Small group doubles consultation",
-    details: "We have 4 players and want a consultation focused on partner movement, kitchen positioning, and point construction.",
-=======
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
   },
   {
     label: "Video Review",
@@ -103,11 +94,7 @@ export default function DashboardQuotes() {
 
       <section className="rounded-[2rem] border border-[#12372a]/10 bg-white/82 p-6 shadow-xl shadow-[#12372a]/8 backdrop-blur">
         <h2 className="text-xl font-black text-[#12372a]">Request custom coaching</h2>
-<<<<<<< HEAD
-        <p className="mt-1 text-sm text-[#5f746c]">Use this when a player needs a custom video context, group size, consultation date, or online coaching quote.</p>
-=======
         <p className="mt-1 text-sm text-[#5f746c]">Use this when a player needs a a custom video review, strategy consultation, or coaching quote.</p>
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
         <div className="mt-5 grid gap-4">
           <label className="block">
             <span className="mb-1 block text-sm font-black text-[#12372a]">Subject</span>
@@ -115,11 +102,7 @@ export default function DashboardQuotes() {
           </label>
           <label className="block">
             <span className="mb-1 block text-sm font-black text-[#12372a]">Details</span>
-<<<<<<< HEAD
-            <textarea rows={5} className="pp-input px-4 py-3" value={form.details} onChange={(e) => setForm((f) => ({ ...f, details: e.target.value }))} placeholder="Include preferred focus area, skill level, group size, goals, and scheduling window." />
-=======
             <textarea rows={5} className="pp-input px-4 py-3" value={form.details} onChange={(e) => setForm((f) => ({ ...f, details: e.target.value }))} placeholder="Include the preferred focus area, skill level, goals, and timing." />
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
           </label>
         </div>
         <button onClick={submit} disabled={sending} className="pp-btn-primary mt-5 px-5 py-3 disabled:opacity-60">

@@ -186,24 +186,12 @@ router.post(
       number: createOrderNumber(),
       orderType: "coaching",
       items: [{ packageId: String(pkg._id), name: pkg.title, price: total, qty: 1, tag: pkg.reviewType }],
-<<<<<<< HEAD
-      status: process.env.STRIPE_SECRET_KEY && total > 0 ? "pending" : "paid",
-=======
       status: "pending",
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
       subtotal: total,
       tax: 0,
       total,
       platformFee: split.platformFee,
-<<<<<<< HEAD
-      paymentMode: process.env.STRIPE_SECRET_KEY && total > 0
-        ? split.chargeType === "separate_charges_and_transfers"
-          ? "stripe_separate_transfers"
-          : "stripe_destination_charge"
-        : "direct_coach_pricing",
-=======
       paymentMode: split.chargeType === "separate_charges_and_transfers" ? "stripe_separate_transfers" : "stripe_destination_charge",
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
       metadata: { goals, skillLevel },
     });
 
@@ -217,11 +205,7 @@ router.post(
       description: description || "",
       goals: goals || "",
       skillLevel: skillLevel || "",
-<<<<<<< HEAD
-      status: process.env.STRIPE_SECRET_KEY && total > 0 ? "awaiting_payment" : "awaiting_upload",
-=======
       status: "awaiting_payment",
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
       dueAt,
     });
 
@@ -233,22 +217,14 @@ router.post(
       chargeType: split.chargeType,
       platformFee: split.platformFee,
       recipients: split.recipients,
-<<<<<<< HEAD
-      status: process.env.STRIPE_SECRET_KEY && total > 0 ? "pending" : "paid",
-=======
       status: "pending",
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
       notes: split.chargeType === "separate_charges_and_transfers" ? "Multiple recipient split configured." : "Primary coach payout configured.",
     });
 
     let checkoutUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/dashboard/submissions/${submission._id}`;
     let stripeSession = null;
 
-<<<<<<< HEAD
-    if (process.env.STRIPE_SECRET_KEY && total > 0) {
-=======
     {
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
       const success = `${process.env.CLIENT_URL || "http://localhost:5173"}/dashboard/submissions/${submission._id}?paid=1`;
       const cancel = `${process.env.CLIENT_URL || "http://localhost:5173"}/coaches/${coach._id}?canceled=1`;
       const sessionBody = {

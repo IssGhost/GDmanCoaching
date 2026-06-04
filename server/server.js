@@ -23,13 +23,7 @@ const isAllowedOrigin = (origin) => {
   }
 
   const hostname = parsed.hostname;
-<<<<<<< HEAD
-  if (["localhost", "127.0.0.1", "0.0.0.0"].includes(hostname)) return true;
-  if (hostname.endsWith(".up.railway.app") || hostname.endsWith(".railway.app")) return true;
-
-=======
   if (process.env.NODE_ENV !== "production" && ["localhost", "127.0.0.1", "0.0.0.0"].includes(hostname)) return true;
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
   return configuredOrigins.includes(origin.replace(/\/$/, ""));
 };
 
@@ -42,10 +36,7 @@ app.use(
     credentials: true,
   })
 );
-<<<<<<< HEAD
-=======
 app.use(["/api/payments/webhook", "/payments/webhook"], express.raw({ type: "application/json" }));
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
@@ -59,11 +50,6 @@ const mongoConnectionState = () => ({
 
 const healthPayload = () => ({
   ok: true,
-<<<<<<< HEAD
-  message: "PicklePro API running",
-  mongo: mongoConnectionState(),
-  configuredMongoVariable: mongoEnvName,
-=======
   message: "GOOD Coaching API running",
   mongo: mongoConnectionState(),
   configuredMongoVariable: mongoEnvName,
@@ -73,7 +59,6 @@ const healthPayload = () => ({
     clientUrl: Boolean(process.env.CLIENT_URL),
     jwtSecret: Boolean(process.env.JWT_SECRET),
   },
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
 });
 
 app.get("/health", (_req, res) => res.json(healthPayload()));
@@ -91,8 +76,6 @@ const mongoEnvCandidates = [
 const [mongoEnvName, MONGO_URI] =
   mongoEnvCandidates.find(([, value]) => /^mongodb(\+srv)?:\/\//i.test(String(value || "").trim())) || [null, ""];
 
-<<<<<<< HEAD
-=======
 if (process.env.NODE_ENV === "production") {
   const required = {
     MONGO_URI: Boolean(MONGO_URI),
@@ -107,7 +90,6 @@ if (process.env.NODE_ENV === "production") {
   if (missing.length) throw new Error(`Production configuration is incomplete: ${missing.join(", ")}`);
 }
 
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
 let mongoConnectAttempt = null;
 
 const connectMongo = () => {
@@ -147,11 +129,7 @@ if (MONGO_URI) {
   );
 }
 
-<<<<<<< HEAD
-const databaseBackedRoute = /^\/(api\/)?(auth|users|admin|orders|quotes|products|posts|tickets|blog|testimonials|coaches|payments|videos|reviews|inquiries|demo)(\/|$)/;
-=======
 const databaseBackedRoute = /^\/(api\/)?(auth|users|admin|orders|quotes|products|posts|tickets|blog|testimonials|coaches|payments|videos|reviews|inquiries)(\/|$)/;
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
 
 app.use(async (req, res, next) => {
   if (!databaseBackedRoute.test(req.path)) return next();
@@ -211,10 +189,6 @@ safeMount("/api/payments", "./routes/payments");
 safeMount("/api/videos", "./routes/videos");
 safeMount("/api/reviews", "./routes/reviews");
 safeMount("/api/inquiries", "./routes/inquiries");
-<<<<<<< HEAD
-safeMount("/api/demo", "./routes/demo");
-=======
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
 safeMount("/api/users", "./routes/auth");
 
 /*

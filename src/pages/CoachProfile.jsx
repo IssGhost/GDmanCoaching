@@ -115,11 +115,7 @@ export default function CoachProfile() {
               <span className={`h-3 w-3 rounded-full border-2 border-white ${isOnline ? "bg-[#55e58d]" : "bg-[#87938e]"}`} />
               <FaComments /> {canChat ? "Have a question? Chat with your coach live!" : "Coach is not accepting new chats"}
             </button>
-<<<<<<< HEAD
-            <p className="mt-3 text-sm font-semibold leading-6 text-[#40584f]">{isOnline ? "This coach is online now. Send a question before choosing a plan." : "This coach is offline right now, but you can leave a message for an asynchronous reply."}</p>
-=======
             <p className="mt-3 text-sm font-semibold leading-6 text-[#40584f]">{isOnline ? "This coach is online now. Send a question before choosing a plan." : "This coach is offline right now, but you can leave a message and they will reply when available."}</p>
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
             {chatOpen && canChat && <div className="mt-4 rounded-2xl border border-[#00a896]/20 bg-[#eaf9f7] p-4"><label className="block text-sm font-black text-[#12372a]" htmlFor="coach-chat-message">Your question</label><textarea id="coach-chat-message" value={inquiryMessage} onChange={(e) => setInquiryMessage(e.target.value)} rows={3} className="pp-input mt-2 px-4 py-3" placeholder="Tell the coach what you want help with..." /><button onClick={startConversation} disabled={busy || !inquiryMessage.trim()} className="pp-btn-primary mt-3 px-5 py-3 disabled:opacity-60">{busy ? "Starting chat..." : "Send question"}</button></div>}
           </section>
 

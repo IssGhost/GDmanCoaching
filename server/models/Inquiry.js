@@ -15,10 +15,6 @@ const inquirySchema = new mongoose.Schema({
     amount: { type: Number, min: 0 },
     scope: { type: String, default: "", maxlength: 5000 },
     discountPercent: { type: Number, default: 0, min: 0, max: 100 },
-<<<<<<< HEAD
-    paymentUrl: { type: String, default: "" },
-=======
->>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
     status: { type: String, enum: ["draft", "sent", "approved", "declined"], default: "draft" },
     sentAt: Date,
     approvedAt: Date,
