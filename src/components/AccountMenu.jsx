@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { normalizeRole, roleLabel as getRoleLabel } from "../lib/roles";
 
-const menuByRole = {
+const ROLE_PORTAL_LINKS = {
   user: [
     ["My Dashboard", "/dashboard/account"],
     ["Personalized Requests", "/dashboard/requests"],
@@ -34,30 +34,6 @@ const menuByRole = {
   ],
 };
 
-const menuByRole = {
-  user: [
-    ["My Dashboard", "/dashboard/account"],
-    ["Personalized Requests", "/dashboard/requests"],
-    ["Training + Reviews", "/dashboard/submissions"],
-    ["Browse Coaches", "/coaches"],
-  ],
-  coach: [
-    ["Coach Operations", "/coach/dashboard"],
-    ["Client Requests & Quotes", "/messages"],
-    ["Review Queue", "/coach/dashboard#review-queue"],
-    ["Service Offerings", "/coach/dashboard#offerings"],
-    ["Public Profile & Payouts", "/coach/dashboard#profile"],
-  ],
-  admin: [
-    ["Admin Command Center", "/admin"],
-    ["Marketplace Control", "/admin/coaching"],
-    ["Users & Access", "/admin/users"],
-    ["Orders & Payments", "/admin/orders"],
-    ["Support Inbox", "/admin/requests"],
-    ["Database Viewer", "/admin/database"],
-  ],
-};
-
 export default function AccountMenu() {
   const { user, signout } = useAuth();
   const nav = useNavigate();
@@ -71,7 +47,7 @@ export default function AccountMenu() {
 
   const role = normalizeRole(user?.role);
   const roleLabel = getRoleLabel(role);
-  const links = menuByRole[role];
+  const links = ROLE_PORTAL_LINKS[role] || ROLE_PORTAL_LINKS.user;
   const go = (path) => { setOpen(false); nav(path); };
 
   return (
