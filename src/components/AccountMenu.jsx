@@ -34,6 +34,30 @@ const menuByRole = {
   ],
 };
 
+const menuByRole = {
+  user: [
+    ["My Dashboard", "/dashboard/account"],
+    ["Personalized Requests", "/dashboard/requests"],
+    ["Training + Reviews", "/dashboard/submissions"],
+    ["Browse Coaches", "/coaches"],
+  ],
+  coach: [
+    ["Coach Operations", "/coach/dashboard"],
+    ["Client Requests & Quotes", "/messages"],
+    ["Review Queue", "/coach/dashboard#review-queue"],
+    ["Service Offerings", "/coach/dashboard#offerings"],
+    ["Public Profile & Payouts", "/coach/dashboard#profile"],
+  ],
+  admin: [
+    ["Admin Command Center", "/admin"],
+    ["Marketplace Control", "/admin/coaching"],
+    ["Users & Access", "/admin/users"],
+    ["Orders & Payments", "/admin/orders"],
+    ["Support Inbox", "/admin/requests"],
+    ["Database Viewer", "/admin/database"],
+  ],
+};
+
 export default function AccountMenu() {
   const { user, signout } = useAuth();
   const nav = useNavigate();
