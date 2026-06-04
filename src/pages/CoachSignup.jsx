@@ -10,6 +10,8 @@ const COACHING_SKILL_LEVELS = ["Beginner (2.5–3.0)", "Intermediate (3.0–4.0)
 
 const COACHING_SKILL_LEVELS = ["Beginner (2.5–3.0)", "Intermediate (3.0–4.0)", "Advanced (4.0–5.0)", "Elite (5.0+)"];
 
+const COACHING_SKILL_LEVELS = ["Beginner (2.5–3.0)", "Intermediate (3.0–4.0)", "Advanced (4.0–5.0)", "Elite (5.0+)"];
+
 export default function CoachSignup() {
   const { user, token, reloadUser } = useAuth();
   const nav = useNavigate();
