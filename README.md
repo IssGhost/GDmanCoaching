@@ -141,3 +141,18 @@ Do not announce the site until every step succeeds.
 - Test database restoration from backup before relying on backups.
 - Keep dependencies updated and review security alerts before each deployment.
 - Maintain a documented customer-support and incident-response process.
+
+## Temporary role test accounts
+
+Only use these accounts briefly in a private staging environment. They intentionally use weak passwords and must be removed before launch.
+
+1. In the Railway web service variables, temporarily add `ALLOW_INSECURE_ROLE_TEST_ACCOUNTS=true`.
+2. Open a Railway shell for the deployed service and run `npm run seed:role-accounts --prefix server`.
+3. Test the role-specific portals with:
+   - Username `user`, password `user` → customer dashboard
+   - Username `coach`, password `coach` → coach operations dashboard
+   - Username `admin`, password `admin` → admin command center
+4. Delete the three `@goodcoaching.test` users from MongoDB immediately after testing.
+5. Remove `ALLOW_INSECURE_ROLE_TEST_ACCOUNTS` from Railway variables.
+
+The seed command refuses to run unless the temporary opt-in variable is exactly `true`.

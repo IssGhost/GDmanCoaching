@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { normalizeRole, roleLabel as getRoleLabel } from "../lib/roles";
+import { normalizeRole, roleBadgeClass, roleLabel as getRoleLabel } from "../lib/roles";
 
 const ROLE_PORTAL_LINKS = {
   user: [
@@ -52,15 +52,15 @@ export default function AccountMenu() {
 
   return (
     <div className="relative">
-      <button onClick={() => setOpen((s) => !s)} className="relative flex h-11 items-center justify-center gap-2 rounded-full border border-[#12372a]/10 bg-white/75 px-2.5 text-[#12372a] shadow-sm transition hover:bg-[#d9f7fb]" title={`${roleLabel} portal`}>
-        <span className="grid h-7 w-7 place-items-center rounded-full bg-[#12372a] text-xs font-black text-white">{initials}</span><span className="pr-1 text-[10px] font-black uppercase tracking-wider">{roleLabel}</span>
+      <button onClick={() => setOpen((s) => !s)} className="relative flex h-11 w-11 items-center justify-center rounded-full border border-[#12372a]/10 bg-white/80 text-[#12372a] shadow-sm transition hover:bg-[#d9f7fb]" title={`${roleLabel} portal`}>
+        <span className="grid h-8 w-8 place-items-center rounded-full bg-[#12372a] text-xs font-black text-white">{initials}</span>
         <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-[#fff8e7] bg-[#c6ff4a]" />
       </button>
 
       {open && (
         <div className="absolute right-0 z-[60] mt-2 w-72 overflow-hidden rounded-2xl border border-[#12372a]/10 bg-[#fffef8]/95 text-[#12372a] shadow-2xl shadow-[#12372a]/15 backdrop-blur-xl">
           <div className="border-b border-[#12372a]/10 bg-[#d9f7fb]/50 px-4 py-4">
-            <div className="flex items-center justify-between gap-3"><div className="truncate text-sm font-black">{user?.fullName || user?.email}</div><span className="shrink-0 rounded-full bg-[#12372a] px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white">{roleLabel}</span></div>
+            <div className="flex items-center justify-between gap-3"><div className="truncate text-sm font-black">{user?.fullName || user?.email}</div><span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${roleBadgeClass(role)}`}>{roleLabel}</span></div>
           </div>
 
           <div className="grid p-2 text-sm font-bold">

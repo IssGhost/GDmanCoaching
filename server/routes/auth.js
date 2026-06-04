@@ -3,6 +3,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const { normalizeRole } = require("../utils/roles");
 
 const router = express.Router();
 
@@ -15,17 +16,11 @@ function signToken(user) {
     {
       _id: user._id,
       id: user._id,
-      role: user.role,
+      role: normalizeRole(user.role),
     },
     JWT_SECRET,
     { expiresIn: TOKEN_EXPIRES_IN }
   );
-}
-
-function normalizeRole(role) {
-  if (role === "customer") return "user";
-  if (role === "player") return "user";
-  return role || "user";
 }
 
 function presentUser(user) {
@@ -133,7 +128,7 @@ async function handleSignin(req, res, next) {
       return res.status(400).json({ error: "Email/username and password are required." });
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ $or: [{ email }, { username: email }] });
 
     if (!user) {
       return res.status(400).json({
@@ -148,6 +143,12 @@ async function handleSignin(req, res, next) {
       return res.status(400).json({
         error: "Invalid credentials.",
       });
+    }
+
+    const normalizedRole = normalizeRole(user.role);
+    if (user.role !== normalizedRole) {
+      user.role = normalizedRole;
+      await user.save();
     }
 
     const token = signToken(user);

@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const { normalizeRole } = require("../utils/roles");
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
 if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) throw new Error("JWT_SECRET is required in production.");
@@ -16,6 +17,7 @@ const auth = async (req, res, next) => {
     if (!user) return res.status(401).json({ error: "Invalid token" });
 
     req.user = user;
+    req.user.role = normalizeRole(user.role);
     next();
   } catch {
     return res.status(401).json({ error: "Unauthorized" });
@@ -35,12 +37,12 @@ const hasAnyRole = (user, roles) => {
 };
 
 const isAdmin = (req, res, next) => {
-  if (!hasRole(req.user, "admin")) return res.status(403).json({ error: "Forbidden" });
+  if (normalizeRole(req.user?.role) !== "admin") return res.status(403).json({ error: "Forbidden" });
   next();
 };
 
 const isStaff = (req, res, next) => {
-  if (!hasAnyRole(req.user, ["admin", "employee"])) {
+  if (!["admin", "employee"].includes(normalizeRole(req.user?.role))) {
     return res.status(403).json({ error: "Forbidden" });
   }
   next();
@@ -49,14 +51,14 @@ const isStaff = (req, res, next) => {
 const isEmployee = isStaff;
 
 const isCoach = (req, res, next) => {
-  if (!hasAnyRole(req.user, ["admin", "coach"])) {
+  if (!["admin", "coach"].includes(normalizeRole(req.user?.role))) {
     return res.status(403).json({ error: "Forbidden" });
   }
   next();
 };
 
 const allow = (...roles) => (req, res, next) => {
-  if (!req.user || !hasAnyRole(req.user, roles)) {
+  if (!req.user || !roles.map(normalizeRole).includes(normalizeRole(req.user.role))) {
     return res.status(403).json({ error: "Forbidden" });
   }
   next();
