@@ -36,7 +36,7 @@ export default function DashboardOrders() {
   return (
     <div className="space-y-6">
       {error && <div className="rounded-2xl border border-[#b94024]/20 bg-[#ffebe5] p-4 font-bold text-[#7a2b18]">{error}</div>}
-      <header className="rounded-[2rem] bg-[#12372a] p-6 text-white"><p className="text-xs font-black uppercase tracking-[.18em] text-[#c6ff4a]">Orders & payments</p><div className="mt-2 flex flex-col justify-between gap-4 md:flex-row md:items-end"><div><h1 className="text-3xl font-black text-white">Training orders</h1><p className="mt-1 text-sm text-white/75">Review payment status and continue into any coaching work connected to an order.</p></div><Link to="/coaches" className="rounded-xl bg-[#c6ff4a] px-4 py-3 text-center text-sm font-black text-[#12372a]">Book more coaching</Link></div></header>
+      <header className="rounded-[2rem] bg-[#12372a] p-6 text-white"><p className="text-xs font-black uppercase tracking-[.18em] text-[#c6ff4a]">Orders & payments</p><div className="mt-2 flex flex-col justify-between gap-4 md:flex-row md:items-end"><div><h1 className="text-3xl font-black text-[#ffffff]">Training orders</h1><p className="mt-1 text-sm text-[#dce9e3]">Review payment status and continue into any coaching work connected to an order.</p></div><Link to="/coaches" className="rounded-xl bg-[#c6ff4a] px-4 py-3 text-center text-sm font-black text-[#12372a]">Book more coaching</Link></div></header>
 
       <div className="grid gap-4 md:grid-cols-3">
         <Summary icon={<FaReceipt />} label="Orders" value={totals.count} />

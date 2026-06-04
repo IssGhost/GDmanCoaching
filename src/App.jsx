@@ -225,7 +225,8 @@ export default function App() {
                   <Route index element={<Navigate to="account" replace />} />
                   <Route path="account" element={<DashboardAccount />} />
                   <Route path="orders" element={<DashboardOrders />} />
-                  <Route path="quotes" element={<Navigate to="/messages" replace />} />
+                  <Route path="requests" element={<Messages embedded />} />
+                  <Route path="quotes" element={<Navigate to="/dashboard/requests" replace />} />
                   <Route path="submissions" element={<PlayerSubmissions />} />
                   <Route path="submissions/:id" element={<SubmissionDetail />} />
                 </Route>

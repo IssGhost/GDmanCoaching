@@ -32,7 +32,7 @@ export default function Footer() {
           <ul className="space-y-2 text-sm font-semibold">
             <li><Link to="/faq" className="hover:text-[#00a896]">Frequently Asked Questions</Link></li>
             <li><Link to="/contact" className="hover:text-[#00a896]">Contact GOOD Coaching</Link></li>
-            <li><Link to="/messages" className="hover:text-[#00a896]">Personalized Requests</Link></li>
+            <li><Link to="/dashboard/requests" className="hover:text-[#00a896]">Personalized Requests</Link></li>
           </ul>
         </div>
       </div>

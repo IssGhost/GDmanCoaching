@@ -42,7 +42,7 @@ export default function CoachProfile() {
     try {
       await api.post("/inquiries", { coachId: coach._id, subject: `Coaching inquiry for ${coach.displayName}`, message: inquiryMessage, requestedServices }, token);
       push("Conversation started. You can discuss scope before purchasing.", "success");
-      nav("/messages");
+      nav("/dashboard/requests");
     } catch (e) {
       push(e.message || "Could not start conversation", "error");
     } finally {
@@ -63,7 +63,7 @@ export default function CoachProfile() {
       const message = [`Requested services: ${requestedServices.join(", ")}`, form.skillLevel && `Skill level: ${form.skillLevel}`, form.goals && `Goals: ${form.goals}`, form.description && `Extra notes: ${form.description}`].filter(Boolean).join("\n\n");
       await api.post("/inquiries", { coachId: coach._id, subject: form.title.trim() || `Personalized request for ${coach.displayName}`, message, requestedServices }, token);
       push("Personalized request sent. The coach can now chat with you and send a quote.", "success");
-      nav("/messages");
+      nav("/dashboard/requests");
     } catch (e) {
       push(e.message || "Could not send personalized request", "error");
     } finally {
