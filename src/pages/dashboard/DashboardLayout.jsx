@@ -3,66 +3,22 @@ import { useAuth } from "../../context/AuthContext";
 
 export default function DashboardLayout() {
   const { user } = useAuth();
-
-  const item = "rounded-xl px-4 py-2 text-sm font-black transition";
+  const item = "block whitespace-nowrap rounded-xl px-3 py-2.5 text-center text-xs font-black transition sm:px-4 sm:text-sm";
   const active = "bg-[#c6ff4a] text-[#12372a] shadow-sm";
-  const hover = "text-[#12372a]/75 hover:bg-white/70 hover:text-[#12372a]";
+  const hover = "text-[#40584f] hover:bg-[#eaf9f7] hover:text-[#12372a]";
 
-  return (
-    <div className="pp-page min-h-screen px-6 pt-28 pb-16">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-6 rounded-[2rem] border border-[#12372a]/10 bg-white/75 p-5 shadow-xl shadow-[#12372a]/10 backdrop-blur">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="pp-kicker">Player dashboard</p>
-
-              <h1 className="mt-1 text-3xl font-black text-[#12372a]">
-                My Pickleball Coaching
-              </h1>
-
-              <p className="mt-1 text-sm text-[#5f746c]">
-                Signed in as {user?.fullName || user?.email}. Track in-person bookings, video submissions, coach notes, and payment history.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <NavLink to="/dashboard/account" className={({ isActive }) => `${item} ${isActive ? active : hover}`}>
-                Account
-              </NavLink>
-
-              <NavLink to="/dashboard/orders" className={({ isActive }) => `${item} ${isActive ? active : hover}`}>
-                Orders
-              </NavLink>
-
-              <NavLink to="/dashboard/quotes" className={({ isActive }) => `${item} ${isActive ? active : hover}`}>
-                Requests
-              </NavLink>
-
-              <NavLink to="/dashboard/submissions" className={({ isActive }) => `${item} ${isActive ? active : hover}`}>
-                Training + Reviews
-              </NavLink>
-
-              <NavLink to="/demo" className={({ isActive }) => `${item} ${isActive ? active : hover}`}>
-                Access
-              </NavLink>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-[2rem] border border-[#12372a]/10 bg-white/75 p-5 shadow-xl shadow-[#12372a]/10 backdrop-blur">
-          <div className="mb-4 flex flex-wrap gap-3">
-            <a href="/coaches" className="pp-btn-primary px-4 py-2 text-sm">
-              Book training
-            </a>
-
-            <a href="/dashboard/submissions" className="pp-btn-secondary px-4 py-2 text-sm">
-              View coaching
-            </a>
-          </div>
-
-          <Outlet />
-        </div>
+  return <div className="pp-page min-h-screen px-4 pt-28 pb-16 sm:px-6"><div className="mx-auto max-w-7xl">
+    <header className="mb-6 rounded-[2rem] border border-[#12372a]/10 bg-white/80 p-5 shadow-xl shadow-[#12372a]/10 backdrop-blur sm:p-6">
+      <div><p className="pp-kicker">Player dashboard</p><h1 className="mt-1 text-3xl font-black text-[#12372a]">My Pickleball Coaching</h1><p className="mt-1 max-w-4xl text-sm leading-6 text-[#5f746c]">Signed in as {user?.fullName || user?.email}. Track online bookings, personalized requests, video submissions, coach notes, and payments.</p></div>
+      <div className="mt-5 max-w-full overflow-x-auto border-t border-[#12372a]/10 pt-4">
+        <nav className="grid min-w-[42rem] grid-cols-4 gap-2 lg:min-w-0" aria-label="Dashboard sections">
+          <NavLink to="/dashboard/account" className={({ isActive }) => `${item} ${isActive ? active : hover}`}>Account</NavLink>
+          <NavLink to="/dashboard/orders" className={({ isActive }) => `${item} ${isActive ? active : hover}`}>Orders</NavLink>
+          <NavLink to="/dashboard/requests" className={({ isActive }) => `${item} ${isActive ? active : hover}`}>Personalized Requests</NavLink>
+          <NavLink to="/dashboard/submissions" className={({ isActive }) => `${item} ${isActive ? active : hover}`}>Training + Reviews</NavLink>
+        </nav>
       </div>
-    </div>
-  );
+    </header>
+    <main className="rounded-[2rem] border border-[#12372a]/10 bg-white/75 p-5 shadow-xl shadow-[#12372a]/10 backdrop-blur md:p-7"><div className="mb-6 flex flex-wrap gap-3"><a href="/coaches" className="pp-btn-primary px-4 py-2 text-sm">Find a coach</a><a href="/dashboard/requests" className="pp-btn-secondary px-4 py-2 text-sm">View requests</a></div><Outlet/></main>
+  </div></div>;
 }
