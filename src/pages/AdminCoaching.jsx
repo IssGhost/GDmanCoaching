@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { FaCheckCircle, FaDollarSign, FaUserTie, FaVideo } from "react-icons/fa";
+import { FaCheckCircle, FaClipboardList, FaUserTie, FaVideo } from "react-icons/fa";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
@@ -23,7 +23,7 @@ export default function AdminCoaching() {
     coaches: coaches?.length || 0,
     pending: coaches?.filter((c) => !c.approved).length || 0,
     submissions: submissions?.length || 0,
-    payoutVolume: (splits || []).reduce((sum, split) => sum + (split.recipients || []).reduce((a, r) => a + Number(r.amount || 0), 0), 0),
+    reviewVolume: (splits || []).reduce((sum, split) => sum + (split.recipients || []).reduce((a, r) => a + Number(r.amount || 0), 0), 0),
   }), [coaches, submissions, splits]);
 
   const updateCoach = async (id, changes) => {
@@ -44,14 +44,14 @@ export default function AdminCoaching() {
         <div>
           <p className="font-bold uppercase tracking-[0.2em] text-emerald-300">Admin</p>
           <h1 className="mt-2 text-4xl font-black">Coaching Marketplace Control</h1>
-          <p className="mt-2 text-gray-400">Approve coaches, monitor video submissions, and audit split-payment records.</p>
+          <p className="mt-2 text-gray-400">Approve coaches, monitor video submissions, and audit coaching records.</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-4">
           <Stat icon={FaUserTie} label="Coaches" value={stats.coaches} />
           <Stat icon={FaCheckCircle} label="Pending approvals" value={stats.pending} />
           <Stat icon={FaVideo} label="Submissions" value={stats.submissions} />
-          <Stat icon={FaDollarSign} label="Tracked payouts" value={`$${stats.payoutVolume.toFixed(2)}`} />
+          <Stat icon={FaClipboardList} label="Tracked reviews" value={submissions.length} />
         </div>
 
         <section className="rounded-2xl border border-white/10 bg-zinc-950 p-5">
@@ -63,7 +63,7 @@ export default function AdminCoaching() {
                   <th className="px-4 py-3">Coach</th>
                   <th className="px-4 py-3">Email</th>
                   <th className="px-4 py-3">Specialties</th>
-                  <th className="px-4 py-3">Fee %</th>
+                  <th className="px-4 py-3">DUPR</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Actions</th>
                 </tr>
@@ -74,7 +74,7 @@ export default function AdminCoaching() {
                     <td className="px-4 py-3 font-semibold">{coach.displayName}</td>
                     <td className="px-4 py-3 text-gray-400">{coach.userId?.email || "—"}</td>
                     <td className="px-4 py-3 text-gray-400">{(coach.specialties || []).join(", ") || "—"}</td>
-                    <td className="px-4 py-3">{coach.defaultPlatformFeePercent || 15}%</td>
+                    <td className="px-4 py-3">{coach.duprId || "—"}</td>
                     <td className="px-4 py-3">{coach.approved ? "Approved" : "Pending"}{coach.featured ? " • Featured" : ""}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-2">
@@ -108,7 +108,7 @@ export default function AdminCoaching() {
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-zinc-950 p-5">
-            <h2 className="text-xl font-bold">Payment split records</h2>
+            <h2 className="text-xl font-bold">Coaching request records</h2>
             <div className="mt-4 space-y-3">
               {splits.slice(0, 8).map((split) => (
                 <div key={split._id} className="rounded-xl border border-white/10 bg-black/40 p-3 text-sm">
@@ -116,15 +116,15 @@ export default function AdminCoaching() {
                     <div className="font-bold capitalize">{split.chargeType.replaceAll("_", " ")}</div>
                     <div className="text-emerald-300">{split.status}</div>
                   </div>
-                  <div className="mt-2 text-gray-400">Platform fee: ${Number(split.platformFee || 0).toFixed(2)}</div>
+                  <div className="mt-2 text-gray-400">Status: {split.status}</div>
                   <div className="mt-2 space-y-1">
                     {(split.recipients || []).map((r, idx) => (
-                      <div key={`${split._id}-${idx}`} className="text-gray-300">{r.label || r.role}: ${Number(r.amount || 0).toFixed(2)} {r.stripeAccountId ? `→ ${r.stripeAccountId}` : ""}</div>
+                      <div key={`${split._id}-${idx}`} className="text-gray-300">{r.label || r.role}</div>
                     ))}
                   </div>
                 </div>
               ))}
-              {splits.length === 0 && <p className="text-gray-400">No payment splits yet.</p>}
+              {splits.length === 0 && <p className="text-gray-400">No coaching records yet.</p>}
             </div>
           </div>
         </section>
