@@ -24,34 +24,22 @@ export default function DashboardOrders() {
   }, [token]);
 
   const list = useMemo(() => (rows || []).filter((o) => (filter === "all" ? true : o.status === filter)), [rows, filter]);
-  const totals = useMemo(() => ({ count: list.length, sum: list.reduce((a, b) => a + (Number(b.total) || 0), 0) }), [list]);
+  const totals = useMemo(() => ({ count: rows.length, paid: rows.filter((item) => item.status === "paid" || item.status === "completed").reduce((sum, item) => sum + (Number(item.total) || 0), 0), pending: rows.filter((item) => item.status === "pending").length }), [rows]);
 
   if (!rows) return <div className="text-[#5f746c]">Loading training orders...</div>;
 
   return (
     <div className="space-y-6">
       {error && <div className="rounded-2xl border border-[#b94024]/20 bg-[#ffebe5] p-4 font-bold text-[#7a2b18]">{error}</div>}
-      <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end">
-        <div>
-          <h1 className="text-3xl font-black text-[#12372a]">Training Orders</h1>
-          <p className="mt-1 text-sm text-[#5f746c]">Paid online coaching requests, consultations, video reviews, and online coaching packages.</p>
-        </div>
-        <label className="flex items-center gap-2 text-sm font-bold text-[#5f746c]">
-          Filter
-          <select value={filter} onChange={(e) => setFilter(e.target.value)} className="pp-input min-w-36 px-3 py-2">
-            {FILTERS.map((f) => <option key={f} value={f}>{f}</option>)}
-          </select>
-        </label>
-      </div>
+      <header className="rounded-[2rem] bg-[#12372a] p-6 text-white"><p className="text-xs font-black uppercase tracking-[.18em] text-[#c6ff4a]">Orders & payments</p><div className="mt-2 flex flex-col justify-between gap-4 md:flex-row md:items-end"><div><h1 className="text-3xl font-black text-white">Training orders</h1><p className="mt-1 text-sm text-white/75">Review payment status and continue into any coaching work connected to an order.</p></div><Link to="/coaches" className="rounded-xl bg-[#c6ff4a] px-4 py-3 text-center text-sm font-black text-[#12372a]">Book more coaching</Link></div></header>
 
       <div className="grid gap-4 md:grid-cols-3">
         <Summary icon={<FaReceipt />} label="Orders" value={totals.count} />
-        <Summary icon={<FaCreditCard />} label="Paid volume" value={`$${totals.sum.toFixed(2)}`} />
-        <div className="rounded-3xl border border-[#12372a]/10 bg-[#fff1c7]/70 p-5 text-center shadow-sm">
-          <div className="text-xs font-black uppercase tracking-[0.14em] text-[#087f73]">Next step</div>
-          <Link to="/coaches" className="pp-btn-primary mt-3 px-4 py-2 text-sm">Book more coaching</Link>
-        </div>
+        <Summary icon={<FaCreditCard />} label="Paid total" value={`$${totals.paid.toFixed(2)}`} />
+        <Summary icon={<FaCalendarCheck />} label="Pending payment" value={totals.pending} />
       </div>
+
+      <div className="flex flex-wrap gap-2">{FILTERS.map((value) => <button key={value} onClick={() => setFilter(value)} className={`rounded-full px-4 py-2 text-xs font-black capitalize transition ${filter === value ? "bg-[#c6ff4a] text-[#12372a]" : "border border-[#12372a]/10 bg-white text-[#40584f] hover:bg-[#eaf9f7]"}`}>{value}</button>)}</div>
 
       <div className="grid gap-4">
         {list.map((order) => (
@@ -72,6 +60,7 @@ export default function DashboardOrders() {
             </div>
           </article>
         ))}
+        {!list.length && <div className="rounded-[2rem] border border-dashed border-[#00a896]/35 bg-[#eaf9f7] p-8 text-center"><FaReceipt className="mx-auto text-3xl text-[#087f73]"/><h2 className="mt-3 text-xl font-black text-[#12372a]">No {filter === "all" ? "orders" : filter + " orders"}</h2><p className="mt-2 text-sm text-[#40584f]">Orders will appear here after you approve a quote or purchase a coach package.</p><Link to="/coaches" className="pp-btn-primary mt-4 px-4 py-2 text-sm">Browse coaches</Link></div>}
       </div>
     </div>
   );
