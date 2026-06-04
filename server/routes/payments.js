@@ -503,11 +503,15 @@ router.post(
       tax: 0,
       total,
       platformFee: split.platformFee,
-      paymentMode: platformOnly
-        ? "stripe_platform_only_test"
-        : split.chargeType === "separate_charges_and_transfers"
-        ? "stripe_separate_transfers"
-        : "stripe_destination_charge",
+
+      // IMPORTANT:
+      // This must stay inside Order.js enum:
+      // ["stripe_destination_charge", "stripe_separate_transfers", "manual"]
+      paymentMode:
+        split.chargeType === "separate_charges_and_transfers" && !platformOnly
+          ? "stripe_separate_transfers"
+          : "stripe_destination_charge",
+
       metadata: {
         goals,
         skillLevel,
@@ -527,17 +531,21 @@ router.post(
     });
 
     order.submissionId = submission._id;
-
     await order.save();
 
     const paymentSplit = await PaymentSplit.create({
       orderId: order._id,
-      chargeType: platformOnly ? "platform_only_manual_payout" : split.chargeType,
+
+      // IMPORTANT:
+      // This must stay inside PaymentSplit.js enum:
+      // ["destination_charge", "separate_charges_and_transfers", "manual"]
+      chargeType: platformOnly ? "destination_charge" : split.chargeType,
+
       platformFee: split.platformFee,
       recipients: split.recipients,
       status: "pending",
       notes: platformOnly
-        ? "Stripe platform-only test payment. No connected coach payout was attempted."
+        ? "Stripe platform-only test payment. No connected coach payout was attempted. Review coach payout manually."
         : split.chargeType === "separate_charges_and_transfers"
         ? "Multiple recipient split configured."
         : "Primary coach payout configured.",
@@ -687,7 +695,10 @@ router.post(
       tax: 0,
       total,
       platformFee: split.platformFee,
-      paymentMode: platformOnly ? "stripe_platform_only_test" : "stripe_destination_charge",
+
+      // Must stay inside allowed Order enum.
+      paymentMode: "stripe_destination_charge",
+
       metadata: {
         inquiryId: String(inquiry._id),
         platformOnlyStripeTest: platformOnly,
@@ -712,12 +723,15 @@ router.post(
 
     const paymentSplit = await PaymentSplit.create({
       orderId: order._id,
-      chargeType: platformOnly ? "platform_only_manual_payout" : split.chargeType,
+
+      // Must stay inside allowed PaymentSplit enum.
+      chargeType: platformOnly ? "destination_charge" : split.chargeType,
+
       platformFee: split.platformFee,
       recipients: split.recipients,
       status: "pending",
       notes: platformOnly
-        ? "Stripe platform-only test payment. No connected coach payout was attempted."
+        ? "Stripe platform-only test payment. No connected coach payout was attempted. Review coach payout manually."
         : "Custom quote payment.",
     });
 
@@ -804,10 +818,8 @@ router.post(
         sessionId: session.id,
       });
 
-      const existingSplit = await PaymentSplit.findOne({ orderId: session.metadata.orderId });
-
       const splitStatus =
-        existingSplit?.chargeType === "platform_only_manual_payout"
+        session.metadata?.platformOnlyStripeTest === "true"
           ? "requires_manual_review"
           : "paid";
 
