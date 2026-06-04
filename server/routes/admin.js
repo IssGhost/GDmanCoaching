@@ -81,6 +81,58 @@ router.get("/stats", async (_req, res) => {
   res.json({ users, products, orders, openTickets: tickets, quotes, coaches, pendingCoaches, submissions, pendingReviews, splits });
 });
 
+// Add a role to a user (without removing existing roles)
+router.put("/users/:id/roles/add", async (req, res) => {
+  const { role } = req.body || {};
+  if (!["admin", "employee", "coach", "player", "user"].includes(role)) {
+    return res.status(400).json({ error: "Invalid role" });
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.params.id,
+    { $addToSet: { roles: role } },
+    { new: true }
+  ).select("-passwordHash");
+
+  if (!user) return res.status(404).json({ error: "User not found" });
+  res.json(user);
+});
+
+// Remove a role from a user
+router.put("/users/:id/roles/remove", async (req, res) => {
+  const { role } = req.body || {};
+  if (!["admin", "employee", "coach", "player", "user"].includes(role)) {
+    return res.status(400).json({ error: "Invalid role" });
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.params.id,
+    { $pull: { roles: role } },
+    { new: true }
+  ).select("-passwordHash");
+
+  if (!user) return res.status(404).json({ error: "User not found" });
+  res.json(user);
+});
+
+// Set roles (replace all roles with the provided array)
+router.put("/users/:id/roles", async (req, res) => {
+  const { roles } = req.body || {};
+  if (!Array.isArray(roles) || !roles.every(r => ["admin", "employee", "coach", "player", "user"].includes(r))) {
+    return res.status(400).json({ error: "Invalid roles array" });
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.params.id,
+    { $set: { roles } },
+    { new: true }
+  ).select("-passwordHash");
+
+  if (!user) return res.status(404).json({ error: "User not found" });
+  res.json(user);
+});
+
+// Legacy endpoint for backward compatibility (sets single role)
 router.put("/users/:id/role", async (req, res) => {
   const { role } = req.body || {};
   if (!["admin", "employee", "coach", "player", "user"].includes(role)) {
@@ -89,7 +141,7 @@ router.put("/users/:id/role", async (req, res) => {
 
   const user = await User.findByIdAndUpdate(
     req.params.id,
-    { $set: { role } },
+    { $set: { roles: [role] } },
     { new: true }
   ).select("-passwordHash");
 
@@ -107,7 +159,7 @@ router.delete("/users/:id", async (req, res) => {
 router.get("/coaches", async (_req, res) => {
   const rows = await CoachProfile.find({})
     .sort({ approved: 1, updatedAt: -1 })
-    .populate("userId", "email fullName role");
+    .populate("userId", "email fullName roles");
   res.json(rows);
 });
 
@@ -137,3 +189,4 @@ router.get("/payment-splits", async (_req, res) => {
 });
 
 module.exports = router;
+
