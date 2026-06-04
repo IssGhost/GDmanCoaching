@@ -7,7 +7,7 @@ import FloatingQuickQuote from "./components/FloatingQuickQuote";
 import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./components/Toast";
 
-import { PrivateRoute, RoleRoute } from "./components/RouteGuards";
+import { PrivateRoute, PortalRedirect, RoleRoute } from "./components/RouteGuards";
 
 // Core pages
 import Home from "./pages/Home";
@@ -17,19 +17,15 @@ import FAQ from "./pages/FAQ";
 import Testimonials from "./pages/Testimonials";
 import Contact from "./pages/Contact";
 import Payments from "./pages/Payments";
+import Messages from "./pages/Messages";
 import Marketplace from "./pages/Marketplace";
 import CoachProfile from "./pages/CoachProfile";
 import CoachSignup from "./pages/CoachSignup";
-import CoachSessionSplit from "./pages/CoachSessionSplit";
 import PlayerSubmissions from "./pages/PlayerSubmissions";
 import SubmissionDetail from "./pages/SubmissionDetail";
 import CoachDashboard from "./pages/CoachDashboard";
 import CoachReview from "./pages/CoachReview";
 import AdminCoaching from "./pages/AdminCoaching";
-import DemoMVP from "./pages/DemoMVP";
-import CustomQuoteStep1 from "./pages/CustomQuoteStep1";
-import CustomQuoteStep2 from "./pages/CustomQuoteStep2";
-import CustomQuoteStep3 from "./pages/CustomQuoteStep3";
 import Cart from "./pages/Cart";
 
 // Auth
@@ -43,22 +39,24 @@ import DashboardAdmin from "./pages/DashboardAdmin";
 
 // Admin screens
 import AdminUsers from "./pages/AdminUsers";
+import AdminDatabase from "./pages/AdminDatabase";
 
 // Dashboard with nested tabs
 import DashboardLayout from "./pages/dashboard/DashboardLayout";
 import DashboardAccount from "./pages/dashboard/Account";
 import DashboardOrders from "./pages/dashboard/Orders";
-import DashboardQuotes from "./pages/dashboard/Quotes";
 import AdminOrders from "./pages/AdminOrders";
 import AdminQuotes from "./pages/AdminQuotes";
 import AdminBlog from "./pages/AdminBlog";
 import AdminBlogEditor from "./pages/AdminBlogEditor";
 import AdminTestimonials from "./pages/AdminTestimonials";
 import AdminTickets from "./pages/AdminTickets";
+import ScrollToTop from "./components/ScrollToTop";
 
 export default function App() {
   return (
     <Router>
+      <ScrollToTop />
       <ToastProvider>
         <AuthProvider>
           <div className="flex min-h-screen flex-col bg-[#fff8e7] text-[#12372a]">
@@ -68,21 +66,17 @@ export default function App() {
               <Routes>
                 {/* Public */}
                 <Route path="/" element={<Home />} />
-                <Route path="/demo" element={<DemoMVP />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/services" element={<Services />} />
                 <Route path="/faq" element={<FAQ />} />
                 <Route path="/testimonials" element={<Testimonials />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/payments" element={<Payments />} />
+                <Route path="/messages" element={<PrivateRoute><Messages /></PrivateRoute>} />
                 <Route path="/marketplace" element={<Marketplace />} />
                 <Route path="/coaches" element={<Marketplace />} />
-                <Route path="/coaches/session-split" element={<CoachSessionSplit />} />
                 <Route path="/coaches/:id" element={<CoachProfile />} />
                 <Route path="/coach-signup" element={<CoachSignup />} />
-                <Route path="/quote" element={<CustomQuoteStep1 />} />
-                <Route path="/quote/step2" element={<CustomQuoteStep2 />} />
-                <Route path="/quote/step3" element={<CustomQuoteStep3 />} />
                 <Route path="/cart" element={<Cart />} />
 
                 {/* Employee/Admin operational pages */}
@@ -119,6 +113,15 @@ export default function App() {
                   element={
                     <RoleRoute allow={["admin"]}>
                       <AdminUsers />
+                    </RoleRoute>
+                  }
+                />
+
+                <Route
+                  path="/admin/database"
+                  element={
+                    <RoleRoute allow={["admin"]}>
+                      <AdminDatabase />
                     </RoleRoute>
                   }
                 />
@@ -191,7 +194,7 @@ export default function App() {
                 <Route
                   path="/coach/dashboard"
                   element={
-                    <RoleRoute allow={["coach", "admin"]}>
+                    <RoleRoute allow={["coach"]}>
                       <CoachDashboard />
                     </RoleRoute>
                   }
@@ -200,7 +203,7 @@ export default function App() {
                 <Route
                   path="/coach/submissions/:id/review"
                   element={
-                    <RoleRoute allow={["coach", "admin"]}>
+                    <RoleRoute allow={["coach"]}>
                       <CoachReview />
                     </RoleRoute>
                   }
@@ -208,21 +211,23 @@ export default function App() {
 
                 {/* Auth */}
                 <Route path="/signin" element={<SignIn />} />
+                <Route path="/portal" element={<PortalRedirect />} />
                 <Route path="/signup" element={<SignUp />} />
 
                 {/* User Dashboard with nested tabs */}
                 <Route
                   path="/dashboard"
                   element={
-                    <PrivateRoute>
+                    <RoleRoute allow={["user"]}>
                       <DashboardLayout />
-                    </PrivateRoute>
+                    </RoleRoute>
                   }
                 >
                   <Route index element={<Navigate to="account" replace />} />
                   <Route path="account" element={<DashboardAccount />} />
                   <Route path="orders" element={<DashboardOrders />} />
-                  <Route path="quotes" element={<DashboardQuotes />} />
+                  <Route path="requests" element={<Messages embedded />} />
+                  <Route path="quotes" element={<Navigate to="/dashboard/requests" replace />} />
                   <Route path="submissions" element={<PlayerSubmissions />} />
                   <Route path="submissions/:id" element={<SubmissionDetail />} />
                 </Route>
@@ -231,9 +236,9 @@ export default function App() {
                 <Route
                   path="/dashboard-legacy"
                   element={
-                    <PrivateRoute>
+                    <RoleRoute allow={["user"]}>
                       <DashboardUser />
-                    </PrivateRoute>
+                    </RoleRoute>
                   }
                 />
               </Routes>
