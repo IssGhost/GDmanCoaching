@@ -4,7 +4,7 @@ import { FaCalendarCheck, FaCreditCard, FaMapMarkerAlt, FaReceipt, FaVideo } fro
 import { useAuth } from "../../context/AuthContext";
 import { api } from "../../lib/api";
 
-const FILTERS = ["all", "pending", "paid", "scheduled", "completed", "canceled"];
+const FILTERS = ["all", "pending", "paid", "completed", "canceled", "refunded", "disputed"];
 
 function typeIcon(type = "") {
   const normalized = String(type).toLowerCase();
@@ -23,8 +23,13 @@ export default function DashboardOrders() {
     api.get("/orders/my", token).then((data) => setRows(Array.isArray(data) ? data : [])).catch((err) => { setError(err.message || "Orders could not be loaded."); setRows([]); });
   }, [token]);
 
-  const list = useMemo(() => (rows || []).filter((o) => (filter === "all" ? true : o.status === filter)), [rows, filter]);
-  const totals = useMemo(() => ({ count: rows.length, paid: rows.filter((item) => item.status === "paid" || item.status === "completed").reduce((sum, item) => sum + (Number(item.total) || 0), 0), pending: rows.filter((item) => item.status === "pending").length }), [rows]);
+  const safeRows = rows || [];
+  const list = useMemo(() => safeRows.filter((order) => (filter === "all" ? true : order.status === filter)), [rows, filter]);
+  const totals = useMemo(() => ({
+    count: safeRows.length,
+    paid: safeRows.filter((item) => item.status === "paid" || item.status === "completed").reduce((sum, item) => sum + (Number(item.total) || 0), 0),
+    pending: safeRows.filter((item) => item.status === "pending").length,
+  }), [rows]);
 
   if (!rows) return <div className="text-[#5f746c]">Loading training orders...</div>;
 
@@ -48,9 +53,9 @@ export default function DashboardOrders() {
               <div className="flex gap-4">
                 <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#d9f7fb] text-xl text-[#00a896]">{typeIcon(order.orderType || order.items?.[0]?.tag)}</div>
                 <div>
-                  <h2 className="text-lg font-black text-[#12372a]">#{order.number || order._id.slice(-6).toUpperCase()}</h2>
+                  <h2 className="text-lg font-black text-[#12372a]">#{order.number || String(order._id || "ORDER").slice(-6).toUpperCase()}</h2>
                   <p className="text-sm text-[#5f746c]">{order.orderType || order.items?.[0]?.name || "Coaching package"}</p>
-                  <p className="mt-1 text-xs font-bold text-[#5f746c]">{new Date(order.createdAt).toLocaleString()}</p>
+                  <p className="mt-1 text-xs font-bold text-[#5f746c]">{order.createdAt ? new Date(order.createdAt).toLocaleString() : "Date unavailable"}</p>
                 </div>
               </div>
               <div className="text-left md:text-right">
