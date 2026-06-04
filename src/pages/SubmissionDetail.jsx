@@ -11,7 +11,11 @@ import {
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
+<<<<<<< HEAD
 import { getDemoSubmission, normalizePhase } from "../lib/demoData";
+=======
+import { normalizePhase } from "../lib/workflow";
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
 import { MAX_VIDEO_MINUTES, validateVideoFile } from "../lib/uploads";
 
 function formatTime(seconds = 0) {
@@ -46,23 +50,12 @@ export default function SubmissionDetail() {
     setError("");
     try {
       const result = await api.get(`/videos/submissions/${id}`, token);
-
-      /*
-        If the live API returns something, respect it.
-        If it returns incomplete data, the requested phase still protects the demo.
-      */
-      if (result?.submission) {
-        const livePhase = normalizePhase(requestedPhase || result.submission.phase || result.submission.status);
-        setData({
-          ...result,
-          submission: { ...result.submission, phase: livePhase, status: result.submission.status || livePhase },
-        });
-      } else {
-        setData(getDemoSubmission(id, requestedPhase));
-      }
+      if (!result?.submission) throw new Error("Submission not found.");
+      const livePhase = normalizePhase(requestedPhase || result.submission.phase || result.submission.status);
+      setData({ ...result, submission: { ...result.submission, phase: livePhase, status: result.submission.status || livePhase } });
     } catch (err) {
-      setError(err.message || "Live submission could not load. Showing demo fallback.");
-      setData(getDemoSubmission(id, requestedPhase));
+      setError(err.message || "Submission could not be loaded.");
+      setData(null);
     }
   };
 
@@ -79,6 +72,7 @@ export default function SubmissionDetail() {
       return;
     }
 
+<<<<<<< HEAD
     try {
       const durationSeconds = await validateVideoFile(file);
       setSelectedVideo(file);
@@ -127,22 +121,57 @@ export default function SubmissionDetail() {
         setData((d) => ({ ...d, submission: { ...row, videoUrl: videoPreviewUrl, phase: "ready_for_review" } }));
         push("Demo upload saved. In production this file upload is stored by the video provider.", "success");
       }
+=======
+    try {
+      const durationSeconds = await validateVideoFile(file);
+      setSelectedVideo(file);
+      setVideoDurationSeconds(durationSeconds);
+      setVideoPreviewUrl(URL.createObjectURL(file));
+      push("Video selected and passed the 15-minute limit.", "success");
+    } catch (err) {
+      setSelectedVideo(null);
+      setVideoPreviewUrl("");
+      setVideoDurationSeconds(0);
+      push(err.message || "Please choose a different video.", "error");
+    }
+  };
+
+  const uploadVideo = async () => {
+    if (!selectedVideo) return push("Choose a video file first.", "error");
+
+    setBusy(true);
+    try {
+      const result = await api.post(`/videos/submissions/${id}/upload-url`, {}, token);
+
+      if (result.provider !== "cloudflare" || !result.uploadUrl) throw new Error("Video uploads are temporarily unavailable.");
+      const formData = new FormData();
+      formData.append("file", selectedVideo);
+      const uploadResponse = await fetch(result.uploadUrl, { method: "POST", body: formData });
+      if (!uploadResponse.ok) throw new Error("Video upload failed. Please try again.");
+      const row = await api.put(`/videos/submissions/${id}/video`, { assetId: result.uploadId, playbackId: result.uploadId, durationSeconds: videoDurationSeconds, status: "ready_for_review" }, token);
+      setData((d) => ({ ...d, submission: { ...row, phase: "ready_for_review" } }));
+      push("Video uploaded and marked ready for coach review.", "success");
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
 
       setSelectedVideo(null);
       setVideoDurationSeconds(0);
     } catch (err) {
+<<<<<<< HEAD
       setData((d) => ({
         ...d,
         submission: { ...d.submission, videoUrl: videoPreviewUrl, status: "ready_for_review", phase: "ready_for_review" },
         review: null,
       }));
       push(err.message || "Demo upload saved. This is now the Ready For Review phase.", "success");
+=======
+      push(err.message || "Video could not be uploaded.", "error");
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
     } finally {
       setBusy(false);
     }
   };
 
-  if (!data) return <div className="text-[#5f746c]">Loading training submission...</div>;
+  if (!data) return <div className="text-[#5f746c]">{error || "Loading training submission..."}</div>;
 
   const { submission, review } = data;
   const phase = normalizePhase(requestedPhase || submission.phase || submission.status);
@@ -233,7 +262,7 @@ function AwaitingUploadPage({ submission, selectedVideo, videoPreviewUrl, videoD
         </div>
         <h2 className="mt-5 text-2xl font-black text-[#12372a]">Upload needed before coach review</h2>
         <p className="mt-3 leading-7 text-[#5f746c]">
-          This is the first phase of the workflow. The player has paid for coaching, but the coach cannot complete the online review until the match footage or follow-up clip is submitted.
+          Your coach can begin the review after you upload your match footage or follow-up clip.
         </p>
 
         <div className="mt-6 rounded-2xl border border-dashed border-[#00a896]/30 bg-[#d9f7fb]/60 p-5">
@@ -262,11 +291,11 @@ function AwaitingUploadPage({ submission, selectedVideo, videoPreviewUrl, videoD
       <section className="rounded-[2rem] border border-[#12372a]/10 bg-white/82 p-6 shadow-sm">
         <h2 className="text-2xl font-black text-[#12372a]">What the player needs to submit</h2>
         <div className="mt-5 grid gap-3">
-          {(submission.demoChecklist || [
+          {([
             "Record 8–12 minutes of match footage.",
             "Make sure the camera shows the full court.",
             "Include the skill area you want reviewed.",
-            "Upload or paste a private video URL.",
+            "Upload the video securely through this page.",
           ]).map((item) => (
             <div key={item} className="flex gap-3 rounded-2xl bg-[#fff8e7] p-4 text-sm leading-6 text-[#5f746c]">
               <FaCheckCircle className="mt-1 shrink-0 text-[#00a896]" />
@@ -297,7 +326,7 @@ function ReadyForReviewPage({ submission, videoSrc }) {
         ) : (
           <div className="rounded-2xl border border-dashed border-[#00a896]/30 bg-[#d9f7fb]/45 p-8 text-center text-[#5f746c]">
             <FaVideo className="mx-auto mb-4 text-4xl text-[#00a896]" />
-            This booking is ready for coach notes, but no playable video URL is attached in demo mode.
+            This booking is ready for coach notes, but the uploaded video is not available. Please upload it again or contact support.
           </div>
         )}
 
@@ -313,7 +342,7 @@ function ReadyForReviewPage({ submission, videoSrc }) {
         </p>
 
         <div className="mt-5 grid gap-3">
-          {(submission.demoCoachTasks || [
+          {([
             "Watch the video.",
             "Add timestamped comments.",
             "Write strengths and weaknesses.",

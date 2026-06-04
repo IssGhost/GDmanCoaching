@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { FaFacebookF, FaInstagram } from "react-icons/fa";
 
 export default function Footer() {
   return (
@@ -30,12 +29,12 @@ export default function Footer() {
           </ul>
         </div>
         <div>
-          <h3 className="mb-4 font-black text-[#12372a]">Social</h3>
-          <p className="text-sm">Add your coaching brand links here before launch.</p>
-          <div className="mt-5 flex gap-3">
-            <a href="#" aria-label="Facebook" className="grid h-10 w-10 place-items-center rounded-full border border-[#12372a]/10 bg-white/60 text-[#12372a] hover:text-[#00a896]"><FaFacebookF /></a>
-            <a href="#" aria-label="Instagram" className="grid h-10 w-10 place-items-center rounded-full border border-[#12372a]/10 bg-white/60 text-[#12372a] hover:text-[#00a896]"><FaInstagram /></a>
-          </div>
+          <h3 className="mb-4 font-black text-[#12372a]">Support</h3>
+          <ul className="space-y-2 text-sm font-semibold">
+            <li><Link to="/faq" className="hover:text-[#00a896]">Frequently Asked Questions</Link></li>
+            <li><Link to="/contact" className="hover:text-[#00a896]">Contact GOOD Coaching</Link></li>
+            <li><Link to="/messages" className="hover:text-[#00a896]">Messages & Quotes</Link></li>
+          </ul>
         </div>
       </div>
       <div className="border-t border-[#12372a]/10 px-6 py-5 text-center text-sm text-[#5f746c]">

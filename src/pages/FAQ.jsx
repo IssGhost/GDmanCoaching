@@ -38,7 +38,11 @@ export default function FAQ() {
       <section className="mx-auto grid max-w-5xl gap-5 md:grid-cols-3">
         {[
           { icon: <FaCalendarCheck />, title: "Request coaching", text: "Schedule online sessions or video-review packages.", to: "/coaches" },
+<<<<<<< HEAD
           { icon: <FaCreditCard />, title: "Coach-led pricing", text: "Each coach communicates pricing directly with prospective clients.", to: "/payments" },
+=======
+          { icon: <FaCreditCard />, title: "Plans and custom quotes", text: "Review listed plan prices or message a coach to request a custom quote.", to: "/payments" },
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
           { icon: <FaCloudUploadAlt />, title: "Player dashboard", text: "Track bookings, uploads, and completed coach feedback.", to: "/dashboard/submissions" },
         ].map((c) => (
           <Link key={c.title} to={c.to} className="pp-card rounded-3xl p-6 text-center transition hover:-translate-y-1">

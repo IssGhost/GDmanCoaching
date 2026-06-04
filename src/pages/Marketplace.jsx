@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { FaExternalLinkAlt, FaFilter, FaSearch, FaStar, FaVideo } from "react-icons/fa";
 import { api } from "../lib/api";
 
+<<<<<<< HEAD
 const fallbackCoaches = [
   {
     _id: "demo-1",
@@ -42,6 +43,8 @@ const fallbackCoaches = [
   },
 ];
 
+=======
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
 function packageLabel(pkg) {
   const type = String(pkg?.reviewType || "").replaceAll("_", " ");
   if (["single_video", "match_breakdown", "doubles_strategy"].includes(pkg?.reviewType)) return "Video review";
@@ -53,13 +56,14 @@ function packageLabel(pkg) {
 export default function Marketplace() {
   const [coaches, setCoaches] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [level, setLevel] = useState("all");
 
   useEffect(() => {
     api.get("/coaches")
-      .then((rows) => setCoaches(rows.length ? rows : fallbackCoaches))
-      .catch(() => setCoaches(fallbackCoaches))
+      .then((rows) => setCoaches(Array.isArray(rows) ? rows : []))
+      .catch((err) => setError(err.message || "Coaches could not be loaded. Please try again shortly."))
       .finally(() => setLoading(false));
   }, []);
 
@@ -81,7 +85,11 @@ export default function Marketplace() {
             <p className="pp-kicker">Coach marketplace</p>
             <h1 className="mt-2 text-4xl font-black text-[#12372a] md:text-6xl">Find online pickleball coaching for your next level.</h1>
             <p className="mt-4 max-w-3xl text-lg leading-8 text-[#5f746c]">
+<<<<<<< HEAD
               Browse coaches for video analysis, match reviews, personalized training plans, strategy consultations, and skill development guidance. Coaches set and communicate pricing directly with prospective clients.
+=======
+              Browse coaches for video analysis, match reviews, personalized training plans, strategy consultations, and skill development guidance. Review each coach’s plans and pricing, then message them if you need a custom option.
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
             </p>
           </div>
           <div className="rounded-3xl border border-[#12372a]/10 bg-white/75 p-4 shadow-xl shadow-[#12372a]/10 backdrop-blur">
@@ -106,6 +114,8 @@ export default function Marketplace() {
 
         {loading ? (
           <div className="pp-card-solid rounded-2xl p-8 text-[#5f746c]">Loading coaches...</div>
+        ) : error ? (
+          <div className="pp-card-solid rounded-2xl p-8 text-center"><h2 className="text-xl font-black text-[#12372a]">Coaches are temporarily unavailable.</h2><p className="mt-2 text-[#5f746c]">{error}</p></div>
         ) : list.length === 0 ? (
           <div className="pp-card-solid rounded-2xl p-8 text-center">
             <h2 className="text-xl font-black text-[#12372a]">No coaches matched that filter.</h2>
@@ -114,7 +124,10 @@ export default function Marketplace() {
         ) : (
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {list.map((coach) => {
+<<<<<<< HEAD
               const isDemo = String(coach._id).startsWith("demo-");
+=======
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
               return (
                 <article key={coach._id} className="flex flex-col overflow-hidden rounded-3xl border border-[#12372a]/10 bg-white/90 shadow-xl shadow-[#12372a]/10 backdrop-blur transition hover:-translate-y-1">
                   <div className="relative">
@@ -161,8 +174,13 @@ export default function Marketplace() {
                   <p className="mt-4 rounded-2xl border border-[#d5b450]/30 bg-[#fff1c7] p-3 text-xs font-black text-[#29483d]">View plan price or request quote directly. Videos are limited to 15 minutes.</p>
 
                   <div className="mt-auto flex gap-3 pt-5">
+<<<<<<< HEAD
                     {isDemo ? <Link to="/demo" className="pp-btn-secondary flex-1 px-4 py-3 text-center">Seed Demo</Link> : <Link to={`/coaches/${coach._id}`} className="pp-btn-secondary flex-1 px-4 py-3 text-center">View Profile</Link>}
                     <Link to={isDemo ? "/signin" : `/coaches/${coach._id}`} className="pp-btn-primary flex-1 px-4 py-3 text-center">Request Coaching</Link>
+=======
+                    <Link to={`/coaches/${coach._id}`} className="pp-btn-secondary flex-1 px-4 py-3 text-center">View Profile</Link>
+                    <Link to={`/coaches/${coach._id}`} className="pp-btn-primary flex-1 px-4 py-3 text-center">Request Coaching</Link>
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
                   </div>
                   </div>
                 </article>

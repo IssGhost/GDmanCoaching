@@ -42,9 +42,6 @@ export default function DashboardLayout() {
                 Training + Reviews
               </NavLink>
 
-              <NavLink to="/demo" className={({ isActive }) => `${item} ${isActive ? active : hover}`}>
-                Access
-              </NavLink>
             </div>
           </div>
         </div>

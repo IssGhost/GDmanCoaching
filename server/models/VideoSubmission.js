@@ -10,7 +10,7 @@ const videoSubmissionSchema = new mongoose.Schema(
     description: { type: String, default: "" },
     goals: { type: String, default: "" },
     skillLevel: { type: String, default: "" },
-    provider: { type: String, enum: ["cloudflare", "mux", "external", "demo"], default: "demo" },
+    provider: { type: String, enum: ["cloudflare"], default: "cloudflare" },
     uploadUrl: String,
     uploadId: String,
     assetId: String,

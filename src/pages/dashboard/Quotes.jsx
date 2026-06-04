@@ -3,7 +3,6 @@ import { FaClipboardCheck, FaMapMarkerAlt, FaUsers, FaVideo } from "react-icons/
 import { useAuth } from "../../context/AuthContext";
 import { api } from "../../lib/api";
 import { useToast } from "../../components/Toast";
-import { DEMO_REQUESTS } from "../../lib/demoData";
 
 const TEMPLATES = [
   {
@@ -11,12 +10,15 @@ const TEMPLATES = [
     icon: FaMapMarkerAlt,
     subject: "Online coaching request at online video review",
     details: "I want a one-hour online coaching request focused on footwork, court positioning, and controlled resets.",
+<<<<<<< HEAD
   },
   {
     label: "Group Consultation",
     icon: FaUsers,
     subject: "Small group doubles consultation",
     details: "We have 4 players and want a consultation focused on partner movement, kitchen positioning, and point construction.",
+=======
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
   },
   {
     label: "Video Review",
@@ -34,13 +36,15 @@ export default function DashboardQuotes() {
   const [form, setForm] = useState({ subject: "", details: "" });
   const [sending, setSending] = useState(false);
   const [filter, setFilter] = useState("all");
+  const [error, setError] = useState("");
 
   const load = async () => {
     try {
       const data = await api.get("/quotes/my", token);
-      setRows(data?.length ? data : DEMO_REQUESTS);
-    } catch {
-      setRows(DEMO_REQUESTS);
+      setRows(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err.message || "Requests could not be loaded.");
+      setRows([]);
     }
   };
   useEffect(() => { load(); }, [token]);
@@ -55,11 +59,12 @@ export default function DashboardQuotes() {
     }
     setSending(true);
     try {
-      const created = await api.post("/quotes", form, token).catch(() => null);
-      const row = created || { _id: `local-${Date.now()}`, ...form, status: "pending", estimate: 0, createdAt: new Date().toISOString() };
-      setRows((current) => [row, ...(current || [])]);
+      const created = await api.post("/quotes", form, token);
+      setRows((current) => [created, ...(current || [])]);
       setForm({ subject: "", details: "" });
       push("Training request submitted", "success");
+    } catch (err) {
+      push(err.message || "Request could not be submitted.", "error");
     } finally {
       setSending(false);
     }
@@ -69,6 +74,7 @@ export default function DashboardQuotes() {
 
   return (
     <div className="space-y-6">
+      {error && <div className="rounded-2xl border border-[#b94024]/20 bg-[#ffebe5] p-4 font-bold text-[#7a2b18]">{error}</div>}
       <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end">
         <div>
           <h1 className="text-3xl font-black text-[#12372a]">Training Requests</h1>
@@ -97,7 +103,11 @@ export default function DashboardQuotes() {
 
       <section className="rounded-[2rem] border border-[#12372a]/10 bg-white/82 p-6 shadow-xl shadow-[#12372a]/8 backdrop-blur">
         <h2 className="text-xl font-black text-[#12372a]">Request custom coaching</h2>
+<<<<<<< HEAD
         <p className="mt-1 text-sm text-[#5f746c]">Use this when a player needs a custom video context, group size, consultation date, or online coaching quote.</p>
+=======
+        <p className="mt-1 text-sm text-[#5f746c]">Use this when a player needs a a custom video review, strategy consultation, or coaching quote.</p>
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
         <div className="mt-5 grid gap-4">
           <label className="block">
             <span className="mb-1 block text-sm font-black text-[#12372a]">Subject</span>
@@ -105,7 +115,11 @@ export default function DashboardQuotes() {
           </label>
           <label className="block">
             <span className="mb-1 block text-sm font-black text-[#12372a]">Details</span>
+<<<<<<< HEAD
             <textarea rows={5} className="pp-input px-4 py-3" value={form.details} onChange={(e) => setForm((f) => ({ ...f, details: e.target.value }))} placeholder="Include preferred focus area, skill level, group size, goals, and scheduling window." />
+=======
+            <textarea rows={5} className="pp-input px-4 py-3" value={form.details} onChange={(e) => setForm((f) => ({ ...f, details: e.target.value }))} placeholder="Include the preferred focus area, skill level, goals, and timing." />
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
           </label>
         </div>
         <button onClick={submit} disabled={sending} className="pp-btn-primary mt-5 px-5 py-3 disabled:opacity-60">

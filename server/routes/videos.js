@@ -1,5 +1,4 @@
 const router = require("express").Router();
-const crypto = require("crypto");
 const { auth, allow } = require("../middleware/auth");
 const CoachProfile = require("../models/CoachProfile");
 const VideoSubmission = require("../models/VideoSubmission");
@@ -20,8 +19,8 @@ async function createCloudflareUpload(maxDurationSeconds = 3600) {
     },
     body: JSON.stringify({
       maxDurationSeconds,
-      requireSignedURLs: true,
-      allowedOrigins: process.env.CLIENT_URL ? process.env.CLIENT_URL.split(",").map((x) => x.trim()) : undefined,
+      requireSignedURLs: false,
+      allowedOrigins: process.env.CLIENT_URL ? process.env.CLIENT_URL.split(",").map((x) => new URL(x.trim()).hostname) : undefined,
     }),
   });
 
@@ -103,13 +102,7 @@ router.post(
       return res.json({ provider: "cloudflare", uploadUrl: upload.uploadURL, uploadId: upload.uid, submission: row });
     }
 
-    const demoUploadId = `demo_upload_${crypto.randomBytes(5).toString("hex")}`;
-    row.provider = "demo";
-    row.uploadUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/dashboard/submissions/${row._id}?demoUpload=${demoUploadId}`;
-    row.uploadId = demoUploadId;
-    row.status = "uploading";
-    await row.save();
-    res.json({ provider: "demo", uploadUrl: row.uploadUrl, uploadId: demoUploadId, submission: row });
+    return res.status(503).json({ error: "Video uploads are not configured. Please contact support." });
   })
 );
 

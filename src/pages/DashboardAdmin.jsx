@@ -1,7 +1,4 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
-import { api } from "../lib/api";
-import { useToast } from "../components/Toast";
 
 const adminCards = [
   { title: "Coaching Marketplace", text: "Approve coaches, monitor video submissions, and audit coaching records.", to: "/admin/coaching", cta: "Manage Coaching" },
@@ -15,21 +12,6 @@ const adminCards = [
 ];
 
 export default function DashboardAdmin() {
-  const { push } = useToast();
-  const [seeding, setSeeding] = useState(false);
-
-  const seedDemo = async () => {
-    setSeeding(true);
-    try {
-      const result = await api.post("/demo/seed", {});
-      push(`Demo customer ready: ${result.customer.email} / ${result.customer.password}`, "success");
-    } catch (e) {
-      push(e.message || "Failed to seed demo data", "error");
-    } finally {
-      setSeeding(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-black px-6 pt-32 text-white">
       <div className="mx-auto max-w-7xl">
@@ -41,18 +23,9 @@ export default function DashboardAdmin() {
               Manage coaches, video submissions, users, support requests, home page content, and testimonials from one polished control area.
             </p>
           </div>
-          <div className="rounded-lg border border-amber-400/30 bg-amber-400/10 p-5">
-            <h2 className="font-bold text-amber-100">Demo test kit</h2>
-            <p className="mt-2 text-sm text-amber-50/80">
-              Creates demo data for live testing. The coaching workflow can also be tested by creating a coach profile and booking a package in demo checkout mode.
-            </p>
-            <button
-              onClick={seedDemo}
-              disabled={seeding}
-              className="mt-4 rounded-md bg-amber-300 px-4 py-2 font-bold text-black hover:bg-amber-200 disabled:opacity-60"
-            >
-              {seeding ? "Creating..." : "Seed Demo Data"}
-            </button>
+          <div className="rounded-2xl border border-[#00a896]/20 bg-[#d9f7fb] p-5 text-[#12372a]">
+            <h2 className="font-black">Production operations</h2>
+            <p className="mt-2 text-sm leading-6 text-[#40584f]">Review new coaches, support requests, payments, and customer activity regularly. Use individual administrator accounts and never share passwords.</p>
           </div>
         </div>
 
@@ -68,21 +41,7 @@ export default function DashboardAdmin() {
           ))}
         </div>
 
-        <div className="mt-8 rounded-lg border border-white/10 bg-zinc-950 p-6">
-          <h2 className="text-xl font-bold">Temporary logins</h2>
-          <div className="mt-4 grid gap-4 text-sm text-gray-300 md:grid-cols-2">
-            <div className="rounded-md bg-white/[0.03] p-4">
-              <div className="font-semibold text-white">Admin</div>
-              <div>Username: admin</div>
-              <div>Password: admin</div>
-            </div>
-            <div className="rounded-md bg-white/[0.03] p-4">
-              <div className="font-semibold text-white">Demo customer</div>
-              <div>Username: customer</div>
-              <div>Password: customer</div>
-            </div>
-          </div>
-        </div>
+
       </div>
     </div>
   );

@@ -21,16 +21,11 @@ import Messages from "./pages/Messages";
 import Marketplace from "./pages/Marketplace";
 import CoachProfile from "./pages/CoachProfile";
 import CoachSignup from "./pages/CoachSignup";
-import CoachSessionSplit from "./pages/CoachSessionSplit";
 import PlayerSubmissions from "./pages/PlayerSubmissions";
 import SubmissionDetail from "./pages/SubmissionDetail";
 import CoachDashboard from "./pages/CoachDashboard";
 import CoachReview from "./pages/CoachReview";
 import AdminCoaching from "./pages/AdminCoaching";
-import DemoMVP from "./pages/DemoMVP";
-import CustomQuoteStep1 from "./pages/CustomQuoteStep1";
-import CustomQuoteStep2 from "./pages/CustomQuoteStep2";
-import CustomQuoteStep3 from "./pages/CustomQuoteStep3";
 import Cart from "./pages/Cart";
 
 // Auth
@@ -70,7 +65,6 @@ export default function App() {
               <Routes>
                 {/* Public */}
                 <Route path="/" element={<Home />} />
-                <Route path="/demo" element={<DemoMVP />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/services" element={<Services />} />
                 <Route path="/faq" element={<FAQ />} />
@@ -80,12 +74,8 @@ export default function App() {
                 <Route path="/messages" element={<PrivateRoute><Messages /></PrivateRoute>} />
                 <Route path="/marketplace" element={<Marketplace />} />
                 <Route path="/coaches" element={<Marketplace />} />
-                <Route path="/coaches/session-split" element={<CoachSessionSplit />} />
                 <Route path="/coaches/:id" element={<CoachProfile />} />
                 <Route path="/coach-signup" element={<CoachSignup />} />
-                <Route path="/quote" element={<CustomQuoteStep1 />} />
-                <Route path="/quote/step2" element={<CustomQuoteStep2 />} />
-                <Route path="/quote/step3" element={<CustomQuoteStep3 />} />
                 <Route path="/cart" element={<Cart />} />
 
                 {/* Employee/Admin operational pages */}

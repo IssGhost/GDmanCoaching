@@ -23,9 +23,13 @@ const isAllowedOrigin = (origin) => {
   }
 
   const hostname = parsed.hostname;
+<<<<<<< HEAD
   if (["localhost", "127.0.0.1", "0.0.0.0"].includes(hostname)) return true;
   if (hostname.endsWith(".up.railway.app") || hostname.endsWith(".railway.app")) return true;
 
+=======
+  if (process.env.NODE_ENV !== "production" && ["localhost", "127.0.0.1", "0.0.0.0"].includes(hostname)) return true;
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
   return configuredOrigins.includes(origin.replace(/\/$/, ""));
 };
 
@@ -38,6 +42,10 @@ app.use(
     credentials: true,
   })
 );
+<<<<<<< HEAD
+=======
+app.use(["/api/payments/webhook", "/payments/webhook"], express.raw({ type: "application/json" }));
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
@@ -51,9 +59,21 @@ const mongoConnectionState = () => ({
 
 const healthPayload = () => ({
   ok: true,
+<<<<<<< HEAD
   message: "PicklePro API running",
   mongo: mongoConnectionState(),
   configuredMongoVariable: mongoEnvName,
+=======
+  message: "GOOD Coaching API running",
+  mongo: mongoConnectionState(),
+  configuredMongoVariable: mongoEnvName,
+  integrations: {
+    stripe: Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET),
+    cloudflareStream: Boolean(process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_STREAM_TOKEN),
+    clientUrl: Boolean(process.env.CLIENT_URL),
+    jwtSecret: Boolean(process.env.JWT_SECRET),
+  },
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
 });
 
 app.get("/health", (_req, res) => res.json(healthPayload()));
@@ -71,6 +91,23 @@ const mongoEnvCandidates = [
 const [mongoEnvName, MONGO_URI] =
   mongoEnvCandidates.find(([, value]) => /^mongodb(\+srv)?:\/\//i.test(String(value || "").trim())) || [null, ""];
 
+<<<<<<< HEAD
+=======
+if (process.env.NODE_ENV === "production") {
+  const required = {
+    MONGO_URI: Boolean(MONGO_URI),
+    JWT_SECRET: Boolean(process.env.JWT_SECRET),
+    CLIENT_URL: /^https:\/\//i.test(String(process.env.CLIENT_URL || "")),
+    STRIPE_SECRET_KEY: Boolean(process.env.STRIPE_SECRET_KEY),
+    STRIPE_WEBHOOK_SECRET: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
+    CLOUDFLARE_ACCOUNT_ID: Boolean(process.env.CLOUDFLARE_ACCOUNT_ID),
+    CLOUDFLARE_STREAM_TOKEN: Boolean(process.env.CLOUDFLARE_STREAM_TOKEN),
+  };
+  const missing = Object.entries(required).filter(([, ready]) => !ready).map(([name]) => name);
+  if (missing.length) throw new Error(`Production configuration is incomplete: ${missing.join(", ")}`);
+}
+
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
 let mongoConnectAttempt = null;
 
 const connectMongo = () => {
@@ -110,7 +147,11 @@ if (MONGO_URI) {
   );
 }
 
+<<<<<<< HEAD
 const databaseBackedRoute = /^\/(api\/)?(auth|users|admin|orders|quotes|products|posts|tickets|blog|testimonials|coaches|payments|videos|reviews|inquiries|demo)(\/|$)/;
+=======
+const databaseBackedRoute = /^\/(api\/)?(auth|users|admin|orders|quotes|products|posts|tickets|blog|testimonials|coaches|payments|videos|reviews|inquiries)(\/|$)/;
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
 
 app.use(async (req, res, next) => {
   if (!databaseBackedRoute.test(req.path)) return next();
@@ -170,19 +211,18 @@ safeMount("/api/payments", "./routes/payments");
 safeMount("/api/videos", "./routes/videos");
 safeMount("/api/reviews", "./routes/reviews");
 safeMount("/api/inquiries", "./routes/inquiries");
+<<<<<<< HEAD
 safeMount("/api/demo", "./routes/demo");
+=======
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
 safeMount("/api/users", "./routes/auth");
 
 /*
   Compatibility mounts.
-  These fix the exact 404s you are seeing:
-  POST /demo/seed
-  POST /auth/signin
-  POST /auth/login
+  Compatibility mounts for clients using routes without the /api prefix.
 */
 safeMount("/auth", "./routes/auth");
 safeMount("/users", "./routes/auth");
-safeMount("/demo", "./routes/demo");
 safeMount("/admin", "./routes/admin");
 safeMount("/orders", "./routes/orders");
 safeMount("/quotes", "./routes/quotes");
@@ -220,8 +260,8 @@ if (shouldServeClient) {
 
 app.use((err, _req, res, _next) => {
   console.error("Unhandled error:", err);
-  res.status(500).json({
-    error: "Server error",
+  res.status(Number(err?.statusCode || 500)).json({
+    error: err?.statusCode ? String(err.message || "Request failed") : "Server error",
     detail: String(err?.message || err),
   });
 });
@@ -231,6 +271,4 @@ const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`API listening on http://localhost:${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/health`);
-  console.log(`Demo seed:    POST http://localhost:${PORT}/demo/seed`);
-  console.log(`API seed:     POST http://localhost:${PORT}/api/demo/seed`);
 });

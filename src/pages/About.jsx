@@ -19,7 +19,11 @@ export default function About() {
           GOOD Coaching helps pickleball players connect with coaches for online video analysis, match reviews, personalized training plans, strategy consultations, and skill development guidance.
         </motion.p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
+<<<<<<< HEAD
           {[{ icon: <FaShieldAlt />, label: "Private submissions" }, { icon: <FaStar />, label: "DUPR-aware profiles" }, { icon: <FaHandshake />, label: "Coach-led pricing" }].map((b) => (
+=======
+          {[{ icon: <FaShieldAlt />, label: "Private submissions" }, { icon: <FaStar />, label: "DUPR-aware profiles" }, { icon: <FaHandshake />, label: "Flexible plan options" }].map((b) => (
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
             <span key={b.label} className="inline-flex items-center gap-2 rounded-full border border-[#12372a]/10 bg-white/75 px-3 py-2 text-sm font-black text-[#12372a]">{b.icon}{b.label}</span>
           ))}
         </div>

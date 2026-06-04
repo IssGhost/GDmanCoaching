@@ -5,7 +5,11 @@ import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
 import { documentFileToDataUrl } from "../lib/uploads";
+<<<<<<< HEAD
 import { DEMO_REVIEWS_BY_PHASE, getDemoSubmission, normalizePhase } from "../lib/demoData";
+=======
+import { normalizePhase } from "../lib/workflow";
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
 
 const blankReview = { summary: "", strengths: "", improvements: "", drills: "", finalNotes: "", responseVideoUrl: "", voiceRecordingUrl: "", transcriptPdfUrl: "", drillPlanPdfUrl: "" };
 
@@ -35,7 +39,7 @@ export default function CoachReview() {
     try {
       const result = await api.get(`/videos/submissions/${id}`, token);
       const phase = normalizePhase(requestedPhase || result?.submission?.phase || result?.submission?.status);
-      const review = result?.review || DEMO_REVIEWS_BY_PHASE[phase] || null;
+      const review = result?.review || null;
 
       setData({
         submission: { ...(result?.submission || {}), phase, status: result?.submission?.status || phase },
@@ -43,10 +47,8 @@ export default function CoachReview() {
       });
       setReviewForm({ ...blankReview, ...(review || {}) });
     } catch (err) {
-      const fallback = getDemoSubmission(id, requestedPhase);
-      setError(err.message || "Live review workspace could not load. Showing demo fallback.");
-      setData(fallback);
-      setReviewForm({ ...blankReview, ...(fallback.review || {}) });
+      setError(err.message || "Review workspace could not be loaded.");
+      setData(null);
     }
   };
 
@@ -63,16 +65,8 @@ export default function CoachReview() {
       const saved = await api.post(`/reviews/${id}/comments`, comment, token);
       setData((d) => ({ ...d, review: saved, submission: { ...d.submission, status: "in_review", phase: "ready_for_review" } }));
       push("Timestamp comment added.", "success");
-    } catch {
-      setData((d) => ({
-        ...d,
-        review: {
-          ...(d.review || { ...blankReview, comments: [] }),
-          comments: [...(d.review?.comments || []), { ...comment, _id: `local-${Date.now()}` }],
-        },
-        submission: { ...d.submission, status: "ready_for_review", phase: "ready_for_review" },
-      }));
-      push("Comment added in demo mode.", "success");
+    } catch (err) {
+      push(err.message || "Comment could not be saved.", "error");
     } finally {
       setComment({ timestampSeconds: 0, category: "General", comment: "" });
       setBusy(false);
@@ -85,9 +79,8 @@ export default function CoachReview() {
       const saved = await api.put(`/reviews/${id}/draft`, reviewForm, token);
       setData((d) => ({ ...d, review: saved }));
       push("Review draft saved.", "success");
-    } catch {
-      setData((d) => ({ ...d, review: { ...(d.review || {}), ...reviewForm, status: "draft" } }));
-      push("Draft saved in demo mode.", "success");
+    } catch (err) {
+      push(err.message || "Draft could not be saved.", "error");
     } finally {
       setBusy(false);
     }
@@ -99,31 +92,21 @@ export default function CoachReview() {
       const saved = await api.post(`/reviews/${id}/complete`, reviewForm, token);
       setData((d) => ({ ...d, review: saved, submission: { ...d.submission, status: "reviewed", phase: "reviewed" } }));
       push("Review completed and sent to player dashboard.", "success");
-    } catch {
-      setData((d) => ({
-        ...d,
-        review: {
-          ...(d.review || {}),
-          ...reviewForm,
-          status: "complete",
-          completedAt: new Date().toISOString(),
-        },
-        submission: { ...d.submission, status: "reviewed", phase: "reviewed" },
-      }));
-      push("Review completed in demo mode.", "success");
+    } catch (err) {
+      push(err.message || "Review could not be completed.", "error");
     } finally {
       setBusy(false);
     }
   };
 
-  if (!data) return <div className="pp-demo-shell px-6 pt-32 text-[#5f746c]">Loading review workspace...</div>;
+  if (!data) return <div className="pp-app-shell px-6 pt-32 text-[#5f746c]">{error || "Loading review workspace..."}</div>;
 
   const { submission, review } = data;
   const phase = normalizePhase(requestedPhase || submission.phase || submission.status);
   const videoSrc = submission.videoUrl || (submission.playbackId ? `https://iframe.videodelivery.net/${submission.playbackId}` : "");
 
   return (
-    <div className="pp-demo-shell px-6 pt-32 pb-16">
+    <div className="pp-app-shell px-6 pt-32 pb-16">
       <div className="mx-auto max-w-7xl space-y-6">
         {error && <div className="rounded-2xl border border-[#ffd166]/50 bg-[#fff1c7]/75 p-4 text-sm font-bold text-[#5f746c]">{error}</div>}
 
@@ -170,7 +153,7 @@ function WorkflowHeader({ phase, submission }) {
     <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
       <div>
         <Link to="/coach/dashboard" className="text-sm font-black text-[#087f73] hover:underline">← Coach dashboard</Link>
-        <p className="mt-4 font-black uppercase tracking-[0.2em] text-[#087f73]">Coach workflow</p>
+        <p className="mt-4 font-black uppercase tracking-[0.2em] text-[#087f73]">Coach review</p>
         <h1 className="mt-2 flex items-center gap-3 text-4xl font-black text-[#12372a]">
           <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#d9f7fb] text-2xl text-[#00a896]">{icon}</span>
           {title}
@@ -243,7 +226,7 @@ function CoachReadyReview({
         ) : (
           <div className="rounded-2xl border border-dashed border-[#00a896]/30 bg-[#d9f7fb]/45 p-8 text-center text-[#5f746c]">
             <FaVideo className="mx-auto mb-4 text-4xl text-[#00a896]" />
-            This booking is ready for coach notes, but no playable video URL is attached in demo mode.
+            This booking is ready for coach notes, but the uploaded video is not available. Please ask the player to upload it again.
           </div>
         )}
 
@@ -299,7 +282,11 @@ function CoachReadyReview({
 
           <div className="rounded-2xl border border-[#12372a]/10 bg-[#fff8e7] p-4">
             <h3 className="font-black text-[#12372a]">Upload coach deliverables</h3>
+<<<<<<< HEAD
             <p className="mt-1 text-sm text-[#5f746c]">Add voice analysis, a transcript PDF, and/or a downloadable drill plan PDF. Files must be 12 MB or smaller.</p>
+=======
+            <p className="mt-1 text-sm text-[#5f746c]">Add voice analysis, a transcript PDF, and/or a downloadable drill plan PDF. Files must be 3 MB or smaller.</p>
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
             <div className="mt-3 grid gap-3">
               {[['voiceRecordingUrl','audio','Voice analysis recording','audio/*'],['transcriptPdfUrl','pdf','Transcript PDF','application/pdf'],['drillPlanPdfUrl','pdf','Drill plan PDF','application/pdf']].map(([key,kind,label,accept]) => <label key={key} className="block text-sm font-black text-[#12372a]">{label}<input type="file" accept={accept} onChange={async(e)=>{try{const url=await documentFileToDataUrl(e.target.files?.[0],kind);setReviewForm(f=>({...f,[key]:url}));}catch(err){push(err.message,'error')}}} className="pp-input mt-1 px-4 py-3"/>{reviewForm[key] && <span className="mt-1 block text-xs text-[#087f73]">Ready to save</span>}</label>)}
             </div>

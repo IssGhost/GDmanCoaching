@@ -55,8 +55,13 @@ router.post("/:id/quote", auth, asyncHandler(async (req, res) => {
   const isCoach = String(row.coachId.userId?._id || row.coachId.userId) === String(req.user._id) || req.user.role === "admin";
   if (!isCoach) return res.status(403).json({ error: "Only the coach can send a quote." });
   const amount = Number(req.body?.amount);
+<<<<<<< HEAD
   if (!Number.isFinite(amount) || amount < 0) return res.status(400).json({ error: "Enter a valid quote amount." });
   row.quote = { amount, scope: String(req.body?.scope || ""), discountPercent: Number(req.body?.discountPercent || 0), paymentUrl: String(req.body?.paymentUrl || ""), status: "sent", sentAt: new Date() };
+=======
+  if (!Number.isFinite(amount) || amount <= 0) return res.status(400).json({ error: "Enter a valid quote amount." });
+  row.quote = { amount, scope: String(req.body?.scope || ""), discountPercent: Math.min(Math.max(Number(req.body?.discountPercent || 0), 0), 100), status: "sent", sentAt: new Date() };
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
   row.status = "quoted";
   await row.save();
   res.json(row);
@@ -69,7 +74,11 @@ router.post("/:id/quote/approve", auth, asyncHandler(async (req, res) => {
   if (row.quote?.status !== "sent") return res.status(400).json({ error: "There is no quote waiting for approval." });
   row.quote.status = "approved"; row.quote.approvedAt = new Date(); row.status = "approved";
   await row.save();
+<<<<<<< HEAD
   res.json({ inquiry: row, paymentNextStep: row.quote.paymentUrl ? "Quote approved. Use the payment button to continue." : "Quote approved. The coach will provide the payment step." });
+=======
+  res.json({ inquiry: row, paymentNextStep: "Quote approved. You can now continue to secure checkout." });
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
 }));
 
 module.exports = router;

@@ -4,16 +4,10 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-let seedPickleballDemo = null;
-try {
-  seedPickleballDemo = require("../utils/seedPickleballDemo").seedPickleballDemo;
-} catch {
-  seedPickleballDemo = null;
-}
-
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
+if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) throw new Error("JWT_SECRET is required in production.");
 const TOKEN_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 
 function signToken(user) {
@@ -56,51 +50,15 @@ function startPathForRole(role) {
 }
 
 function normalizeLoginEmail(value) {
-  const raw = String(value || "").trim().toLowerCase();
-
-  const aliases = {
-    customer: "customer@picklepro.demo",
-    player: "customer@picklepro.demo",
-    user: "customer@picklepro.demo",
-
-    coach: "coach@picklepro.demo",
-
-    admin: "admin@picklepro.demo",
-  };
-
-  return aliases[raw] || raw;
+  return String(value || "").trim().toLowerCase();
 }
 
-async function maybeSeedDemo(email) {
-  const demoEmails = [
-    "customer@picklepro.demo",
-    "coach@picklepro.demo",
-    "admin@picklepro.demo",
-  ];
-
-  if (demoEmails.includes(email) && typeof seedPickleballDemo === "function") {
-    await seedPickleballDemo();
-  }
-}
 
 async function comparePassword(inputPassword, user) {
-  if (!user) return false;
-
-  const storedHash = user.passwordHash || user.password;
-
-  if (!storedHash) return false;
-
-  // Supports hashed passwords.
-  try {
-    const hashedMatch = await bcrypt.compare(inputPassword, storedHash);
-    if (hashedMatch) return true;
-  } catch {
-    // Ignore and try plain fallback below.
-  }
-
-  // Demo/dev fallback only.
-  return storedHash === inputPassword;
+  if (!user?.passwordHash) return false;
+  return bcrypt.compare(inputPassword, user.passwordHash);
 }
+
 
 function auth(req, res, next) {
   const hdr = req.headers.authorization || "";
@@ -127,7 +85,8 @@ async function handleSignup(req, res, next) {
     const password = String(req.body?.password || req.body?.pw || "");
     const fullName = req.body?.fullName || req.body?.name || "";
     const phone = req.body?.phone || "";
-    const accountType = req.body?.accountType || req.body?.role || "user";
+    const requestedType = req.body?.accountType || req.body?.role || "user";
+    const accountType = requestedType === "coach" ? "coach" : "user";
 
     if (!fullName || !email || !phone || !password) {
       return res.status(400).json({ error: "Full name, email, phone number, and password are required." });
@@ -172,8 +131,6 @@ async function handleSignin(req, res, next) {
     if (!email || !password) {
       return res.status(400).json({ error: "Email/username and password are required." });
     }
-
-    await maybeSeedDemo(email);
 
     const user = await User.findOne({ email });
 

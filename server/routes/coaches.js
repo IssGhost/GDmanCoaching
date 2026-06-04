@@ -26,6 +26,19 @@ function cleanSocialLinks(body = {}) {
   };
 }
 
+<<<<<<< HEAD
+=======
+function packageInput(body = {}) {
+  const price = Number(body.price);
+  if (!Number.isFinite(price) || price <= 0) {
+    const error = new Error("Enter a plan price greater than $0 before publishing.");
+    error.statusCode = 400;
+    throw error;
+  }
+  return { ...body, price, discountPercent: Math.min(Math.max(Number(body.discountPercent || 0), 0), 100), maxVideoMinutes: Math.min(Number(body.maxVideoMinutes || 15), 15) };
+}
+
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
 function duprProfileUrl(duprId) {
   return duprId ? `https://dashboard.dupr.com/dashboard/player/${encodeURIComponent(duprId)}` : "";
 }
@@ -111,6 +124,7 @@ router.post(
 
     const user = await User.findByIdAndUpdate(req.user._id, { $set: { role: "coach" } }, { new: true }).select("-passwordHash");
 
+<<<<<<< HEAD
     const starterPackages = [
       {
         title: "Single Video Analysis",
@@ -135,6 +149,8 @@ router.post(
       await CoachingPackage.insertMany(starterPackages.map((pkg) => ({ ...pkg, coachId: profile._id })));
     }
 
+=======
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
     const packages = await CoachingPackage.find({ coachId: profile._id }).sort({ price: 1 });
     res.json({ profile, packages, user });
   })
@@ -186,7 +202,11 @@ router.post(
   asyncHandler(async (req, res) => {
     const profile = await CoachProfile.findOne({ userId: req.user._id });
     if (!profile) return res.status(404).json({ error: "Coach profile not found" });
+<<<<<<< HEAD
     const pkg = await CoachingPackage.create({ ...req.body, price: Math.max(Number(req.body?.price || 0), 0), discountPercent: Math.min(Math.max(Number(req.body?.discountPercent || 0), 0), 100), maxVideoMinutes: Math.min(Number(req.body?.maxVideoMinutes || 15), 15), coachId: profile._id });
+=======
+    const pkg = await CoachingPackage.create({ ...packageInput(req.body), coachId: profile._id });
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
     res.json(pkg);
   })
 );
@@ -199,8 +219,8 @@ router.put(
     if (!profile) return res.status(404).json({ error: "Coach profile not found" });
     const pkg = await CoachingPackage.findOneAndUpdate(
       { _id: req.params.packageId, coachId: profile._id },
-      { $set: req.body },
-      { new: true }
+      { $set: packageInput(req.body) },
+      { new: true, runValidators: true }
     );
     if (!pkg) return res.status(404).json({ error: "Package not found" });
     res.json(pkg);
@@ -233,7 +253,11 @@ router.post(
   asyncHandler(async (req, res) => {
     const profile = await CoachProfile.findOne({ userId: req.user._id });
     if (!profile) return res.status(404).json({ error: "Coach profile not found" });
+<<<<<<< HEAD
     const pkg = await CoachingPackage.create({ ...req.body, price: Math.max(Number(req.body?.price || 0), 0), discountPercent: Math.min(Math.max(Number(req.body?.discountPercent || 0), 0), 100), maxVideoMinutes: Math.min(Number(req.body?.maxVideoMinutes || 15), 15), coachId: profile._id });
+=======
+    const pkg = await CoachingPackage.create({ ...packageInput(req.body), coachId: profile._id });
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
     res.json(pkg);
   })
 );

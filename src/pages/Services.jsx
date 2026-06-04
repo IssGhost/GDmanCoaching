@@ -27,7 +27,11 @@ const offerings = [
   {
     title: "Strategy consultations",
     text: "Use online coaching to discuss tournament preparation, doubles strategy, serve/return choices, or mental-game priorities.",
+<<<<<<< HEAD
     items: ["Strategy questions", "Skill development guidance", "Goal setting", "Coach-led next steps"],
+=======
+    items: ["Strategy questions", "Skill development guidance", "Goal setting", "Clear next steps"],
+>>>>>>> origin/codex/display-mongodb-data-on-webpage-7sumqq
   },
 ];
 
