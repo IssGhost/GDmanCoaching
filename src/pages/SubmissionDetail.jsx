@@ -370,6 +370,7 @@ function ReviewedPage({ submission, review, videoSrc }) {
               <Info title="Needs work" value={review.improvements} />
               <Info title="Drills" value={review.drills} />
               <Info title="Final notes" value={review.finalNotes} />
+              <ReviewDownloads review={review} />
             </div>
 
             <div>
@@ -416,4 +417,9 @@ function Info({ title, value }) {
       <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#5f746c]">{value || "—"}</p>
     </div>
   );
+}
+function ReviewDownloads({ review }) {
+  const files=[[review?.voiceRecordingUrl,"Voice analysis","coach-analysis.webm"],[review?.transcriptPdfUrl,"Transcript PDF","coach-transcript.pdf"],[review?.drillPlanPdfUrl,"Drill plan PDF","drill-plan.pdf"]].filter(([url])=>url);
+  if(!files.length)return null;
+  return <div className="rounded-2xl border border-[#00a896]/25 bg-[#d9f7fb] p-4"><h3 className="font-black text-[#12372a]">Coach downloads</h3><div className="mt-3 flex flex-wrap gap-2">{files.map(([url,label,name])=><a key={label} href={url} download={name} className="pp-btn-secondary px-3 py-2 text-sm">Download {label}</a>)}</div></div>;
 }

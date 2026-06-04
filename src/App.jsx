@@ -17,6 +17,7 @@ import FAQ from "./pages/FAQ";
 import Testimonials from "./pages/Testimonials";
 import Contact from "./pages/Contact";
 import Payments from "./pages/Payments";
+import Messages from "./pages/Messages";
 import Marketplace from "./pages/Marketplace";
 import CoachProfile from "./pages/CoachProfile";
 import CoachSignup from "./pages/CoachSignup";
@@ -76,6 +77,7 @@ export default function App() {
                 <Route path="/testimonials" element={<Testimonials />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/payments" element={<Payments />} />
+                <Route path="/messages" element={<PrivateRoute><Messages /></PrivateRoute>} />
                 <Route path="/marketplace" element={<Marketplace />} />
                 <Route path="/coaches" element={<Marketplace />} />
                 <Route path="/coaches/session-split" element={<CoachSessionSplit />} />

@@ -152,7 +152,7 @@ export default function Marketplace() {
                     ))}
                   </div>
 
-                  <p className="mt-4 rounded-2xl bg-[#fff1c7]/80 p-3 text-xs font-black text-[#5f746c]">Coach sets pricing directly. Videos are limited to 15 minutes.</p>
+                  <p className="mt-4 rounded-2xl bg-[#fff1c7]/80 p-3 text-xs font-black text-[#5f746c]">View plan price or request quote directly. Videos are limited to 15 minutes.</p>
 
                   <div className="mt-auto flex gap-3 pt-5">
                     {isDemo ? <Link to="/demo" className="pp-btn-secondary flex-1 px-4 py-3 text-center">Seed Demo</Link> : <Link to={`/coaches/${coach._id}`} className="pp-btn-secondary flex-1 px-4 py-3 text-center">View Profile</Link>}

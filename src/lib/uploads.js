@@ -45,3 +45,11 @@ export async function validateVideoFile(file) {
   }
   return durationSeconds;
 }
+
+export async function documentFileToDataUrl(file, kind = "file") {
+  if (!file) return "";
+  const allowed = kind === "audio" ? file.type?.startsWith("audio/") : file.type === "application/pdf";
+  if (!allowed) throw new Error(kind === "audio" ? "Please choose an audio recording." : "Please choose a PDF file.");
+  if (file.size > 12 * 1024 * 1024) throw new Error("Files must be 12 MB or smaller.");
+  return readFileAsDataUrl(file);
+}

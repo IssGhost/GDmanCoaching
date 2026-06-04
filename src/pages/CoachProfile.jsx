@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { FaClock, FaExternalLinkAlt, FaFacebook, FaGlobe, FaInstagram, FaStar, FaTiktok, FaUpload, FaYoutube } from "react-icons/fa";
+import { FaClock, FaComments, FaEnvelope, FaExternalLinkAlt, FaFacebook, FaGlobe, FaInstagram, FaStar, FaTiktok, FaUpload, FaYoutube } from "react-icons/fa";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
@@ -15,6 +15,7 @@ export default function CoachProfile() {
   const [form, setForm] = useState({ title: "", goals: "", skillLevel: "", description: "", durationMinutes: "" });
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [inquiryMessage, setInquiryMessage] = useState("");
 
   useEffect(() => {
     api.get(`/coaches/${id}`)
@@ -30,6 +31,18 @@ export default function CoachProfile() {
     () => coach?.packages?.find((pkg) => pkg._id === selectedPackageId),
     [coach, selectedPackageId]
   );
+
+  const startConversation = async () => {
+    if (!user) return nav("/signin", { state: { from: { pathname: `/coaches/${id}` } } });
+    if (!inquiryMessage.trim()) return push("Write a short message for the coach first.", "error");
+    setBusy(true);
+    try {
+      await api.post("/inquiries", { coachId: coach._id, subject: `Coaching inquiry for ${coach.displayName}`, message: inquiryMessage }, token);
+      push("Conversation started. You can discuss scope before purchasing.", "success");
+      nav("/messages");
+    } catch (e) { push(e.message || "Could not start conversation", "error"); }
+    finally { setBusy(false); }
+  };
 
   const checkout = async () => {
     if (!user) {
@@ -95,11 +108,13 @@ export default function CoachProfile() {
               <div><span className="font-black text-emerald-300">Singles:</span> {coach.duprSingles || "Pending"}</div>
               <div><span className="font-black text-emerald-300">Doubles:</span> {coach.duprDoubles || "Pending"}</div>
               <div><span className="font-black text-emerald-300">Location:</span> {[coach.city, coach.state, coach.country].filter(Boolean).join(", ") || "Online"}</div>
+              <div><span className="font-black text-emerald-300">Status:</span> {coach.presenceStatus === "online" ? "● Online now" : "○ Offline — asynchronous replies"}</div>
             </div>
             <div className="mt-6 flex flex-wrap gap-2">
               {(coach.specialties || []).map((tag) => <span key={tag} className="rounded-full bg-white/10 px-3 py-1 text-sm text-gray-300">{tag}</span>)}
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
+              {coach.contactEmail && <a href={`mailto:${coach.contactEmail}`} className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 text-sm font-bold text-gray-200 hover:bg-emerald-400 hover:text-black"><FaEnvelope /> Email coach</a>}
               <Social href={coach.socialLinks?.instagram} icon={<FaInstagram />} label="Instagram" />
               <Social href={coach.socialLinks?.youtube} icon={<FaYoutube />} label="YouTube" />
               <Social href={coach.socialLinks?.facebook} icon={<FaFacebook />} label="Facebook" />
@@ -111,6 +126,13 @@ export default function CoachProfile() {
         </aside>
 
         <main className="space-y-5">
+          <div className="rounded-3xl border border-emerald-400/30 bg-zinc-950 p-6">
+            <h2 className="flex items-center gap-2 text-2xl font-black"><FaComments className="text-emerald-300" /> Chat before committing</h2>
+            <p className="mt-2 text-sm leading-6 text-gray-300">Ask about your goals, the 15-minute video, timing, or deliverables. The coach can send a final custom quote if the scope grows.</p>
+            <textarea value={inquiryMessage} onChange={(e) => setInquiryMessage(e.target.value)} rows={3} className="mt-4 w-full rounded-xl border border-white/10 bg-black p-3" placeholder="Tell the coach what you want help with..." />
+            <button onClick={startConversation} disabled={busy || !coach.acceptingInquiries} className="mt-3 rounded-xl bg-emerald-400 px-5 py-3 font-black text-black disabled:opacity-50">{coach.acceptingInquiries ? "Start conversation" : "Not accepting inquiries"}</button>
+          </div>
+
           <div className="rounded-3xl border border-white/10 bg-zinc-950 p-6">
             <h2 className="text-2xl font-black">Choose an online coaching option</h2>
             <div className="mt-5 grid gap-4 md:grid-cols-2">
@@ -125,7 +147,7 @@ export default function CoachProfile() {
                       <h3 className="text-lg font-bold">{pkg.title}</h3>
                       <p className="mt-2 text-sm leading-6 text-gray-400">{pkg.description}</p>
                     </div>
-                    <div className="text-sm font-black text-emerald-300">Coach sets pricing</div>
+                    <div className="text-right text-sm font-black text-emerald-300">{Number(pkg.price) > 0 ? `$${Number(pkg.price).toFixed(2)}` : "Request a custom quote"}{pkg.discountPercent > 0 && <div className="text-xs text-amber-300">{pkg.discountPercent}% package discount</div>}</div>
                   </div>
                   <div className="mt-4 flex items-center gap-2 text-xs text-gray-400"><FaClock /> {pkg.turnaroundHours || coach.turnaroundHours || 72} hour target response • {Math.min(pkg.maxVideoMinutes || 15, 15)} min max video</div>
                 </button>
@@ -160,7 +182,7 @@ export default function CoachProfile() {
               </label>
             </div>
             <div className="mt-5 rounded-2xl border border-[#087f73]/30 bg-[#d9f7fb] p-4 text-sm font-black text-[#12372a]">
-              Please allow 1–3 business days for coaches to review and respond to inquiries. Uploaded videos are limited to 15 minutes. Coaches determine and communicate their own pricing directly.
+              Please allow 1–3 business days for coaches to review and respond to inquiries. Uploaded videos are limited to 15 minutes. Pricing and scope are shown by the coach or finalized through a custom quote you approve before payment.
             </div>
             <button onClick={checkout} disabled={busy || !selectedPackage} className="mt-6 w-full rounded-xl bg-emerald-400 px-6 py-4 font-black text-black hover:bg-emerald-300 disabled:opacity-60">
               {busy ? "Creating request..." : selectedPackage ? `Request ${selectedPackage.title}` : "Select an option"}

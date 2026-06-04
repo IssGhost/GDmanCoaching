@@ -84,7 +84,10 @@ router.post(
       city: body.city || "",
       state: body.state || "",
       country: body.country || "",
-      phone: body.phone || "",
+      phone: body.phone || current.phone || "",
+      contactEmail: body.contactEmail || current.email,
+      presenceStatus: body.presenceStatus || "offline",
+      acceptingInquiries: body.acceptingInquiries !== false,
       organization: body.organization || "",
       specialties: cleanArray(body.specialties),
       skillLevels: cleanArray(body.skillLevels),
@@ -111,7 +114,7 @@ router.post(
     const starterPackages = [
       {
         title: "Single Video Analysis",
-        description: "Upload one match or drill clip and receive timestamped notes, strengths, fixes, and drills. Pricing is discussed directly with the coach.",
+        description: "Upload one match or drill clip and receive timestamped notes, strengths, fixes, and drills. Includes coach-entered pricing and can be adjusted through a custom quote after discussion.",
         price: 0,
         reviewType: "single_video",
         turnaroundHours: update.turnaroundHours,
@@ -119,7 +122,7 @@ router.post(
       },
       {
         title: "Strategy Consultation",
-        description: "A remote review focused on positioning, third-shot choices, resets, and partner movement. Pricing is discussed directly with the coach.",
+        description: "A remote review focused on positioning, third-shot choices, resets, and partner movement. Includes coach-entered pricing and can be adjusted through a custom quote after discussion.",
         price: 0,
         reviewType: "strategy_consultation",
         turnaroundHours: update.turnaroundHours,
@@ -153,6 +156,9 @@ router.put(
       state: body.state,
       country: body.country,
       phone: body.phone,
+      contactEmail: body.contactEmail,
+      presenceStatus: body.presenceStatus,
+      acceptingInquiries: body.acceptingInquiries,
       organization: body.organization,
       specialties: body.specialties !== undefined ? cleanArray(body.specialties) : undefined,
       skillLevels: body.skillLevels !== undefined ? cleanArray(body.skillLevels) : undefined,
@@ -180,7 +186,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const profile = await CoachProfile.findOne({ userId: req.user._id });
     if (!profile) return res.status(404).json({ error: "Coach profile not found" });
-    const pkg = await CoachingPackage.create({ ...req.body, price: Number(req.body?.price || 0), maxVideoMinutes: Math.min(Number(req.body?.maxVideoMinutes || 15), 15), coachId: profile._id });
+    const pkg = await CoachingPackage.create({ ...req.body, price: Math.max(Number(req.body?.price || 0), 0), discountPercent: Math.min(Math.max(Number(req.body?.discountPercent || 0), 0), 100), maxVideoMinutes: Math.min(Number(req.body?.maxVideoMinutes || 15), 15), coachId: profile._id });
     res.json(pkg);
   })
 );
@@ -227,7 +233,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const profile = await CoachProfile.findOne({ userId: req.user._id });
     if (!profile) return res.status(404).json({ error: "Coach profile not found" });
-    const pkg = await CoachingPackage.create({ ...req.body, price: Number(req.body?.price || 0), maxVideoMinutes: Math.min(Number(req.body?.maxVideoMinutes || 15), 15), coachId: profile._id });
+    const pkg = await CoachingPackage.create({ ...req.body, price: Math.max(Number(req.body?.price || 0), 0), discountPercent: Math.min(Math.max(Number(req.body?.discountPercent || 0), 0), 100), maxVideoMinutes: Math.min(Number(req.body?.maxVideoMinutes || 15), 15), coachId: profile._id });
     res.json(pkg);
   })
 );

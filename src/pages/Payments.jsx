@@ -15,9 +15,9 @@ export default function Payments() {
     <div className="pp-page px-6 pt-32 pb-16">
       <section className="mx-auto max-w-5xl text-center">
         <p className="pp-kicker">Online coaching requests</p>
-        <h1 className="mt-3 text-4xl font-black text-[#12372a] md:text-6xl">Coach-led pricing, online-first services.</h1>
+        <h1 className="mt-3 text-4xl font-black text-[#12372a] md:text-6xl">Flexible online plans, built around your goals.</h1>
         <p className="mx-auto mt-4 max-w-3xl text-lg leading-8 text-[#5f746c]">
-          GOOD Coaching does not publish preset pricing or offline event offers. Each coach determines and communicates their own pricing directly with prospective clients.
+          GOOD Coaching does not publish preset pricing or offline event offers. Plan pricing is entered on each offering, with custom quotes available after a conversation.
         </p>
       </section>
 

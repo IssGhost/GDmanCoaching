@@ -129,8 +129,11 @@ async function handleSignup(req, res, next) {
     const phone = req.body?.phone || "";
     const accountType = req.body?.accountType || req.body?.role || "user";
 
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required." });
+    if (!fullName || !email || !phone || !password) {
+      return res.status(400).json({ error: "Full name, email, phone number, and password are required." });
+    }
+    if (password.length < 8 || !/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/\d/.test(password)) {
+      return res.status(400).json({ error: "Password must be at least 8 characters and include uppercase, lowercase, and a number." });
     }
 
     const existing = await User.findOne({ email });

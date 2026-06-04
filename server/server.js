@@ -110,7 +110,7 @@ if (MONGO_URI) {
   );
 }
 
-const databaseBackedRoute = /^\/(api\/)?(auth|users|admin|orders|quotes|products|posts|tickets|blog|testimonials|coaches|payments|videos|reviews|demo)(\/|$)/;
+const databaseBackedRoute = /^\/(api\/)?(auth|users|admin|orders|quotes|products|posts|tickets|blog|testimonials|coaches|payments|videos|reviews|inquiries|demo)(\/|$)/;
 
 app.use(async (req, res, next) => {
   if (!databaseBackedRoute.test(req.path)) return next();
@@ -169,6 +169,7 @@ safeMount("/api/coaches", "./routes/coaches");
 safeMount("/api/payments", "./routes/payments");
 safeMount("/api/videos", "./routes/videos");
 safeMount("/api/reviews", "./routes/reviews");
+safeMount("/api/inquiries", "./routes/inquiries");
 safeMount("/api/demo", "./routes/demo");
 safeMount("/api/users", "./routes/auth");
 
@@ -194,6 +195,7 @@ safeMount("/coaches", "./routes/coaches");
 safeMount("/payments", "./routes/payments");
 safeMount("/videos", "./routes/videos");
 safeMount("/reviews", "./routes/reviews");
+safeMount("/inquiries", "./routes/inquiries");
 
 const distDir = path.resolve(__dirname, "..", "dist");
 const shouldServeClient =

@@ -14,6 +14,11 @@ const initialPackage = {
   reviewType: "single_video",
   turnaroundHours: 72,
   maxVideoMinutes: 15,
+  discountPercent: 0,
+  packageDeal: false,
+  includesVoiceAnalysis: true,
+  includesTranscriptPdf: false,
+  includesDrillPlanPdf: true,
 };
 
 function phaseMeta(row) {
@@ -153,7 +158,7 @@ export default function CoachDashboard() {
     setBusy(true);
 
     try {
-      await api.post("/coaches/packages", { ...pkg, price: 0, maxVideoMinutes: Math.min(Number(pkg.maxVideoMinutes || 15), 15) }, token);
+      await api.post("/coaches/packages", { ...pkg, price: Math.max(Number(pkg.price || 0), 0), maxVideoMinutes: Math.min(Number(pkg.maxVideoMinutes || 15), 15) }, token);
       push("Package created.", "success");
       setPkg(initialPackage);
       load();
@@ -216,7 +221,10 @@ export default function CoachDashboard() {
               <input className="pp-input px-4 py-3 md:col-span-2" placeholder="Areas of specialization, comma-separated" value={Array.isArray(profileForm.specialties) ? profileForm.specialties.join(", ") : profileForm.specialties || ""} onChange={(e) => setProfileForm((p) => ({ ...p, specialties: e.target.value }))} />
               <input className="pp-input px-4 py-3" placeholder="Instagram URL" value={profileForm.instagram || ""} onChange={(e) => setProfileForm((p) => ({ ...p, instagram: e.target.value }))} />
               <input className="pp-input px-4 py-3" placeholder="YouTube URL" value={profileForm.youtube || ""} onChange={(e) => setProfileForm((p) => ({ ...p, youtube: e.target.value }))} />
-              <input className="pp-input px-4 py-3 md:col-span-2" placeholder="Personal website" value={profileForm.website || ""} onChange={(e) => setProfileForm((p) => ({ ...p, website: e.target.value }))} />
+              <input className="pp-input px-4 py-3" type="email" placeholder="Public contact email" value={profileForm.contactEmail || ""} onChange={(e) => setProfileForm((p) => ({ ...p, contactEmail: e.target.value }))} />
+              <select className="pp-input px-4 py-3" value={profileForm.presenceStatus || "offline"} onChange={(e) => setProfileForm((p) => ({ ...p, presenceStatus: e.target.value }))}><option value="online">Online / available to chat</option><option value="offline">Offline / asynchronous replies</option></select>
+              <label className="flex items-center gap-2 rounded-xl border border-[#12372a]/10 bg-white px-4 py-3 font-bold text-[#12372a]"><input type="checkbox" checked={profileForm.acceptingInquiries !== false} onChange={(e) => setProfileForm((p) => ({ ...p, acceptingInquiries: e.target.checked }))} /> Accepting new inquiries</label>
+              <input className="pp-input px-4 py-3" placeholder="Personal website" value={profileForm.website || ""} onChange={(e) => setProfileForm((p) => ({ ...p, website: e.target.value }))} />
               <textarea maxLength={5000} rows={6} className="pp-input px-4 py-3 md:col-span-2" placeholder="Biography and coaching expectations" value={profileForm.bio || ""} onChange={(e) => setProfileForm((p) => ({ ...p, bio: e.target.value }))} />
               <button className="pp-btn-primary px-4 py-3 md:col-span-2 disabled:opacity-60" disabled={busy}>Save Profile</button>
             </form>
@@ -294,11 +302,14 @@ export default function CoachDashboard() {
                   <option value="match_breakdown">Match breakdown</option>
                   <option value="strategy_consultation">Strategy consultation</option>
                   <option value="training_plan">Personalized training plan</option>
+                  <option value="monthly">Customized monthly program</option>
                   <option value="doubles_strategy">Doubles strategy</option>
                 </select>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
+                <input type="number" min="0" step="0.01" className="pp-input px-4 py-3" value={pkg.price} onChange={(e) => setPkg((p) => ({ ...p, price: e.target.value }))} placeholder="Price" required />
+                <input type="number" min="0" max="100" className="pp-input px-4 py-3" value={pkg.discountPercent} onChange={(e) => setPkg((p) => ({ ...p, discountPercent: e.target.value, packageDeal: Number(e.target.value) > 0 }))} placeholder="Package discount %" />
                 <input
                   type="number"
                   className="pp-input px-4 py-3"
@@ -315,6 +326,10 @@ export default function CoachDashboard() {
                 />
               </div>
 
+              <div className="grid gap-2 rounded-2xl border border-[#12372a]/10 bg-white p-4 text-sm font-bold text-[#12372a]">
+                {[['includesVoiceAnalysis','Voice-recorded analysis'],['includesTranscriptPdf','Transcript PDF'],['includesDrillPlanPdf','Downloadable drill-plan PDF']].map(([key,label]) => <label key={key} className="flex items-center gap-2"><input type="checkbox" checked={Boolean(pkg[key])} onChange={(e)=>setPkg((p)=>({...p,[key]:e.target.checked}))}/>{label}</label>)}
+              </div>
+
               <button className="pp-btn-primary px-4 py-3 disabled:opacity-60" disabled={busy}>
                 <FaPlus className="mr-2" /> Add Package
               </button>
@@ -326,7 +341,7 @@ export default function CoachDashboard() {
               {(data.packages || []).map((pkg) => (
                 <div key={pkg._id} className="rounded-2xl border border-[#12372a]/10 bg-[#fff8e7] p-4">
                   <div className="font-black text-[#12372a]">
-                    {pkg.title} — Coach sets pricing
+                    {pkg.title} — ${Number(pkg.price || 0).toFixed(2)}{pkg.discountPercent > 0 ? ` (${pkg.discountPercent}% package discount)` : ""}
                   </div>
 
                   <div className="mt-1 text-sm text-[#5f746c]">

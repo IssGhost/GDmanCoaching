@@ -75,7 +75,7 @@ export default function CoachSignup() {
           <p className="font-bold uppercase tracking-[0.2em] text-emerald-300">Coach application</p>
           <h1 className="mt-3 text-4xl font-black">Apply to coach online through GOOD Coaching.</h1>
           <p className="mt-4 leading-7 text-gray-300">
-            Create a public profile for remote video analysis, match reviews, strategy consultations, and personalized training plans. Each coach determines and communicates pricing directly with prospective clients.
+            Create a public profile for remote video analysis, match reviews, strategy consultations, and personalized training plans. Coaches enter plan prices and can send a custom quote after discussing the requested scope.
           </p>
           <div className="mt-6 space-y-3 text-sm text-gray-300">
             {["Profile photo, bio, DUPR ID, and social links", "Skill categories based on DUPR ratings", "Online-only coaching services", "15-minute video upload limit", "1–3 business day response expectation"].map((item) => (
@@ -97,22 +97,22 @@ export default function CoachSignup() {
           <Section title="Personal information" />
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Full Name" value={form.displayName} onChange={(v) => update("displayName", v)} required />
-            <Field label="Email Address" type="email" value={form.email} onChange={(v) => update("email", v)} />
-            <Field label="Phone Number" value={form.phone} onChange={(v) => update("phone", v)} />
+            <Field label="Email Address" type="email" value={form.email} onChange={(v) => update("email", v)} required />
+            <Field label="Phone Number" value={form.phone} onChange={(v) => update("phone", v)} required />
             <label className="block md:col-span-2">
               <span className="text-sm text-gray-400">Profile Photo Upload</span>
               <input type="file" accept="image/*" onChange={(e) => uploadProfilePhoto(e.target.files?.[0])} className="mt-1 w-full rounded-xl border border-white/10 bg-black p-3 file:mr-4 file:rounded-full file:border-0 file:bg-emerald-400 file:px-4 file:py-2 file:font-black file:text-black" />
               {form.avatarUrl && <img src={form.avatarUrl} alt="Coach profile preview" className="mt-3 h-44 w-full rounded-2xl object-cover" />}
             </label>
-            <Field label="City" value={form.city} onChange={(v) => update("city", v)} />
-            <Field label="State" value={form.state} onChange={(v) => update("state", v)} />
-            <Field label="Country" value={form.country} onChange={(v) => update("country", v)} />
+            <Field label="City" value={form.city} onChange={(v) => update("city", v)} required />
+            <Field label="State" value={form.state} onChange={(v) => update("state", v)} required />
+            <Field label="Country" value={form.country} onChange={(v) => update("country", v)} required />
           </div>
 
           <Section title="Experience" />
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Years of Playing Experience" type="number" min="0" value={form.playingExperienceYears} onChange={(v) => update("playingExperienceYears", v)} />
-            <Field label="Years of Coaching Experience" type="number" min="0" value={form.coachingExperienceYears} onChange={(v) => update("coachingExperienceYears", v)} />
+            <Field label="Years of Playing Experience" type="number" min="0" value={form.playingExperienceYears} required onChange={(v) => update("playingExperienceYears", v)} />
+            <Field label="Years of Coaching Experience" type="number" min="0" value={form.coachingExperienceYears} required onChange={(v) => update("coachingExperienceYears", v)} />
             <Field label="Current Coaching Organization or Club Affiliation" value={form.organization} onChange={(v) => update("organization", v)} className="md:col-span-2" />
           </div>
 
@@ -122,7 +122,7 @@ export default function CoachSignup() {
             <Field label="DUPR ID" value={form.duprId} onChange={(v) => update("duprId", v)} placeholder="Example: 7DVMM4" />
             <Field label="DUPR Singles Rating" type="number" step="0.001" value={form.duprSingles} onChange={(v) => update("duprSingles", v)} />
             <Field label="DUPR Doubles Rating" type="number" step="0.001" value={form.duprDoubles} onChange={(v) => update("duprDoubles", v)} />
-            <Field label="Areas of Specialization" value={form.specialties} onChange={(v) => update("specialties", v)} className="md:col-span-2" />
+            <Field label="Areas of Specialization" value={form.specialties} required onChange={(v) => update("specialties", v)} className="md:col-span-2" />
             <label className="block md:col-span-2">
               <span className="text-sm text-gray-400">Coaching Skill Levels</span>
               <select multiple value={form.skillLevels.split(", ").filter(Boolean)} onChange={(e) => update("skillLevels", Array.from(e.target.selectedOptions).map((o) => o.value).join(", "))} className="mt-1 min-h-36 w-full rounded-xl border border-white/10 bg-black p-3">

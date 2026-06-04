@@ -12,7 +12,7 @@ const offerings = [
   {
     title: "Video analysis",
     text: "Submit gameplay footage for technical notes, decision-making feedback, strengths, weaknesses, and recommended adjustments.",
-    items: ["15-minute maximum upload", "Timestamped review notes", "Technique and decision feedback", "Clear improvement priorities"],
+    items: ["15-minute maximum upload", "Timestamped review notes", "Optional voice-recorded analysis", "Transcript PDF option"],
   },
   {
     title: "Match reviews",
@@ -22,7 +22,7 @@ const offerings = [
   {
     title: "Personalized training plans",
     text: "Coaches can create online development plans based on your goals, DUPR range, practice time, and current limitations.",
-    items: ["Weekly focus areas", "Drill recommendations", "Progress checkpoints", "Coach-specific expectations"],
+    items: ["Customized monthly program", "Downloadable drill-plan PDF", "2–3 business day delivery target", "Progress checkpoints"],
   },
   {
     title: "Strategy consultations",
@@ -73,12 +73,12 @@ export default function Services() {
       <section className="mx-auto mt-10 max-w-6xl rounded-[2rem] border border-[#12372a]/10 bg-gradient-to-br from-[#fffef8] via-[#d9f7fb] to-[#fff1c7] p-8 shadow-2xl shadow-[#12372a]/10">
         <h2 className="text-3xl font-black text-[#12372a]">What coaches can deliver</h2>
         <div className="mt-6 grid gap-4 md:grid-cols-2">
-          {["Video analysis", "Match reviews", "Personalized training plans", "Strategy consultations", "Skill development guidance", "Strengths and weaknesses", "Recommended drills", "Player dashboard archive"].map((item) => (
+          {["Video analysis", "Match reviews", "Personalized training plans", "Strategy consultations", "Skill development guidance", "Strengths and weaknesses", "Voice-recorded analysis", "Transcript PDFs", "Downloadable drill plans", "Monthly customized programs", "Package discounts", "Player dashboard archive"].map((item) => (
             <div key={item} className="flex gap-3 rounded-xl bg-white/70 p-4 font-bold text-[#5f746c]"><FaCheckCircle className="mt-1 text-[#00a896]" /> {item}</div>
           ))}
         </div>
         <p className="mt-6 rounded-2xl bg-white/75 p-4 text-sm font-bold text-[#5f746c]">
-          Coaches set and communicate their own pricing directly with prospective clients. GOOD Coaching does not display preset pricing or offline event offers.
+          Plan prices are entered on coach offerings. Customers can chat first, and coaches can send a revised custom quote for approval when the final scope goes beyond the original request.
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <Link to="/coaches" className="pp-btn-primary px-5 py-3 text-center">Browse Coaches</Link>

@@ -9,6 +9,7 @@ export default function SignUp() {
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [err, setErr] = useState("");
   const [accountType, setAccountType] = useState("player");
 
@@ -16,7 +17,7 @@ export default function SignUp() {
     e.preventDefault();
     setErr("");
     try {
-      await signup(email, pw, name, accountType);
+      await signup(email, pw, name, phone, accountType);
       nav(accountType === "coach" ? "/coach-signup" : "/dashboard/account");
     } catch (e) {
       setErr(e.message || "Signup failed");
@@ -67,13 +68,18 @@ export default function SignUp() {
             </label>
 
             <label className="block">
+              <span className="mb-1 block text-sm font-black text-[#12372a]">Phone Number</span>
+              <input className="pp-input px-4 py-3" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(555) 555-0123" type="tel" required />
+            </label>
+
+            <label className="block">
               <span className="mb-1 block text-sm font-black text-[#12372a]">Email</span>
               <input className="pp-input px-4 py-3" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" type="email" required />
             </label>
 
             <label className="block">
               <span className="mb-1 block text-sm font-black text-[#12372a]">Password</span>
-              <input className="pp-input px-4 py-3" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Minimum 8 characters" type="password" required />
+              <input className="pp-input px-4 py-3" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="8+ characters, uppercase, lowercase, number" type="password" minLength={8} required />
             </label>
           </div>
 
