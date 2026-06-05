@@ -6,6 +6,7 @@ import {
   FaEnvelope,
   FaPaperPlane,
   FaReceipt,
+  FaShoppingCart,
   FaTimes,
 } from "react-icons/fa";
 import { api } from "../lib/api";
@@ -189,7 +190,7 @@ export default function Messages({ embedded = false }) {
 
       const result = await api.post(`/inquiries/${selected._id}/quote/approve`, {}, token);
       setSelected(result.inquiry);
-      push(result.paymentNextStep || "Quote approved. You can now continue to secure checkout.", "success");
+      push(result.paymentNextStep || "Quote approved. The checkout button is now available.", "success");
       await load();
     });
 
@@ -297,17 +298,6 @@ export default function Messages({ embedded = false }) {
                       {row.subject}
                     </div>
 
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {(row.requestedServices || []).slice(0, 3).map((service) => (
-                        <span
-                          key={service}
-                          className="rounded-full bg-white px-2 py-1 text-[11px] font-bold text-[#087f73]"
-                        >
-                          {service}
-                        </span>
-                      ))}
-                    </div>
-
                     <div className="mt-3 flex items-center gap-2 text-xs font-bold text-[#5f746c]">
                       Open details <FaChevronRight />
                     </div>
@@ -349,36 +339,13 @@ export default function Messages({ embedded = false }) {
                   )}
                 </div>
 
-                {!!selected.requestedServices?.length && (
-                  <section className="mt-4 rounded-2xl border border-[#00a896]/20 bg-[#eaf9f7] p-4">
-                    <div className="text-xs font-black uppercase tracking-[.15em] text-[#087f73]">
-                      Requested services
-                    </div>
-
-                    <p className="mt-1 text-sm font-semibold leading-6 text-[#40584f]">
-                      These are the services the customer selected when starting the custom request.
-                    </p>
-
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {selected.requestedServices.map((service) => (
-                        <span
-                          key={service}
-                          className="rounded-full bg-white px-3 py-2 text-xs font-black text-[#12372a]"
-                        >
-                          {service}
-                        </span>
-                      ))}
-                    </div>
-                  </section>
-                )}
-
                 <section className="mt-4 rounded-2xl border border-[#12372a]/10 bg-[#fffdf6] p-4">
                   <h3 className="font-black text-[#12372a]">How this custom quote works</h3>
 
                   <div className="mt-3 grid gap-3 md:grid-cols-3">
                     <MiniStep number="1" title="Discuss details" text="Use chat to clarify goals, timeline, and video needs." />
-                    <MiniStep number="2" title="Coach sends quote" text="The quote should include price, scope, deliverables, and turnaround." />
-                    <MiniStep number="3" title="Approve then pay" text="The customer only pays after approving the quote." />
+                    <MiniStep number="2" title="Coach sends quote" text="The quote includes price, scope, deliverables, and turnaround." />
+                    <MiniStep number="3" title="Approve then pay" text="The customer pays only after approving the quote." />
                   </div>
                 </section>
 
@@ -488,9 +455,22 @@ export default function Messages({ embedded = false }) {
                     )}
 
                     {!canSendQuote && selected.quote.status === "approved" && (
-                      <button onClick={payQuote} disabled={busy} className="pp-btn-primary mt-4 px-4 py-2">
-                        Pay approved quote securely
-                      </button>
+                      <div className="mt-5 rounded-3xl border-2 border-[#087f73]/30 bg-white p-5 shadow-sm">
+                        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                          <div>
+                            <h4 className="text-xl font-black text-[#12372a]">Ready for checkout</h4>
+
+                            <p className="mt-1 text-sm font-semibold leading-6 text-[#40584f]">
+                              Your quote is approved. Click below to pay securely, then your upload page will open.
+                            </p>
+                          </div>
+
+                          <button onClick={payQuote} disabled={busy} className="pp-btn-primary px-6 py-4 disabled:opacity-60">
+                            <FaShoppingCart className="mr-2" />
+                            Pay approved quote — {money(selected.quote.amount)}
+                          </button>
+                        </div>
+                      </div>
                     )}
 
                     {canSendQuote && selected.quote.status === "approved" && (

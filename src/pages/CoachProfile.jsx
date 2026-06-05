@@ -83,7 +83,6 @@ export default function CoachProfile() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [inquiryMessage, setInquiryMessage] = useState("");
-  const [requestedServices, setRequestedServices] = useState([]);
 
   useEffect(() => {
     setLoading(true);
@@ -110,24 +109,6 @@ export default function CoachProfile() {
     () => coach?.packages?.find((pkg) => pkg._id === selectedPackageId),
     [coach, selectedPackageId]
   );
-
-  const allServiceOptions = useMemo(() => {
-    const packageTitles = (coach?.packages || []).map((pkg) => pkg.title).filter(Boolean);
-
-    return [
-      ...packageTitles,
-      "Video analysis",
-      "Full match review",
-      "Doubles strategy",
-      "Singles strategy",
-      "Third-shot drop help",
-      "Kitchen / NVZ positioning",
-      "Tournament preparation",
-      "Personalized drill plan",
-      "Monthly training program",
-      "Other custom service",
-    ].filter((item, index, all) => all.indexOf(item) === index);
-  }, [coach]);
 
   const requireLogin = () => {
     if (user) return false;
@@ -160,7 +141,7 @@ export default function CoachProfile() {
           coachId: coach._id,
           subject: `Question for ${coach.displayName}`,
           message: inquiryMessage,
-          requestedServices,
+          requestedServices: [],
         },
         token
       );
@@ -174,19 +155,8 @@ export default function CoachProfile() {
     }
   };
 
-  const toggleRequestedService = (service) => {
-    setRequestedServices((current) =>
-      current.includes(service) ? current.filter((item) => item !== service) : [...current, service]
-    );
-  };
-
   const sendCustomRequest = async () => {
     if (requireLogin()) return;
-
-    if (!requestedServices.length) {
-      push("Select at least one service for your custom quote request.", "error");
-      return;
-    }
 
     if (!customForm.goals.trim() && !customForm.description.trim()) {
       push("Tell the coach what you want help with before sending the request.", "error");
@@ -197,7 +167,6 @@ export default function CoachProfile() {
 
     try {
       const message = [
-        `Requested services: ${requestedServices.join(", ")}`,
         customForm.skillLevel ? `Skill level: ${customForm.skillLevel}` : "",
         customForm.goals ? `Main goals: ${customForm.goals}` : "",
         customForm.description ? `Extra notes: ${customForm.description}` : "",
@@ -211,7 +180,7 @@ export default function CoachProfile() {
           coachId: coach._id,
           subject: customForm.title.trim() || `Custom quote request for ${coach.displayName}`,
           message,
-          requestedServices,
+          requestedServices: [],
         },
         token
       );
@@ -516,6 +485,12 @@ export default function CoachProfile() {
                           <span className="rounded-full bg-white px-3 py-1 text-xs font-black capitalize text-[#087f73]">
                             {readableReviewType(pkg.reviewType)}
                           </span>
+
+                          {(pkg.packageDeal || pkg.discountPercent > 0 || pkg.reviewType === "package_discount") && (
+                            <span className="rounded-full bg-[#fff0cf] px-3 py-1 text-xs font-black text-[#9b4f00]">
+                              Package discount
+                            </span>
+                          )}
                         </div>
 
                         <h3 className="mt-2 text-lg font-black text-[#12372a]">{pkg.title}</h3>
@@ -618,11 +593,11 @@ export default function CoachProfile() {
             highlight
           >
             <p className="text-sm font-semibold leading-6 text-[#40584f]">
-              Send your goals to the coach. The coach replies with a custom quote, and you only pay after approving it.
+              Explain your request in your own words. The coach replies with a custom quote, and you only pay after approving it.
             </p>
 
             <div className="mt-5 grid gap-3 md:grid-cols-3">
-              <InfoStep number="1" title="Send request" text="Explain what you want help with and select services." />
+              <InfoStep number="1" title="Send request" text="Explain what you want help with." />
               <InfoStep number="2" title="Coach quotes" text="The coach replies with scope, price, and deliverables." />
               <InfoStep number="3" title="Approve then pay" text="You decide whether to approve the quote before payment." />
             </div>
@@ -633,28 +608,6 @@ export default function CoachProfile() {
               <p className="mt-1 text-sm font-semibold leading-6 text-[#40584f]">
                 The more detail you provide, the easier it is for the coach to send an accurate quote.
               </p>
-
-              <div className="mt-5 grid gap-2 sm:grid-cols-2">
-                {allServiceOptions.map((service) => (
-                  <label
-                    key={service}
-                    className={`flex cursor-pointer items-center gap-3 rounded-2xl border p-3 text-sm font-bold ${
-                      requestedServices.includes(service)
-                        ? "border-[#00a896] bg-white"
-                        : "border-[#12372a]/10 bg-white/60"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={requestedServices.includes(service)}
-                      onChange={() => toggleRequestedService(service)}
-                      className="h-5 w-5 accent-[#087f73]"
-                    />
-
-                    {service}
-                  </label>
-                ))}
-              </div>
 
               <div className="mt-5 grid gap-4 md:grid-cols-2">
                 <Field label="Request title" help="Give the coach a quick summary of what you need.">

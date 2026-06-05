@@ -13,7 +13,16 @@ const coachingPackageSchema = new mongoose.Schema(
     includesDrillPlanPdf: { type: Boolean, default: false },
     reviewType: {
       type: String,
-      enum: ["single_video", "match_breakdown", "doubles_strategy", "monthly", "strategy_consultation", "training_plan"],
+      enum: [
+        "single_video",
+        "match_breakdown",
+        "doubles_strategy",
+        "singles_strategy",
+        "monthly",
+        "strategy_consultation",
+        "training_plan",
+        "package_discount",
+      ],
       default: "single_video",
     },
     turnaroundHours: { type: Number, default: 48 },

@@ -72,6 +72,19 @@ const PACKAGE_TEMPLATES = [
     includesResponseVideo: false,
   },
   {
+    title: "Singles Strategy Review",
+    range: "$35–$75",
+    price: 55,
+    reviewType: "singles_strategy",
+    turnaroundHours: 72,
+    description:
+      "A singles-focused review covering court positioning, patterns, serve and return strategy, shot selection, point construction, and how to create pressure one-on-one.",
+    includesVoiceAnalysis: true,
+    includesTranscriptPdf: false,
+    includesDrillPlanPdf: true,
+    includesResponseVideo: false,
+  },
+  {
     title: "Personalized Training Plan",
     range: "$60–$125",
     price: 95,
@@ -81,6 +94,21 @@ const PACKAGE_TEMPLATES = [
       "A custom improvement plan based on the customer’s goals, current skill level, and uploaded footage. Includes priorities, drills, and a weekly practice structure.",
     includesVoiceAnalysis: true,
     includesTranscriptPdf: true,
+    includesDrillPlanPdf: true,
+    includesResponseVideo: false,
+  },
+  {
+    title: "Package Discount Bundle",
+    range: "$100–$180",
+    price: 140,
+    reviewType: "package_discount",
+    turnaroundHours: 120,
+    discountPercent: 10,
+    packageDeal: true,
+    description:
+      "A discounted bundle for multiple short video reviews. Example: four separate 15-minute video reviews purchased together at a lower total price than buying each one individually.",
+    includesVoiceAnalysis: true,
+    includesTranscriptPdf: false,
     includesDrillPlanPdf: true,
     includesResponseVideo: false,
   },
@@ -232,8 +260,8 @@ export default function CoachDashboard() {
       ...template,
       maxVideoMinutes: 15,
       active: true,
-      discountPercent: 0,
-      packageDeal: false,
+      discountPercent: template.discountPercent || 0,
+      packageDeal: Boolean(template.packageDeal || template.discountPercent),
     }));
 
     push(`${template.title} template applied. Adjust the price and wording before publishing.`, "success");
@@ -290,6 +318,7 @@ export default function CoachDashboard() {
         discountPercent: Number(pkg.discountPercent || 0),
         turnaroundHours: Number(pkg.turnaroundHours || 72),
         maxVideoMinutes: Math.min(Number(pkg.maxVideoMinutes || 15), 15),
+        packageDeal: Boolean(pkg.packageDeal || Number(pkg.discountPercent || 0) > 0 || pkg.reviewType === "package_discount"),
         active: pkg.active !== false,
       };
 
@@ -543,7 +572,7 @@ export default function CoachDashboard() {
                 <span className="mb-1 block text-sm font-black text-[#12372a]">Areas of specialization</span>
                 <input
                   className="pp-input px-4 py-3"
-                  placeholder="Example: doubles strategy, third-shot drops, resets, beginner fundamentals"
+                  placeholder="Example: doubles strategy, singles strategy, third-shot drops, resets, junior programs"
                   value={Array.isArray(profileForm.specialties) ? profileForm.specialties.join(", ") : profileForm.specialties || ""}
                   onChange={(e) => setProfileForm((p) => ({ ...p, specialties: e.target.value }))}
                 />
@@ -713,6 +742,13 @@ export default function CoachDashboard() {
               </div>
             </div>
 
+            <div className="mt-5 rounded-2xl border border-[#00a896]/20 bg-[#eaf9f7] p-4 text-sm font-semibold leading-6 text-[#40584f]">
+              <h3 className="font-black text-[#12372a]">How package discounts appear to customers</h3>
+              <p className="mt-2">
+                Example: if you create a “Package Discount Bundle” for four 15-minute video reviews, the customer sees one buy-now plan with one total price. After purchase, they get access to the video submission workflow. You can explain in the description that the package includes four separate reviews and how the customer should submit each clip.
+              </p>
+            </div>
+
             <form onSubmit={createPackage} className="mt-5 grid gap-3">
               <label className="block">
                 <span className="mb-1 block text-sm font-black text-[#12372a]">Plan name</span>
@@ -742,14 +778,22 @@ export default function CoachDashboard() {
                 <select
                   className="pp-input px-4 py-3"
                   value={pkg.reviewType}
-                  onChange={(e) => setPkg((p) => ({ ...p, reviewType: e.target.value }))}
+                  onChange={(e) =>
+                    setPkg((p) => ({
+                      ...p,
+                      reviewType: e.target.value,
+                      packageDeal: e.target.value === "package_discount" ? true : p.packageDeal,
+                    }))
+                  }
                 >
                   <option value="single_video">Single video review</option>
                   <option value="match_breakdown">Match breakdown</option>
+                  <option value="doubles_strategy">Doubles strategy</option>
+                  <option value="singles_strategy">Singles strategy</option>
                   <option value="strategy_consultation">Strategy consultation</option>
                   <option value="training_plan">Personalized training plan</option>
+                  <option value="package_discount">Package discount</option>
                   <option value="monthly">Customized monthly program</option>
-                  <option value="doubles_strategy">Doubles strategy</option>
                 </select>
               </label>
 
@@ -782,7 +826,7 @@ export default function CoachDashboard() {
                       setPkg((p) => ({
                         ...p,
                         discountPercent: e.target.value,
-                        packageDeal: Number(e.target.value) > 0,
+                        packageDeal: Number(e.target.value) > 0 || p.reviewType === "package_discount",
                       }))
                     }
                     placeholder="Example: 10"
@@ -846,6 +890,22 @@ export default function CoachDashboard() {
                 ))}
               </div>
 
+              <label className="flex items-start gap-3 rounded-2xl border border-[#12372a]/10 bg-[#fff8e7] p-4 font-bold text-[#12372a]">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={Boolean(pkg.packageDeal || Number(pkg.discountPercent || 0) > 0 || pkg.reviewType === "package_discount")}
+                  onChange={(e) => setPkg((p) => ({ ...p, packageDeal: e.target.checked }))}
+                />
+
+                <span>
+                  Mark this as a package discount
+                  <span className="mt-1 block text-xs font-semibold leading-5 text-[#40584f]">
+                    Use this for bundles such as four video reviews at a lower total price. Explain the bundle details clearly in the description.
+                  </span>
+                </span>
+              </label>
+
               <label className="flex items-start gap-3 rounded-2xl border border-[#12372a]/10 bg-[#eaf9f7] p-4 font-bold text-[#12372a]">
                 <input
                   type="checkbox"
@@ -901,6 +961,12 @@ export default function CoachDashboard() {
                     <div className="mt-3 rounded-xl bg-white/70 p-3 text-xs font-bold text-[#087f73]">
                       Includes: {includedDeliverables(item)}
                     </div>
+
+                    {(item.packageDeal || item.discountPercent > 0 || item.reviewType === "package_discount") && (
+                      <div className="mt-3 rounded-xl bg-[#eaf9f7] p-3 text-xs font-bold text-[#087f73]">
+                        Package discount plan: customers purchase this as one discounted bundle. Make sure the description explains how many reviews or sessions are included.
+                      </div>
+                    )}
 
                     {(!item.active || Number(item.price || 0) <= 0) && (
                       <div className="mt-3 rounded-xl border border-[#ffd166]/50 bg-white p-3 text-xs font-bold text-[#7a4d00]">
