@@ -476,7 +476,7 @@ router.post(
 
     const split = buildSplit({
       total,
-      platformFeePercent: coach.defaultPlatformFeePercent || 10,
+      platformFeePercent: Number(process.env.PLATFORM_FEE_PERCENT || coach.defaultPlatformFeePercent || 15),      
       coach,
       manualSplits: splitRecipients,
     });

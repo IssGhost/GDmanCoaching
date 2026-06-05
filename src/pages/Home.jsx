@@ -51,7 +51,7 @@ export default function Home() {
               </Link>
             </div>
 
-            <div className="mt-8 grid gap-3 text-sm font-bold text-[#5f746c] sm:grid-cols-3">
+            <div className="mt-10 grid gap-x-8 gap-y-4 text-sm font-bold text-[#5f746c] sm:grid-cols-2 lg:grid-cols-3">
               {[
                 "Direct coach communication",
                 "Private video submissions",
@@ -60,8 +60,8 @@ export default function Home() {
                 "Live coach chat",
                 "Training packages",
               ].map((item) => (
-                <div key={item} className="flex items-center gap-2 whitespace-nowrap">
-                  <FaCheckCircle className="shrink-0 text-[#00a896]" /> {item}
+                <div key={item} className="flex items-start gap-3 leading-6">
+                  <FaCheckCircle className="mt-1 shrink-0 text-[#00a896]" /> <span>{item}</span>
                 </div>
               ))}
             </div>

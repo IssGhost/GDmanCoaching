@@ -11,12 +11,24 @@ const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, ne
 
 function videoUploadsMode() {
   const raw = String(process.env.VIDEO_UPLOADS_MODE || "").trim().toLowerCase();
+
   if (["mock", "cloudflare", "disabled"].includes(raw)) return raw;
+
   return "cloudflare";
 }
 
 function mockUploadsEnabled() {
   return envFlag("ENABLE_MOCK_UPLOADS") || videoUploadsMode() === "mock";
+}
+
+function cloudflareConfigured() {
+  return Boolean(process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_STREAM_TOKEN);
+}
+
+function maxVideoMinutes() {
+  const value = Number(process.env.MAX_VIDEO_MINUTES || 15);
+  if (!Number.isFinite(value)) return 15;
+  return Math.min(Math.max(value, 1), 15);
 }
 
 function safeId(value) {
@@ -37,7 +49,9 @@ function sameId(a, b) {
 }
 
 function safeAllowedOriginHosts() {
-  return configuredClientOrigins()
+  const origins = configuredClientOrigins();
+
+  return origins
     .map((origin) => {
       try {
         return new URL(origin).hostname;
@@ -48,7 +62,7 @@ function safeAllowedOriginHosts() {
     .filter(Boolean);
 }
 
-async function createCloudflareUpload(maxDurationSeconds = 3600) {
+async function createCloudflareUpload(maxDurationSeconds = 900) {
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
   const token = process.env.CLOUDFLARE_STREAM_TOKEN;
 
@@ -57,6 +71,10 @@ async function createCloudflareUpload(maxDurationSeconds = 3600) {
   const body = {
     maxDurationSeconds,
     requireSignedURLs: false,
+    meta: {
+      app: "GOOD Coaching",
+      source: "customer-video-upload",
+    },
   };
 
   const allowedOrigins = safeAllowedOriginHosts();
@@ -76,6 +94,7 @@ async function createCloudflareUpload(maxDurationSeconds = 3600) {
   if (!response.ok || !data.success) {
     const error = new Error(data.errors?.[0]?.message || "Cloudflare upload URL failed");
     error.statusCode = response.status >= 400 && response.status < 500 ? 400 : 502;
+    error.cloudflareError = data.errors || data;
     throw error;
   }
 
@@ -104,7 +123,7 @@ async function canAccessSubmission(req, submission) {
     }
   }
 
-  const coach = await CoachProfile.findOne({ userId: userId }).select("_id");
+  const coach = await CoachProfile.findOne({ userId }).select("_id");
 
   if (coach && sameId(submission.coachId, coach._id)) return true;
 
@@ -139,9 +158,9 @@ async function canCustomerUpload(req, submission) {
 router.get("/config", (_req, res) => {
   res.json({
     mode: videoUploadsMode(),
-    cloudflareConfigured: Boolean(process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_STREAM_TOKEN),
+    cloudflareConfigured: cloudflareConfigured(),
     mockUploads: mockUploadsEnabled(),
-    maxVideoMinutes: 15,
+    maxVideoMinutes: maxVideoMinutes(),
   });
 });
 
@@ -208,9 +227,6 @@ router.get(
       return res.status(403).json({
         error: "Forbidden",
         message: "This submission does not belong to the currently signed-in account.",
-        currentUserId: currentUserId(req),
-        submissionPlayerId: safeId(row.playerId),
-        submissionOrderId: safeId(row.orderId),
       });
     }
 
@@ -234,9 +250,6 @@ router.post(
       return res.status(403).json({
         error: "Forbidden",
         message: "Only the customer who bought this review can upload video for it.",
-        currentUserId: currentUserId(req),
-        submissionPlayerId: safeId(row.playerId),
-        submissionOrderId: safeId(row.orderId),
       });
     }
 
@@ -244,13 +257,14 @@ router.post(
       return res.status(400).json({ error: `Cannot upload while submission is ${row.status}` });
     }
 
-    const maxMinutes = Math.min(Number(row.packageId?.maxVideoMinutes || 15), 15);
+    const allowedMinutes = Math.min(Number(row.packageId?.maxVideoMinutes || maxVideoMinutes()), maxVideoMinutes());
+    const maxDurationSeconds = allowedMinutes * 60;
 
     if (mockUploadsEnabled()) {
       const base = publicBaseUrl(req) || "";
 
       row.provider = "cloudflare";
-      row.uploadUrl = `${base}/api/videos/mock-upload/${row._id}`;
+      row.uploadUrl = `${base}/videos/mock-upload/${row._id}`;
       row.uploadId = `mock_${row._id}`;
       row.status = "uploading";
 
@@ -266,26 +280,35 @@ router.post(
       });
     }
 
-    const upload = await createCloudflareUpload(maxMinutes * 60);
-
-    if (upload) {
-      row.provider = "cloudflare";
-      row.uploadUrl = upload.uploadURL;
-      row.uploadId = upload.uid;
-      row.status = "uploading";
-
-      await row.save();
-
-      return res.json({
-        provider: "cloudflare",
-        uploadUrl: upload.uploadURL,
-        uploadId: upload.uid,
-        submission: row,
+    if (videoUploadsMode() !== "cloudflare") {
+      return res.status(503).json({
+        error: "Video uploads are disabled.",
       });
     }
 
-    return res.status(503).json({
-      error: "Video uploads are not configured. Add Cloudflare Stream keys or enable mock uploads for testing.",
+    if (!cloudflareConfigured()) {
+      return res.status(503).json({
+        error: "Cloudflare Stream is not configured. Add CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_STREAM_TOKEN.",
+      });
+    }
+
+    const upload = await createCloudflareUpload(maxDurationSeconds);
+
+    row.provider = "cloudflare";
+    row.uploadUrl = upload.uploadURL;
+    row.uploadId = upload.uid;
+    row.assetId = upload.uid;
+    row.status = "uploading";
+
+    await row.save();
+
+    return res.json({
+      provider: "cloudflare",
+      uploadUrl: upload.uploadURL,
+      uploadId: upload.uid,
+      assetId: upload.uid,
+      submission: row,
+      mock: false,
     });
   })
 );
@@ -341,9 +364,9 @@ router.put(
     if (durationSeconds !== undefined) {
       const duration = Number(durationSeconds);
 
-      if (duration > 15 * 60) {
+      if (duration > maxVideoMinutes() * 60) {
         return res.status(400).json({
-          error: "Videos must be 15 minutes or shorter. Please trim your clip and upload again.",
+          error: `Videos must be ${maxVideoMinutes()} minutes or shorter. Please trim your clip and upload again.`,
         });
       }
 
