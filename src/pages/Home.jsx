@@ -76,23 +76,48 @@ export default function Home() {
           </div>
 
           <div className="pp-card rounded-[2rem] p-5">
-            <div className="relative overflow-hidden rounded-[1.5rem] bg-[#12372a] shadow-2xl">
-              <video
-                src="/brand/good_coaching_demo.mp4"
-                className="aspect-video w-full bg-black object-cover"
-                controls
-                muted
-                playsInline
-                preload="metadata"
-                poster="/brand/good_coaching_logo.png"
-              />
+            <div className="pp-court-card relative overflow-hidden rounded-[1.5rem] p-5 text-white shadow-2xl">
+              <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[#c6ff4a]/80 blur-xl" />
+              <div className="absolute -bottom-12 -left-10 h-40 w-40 rounded-full bg-[#ffd166]/50 blur-2xl" />
 
-              <div className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-black text-[#12372a] shadow">
-                Real player video review
+              <div className="relative mb-4 flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-bold text-white/75">Review in progress</div>
+                  <div className="text-xl font-black">Tournament Match Breakdown</div>
+                </div>
+
+                <span className="rounded-full bg-[#c6ff4a] px-3 py-1 text-xs font-black text-[#12372a]">
+                  PAID
+                </span>
               </div>
 
-              <div className="absolute bottom-4 left-4 rounded-full bg-[#c6ff4a] px-3 py-1 text-xs font-black text-[#12372a] shadow">
-                Coach-reviewed feedback
+              <div className="relative overflow-hidden rounded-2xl border border-white/30 bg-white/15 backdrop-blur">
+                <video
+                  src="/brand/good_coaching_demo.mp4"
+                  className="aspect-video w-full bg-black object-cover"
+                  controls
+                  muted
+                  playsInline
+                  preload="metadata"
+                  poster="/brand/good_coaching_logo.png"
+                />
+
+                <div className="absolute bottom-4 left-4 rounded-full bg-white/90 px-3 py-1 text-xs font-black text-[#12372a] shadow">
+                  Coach notes ready
+                </div>
+              </div>
+
+              <div className="relative mt-5 space-y-3">
+                {[
+                  ["00:42", "Recover forward after the third-shot drop."],
+                  ["01:18", "Good cross-court dink decision. Keep paddle higher."],
+                  ["02:09", "You overcommitted wide. Reset through the middle."],
+                ].map(([time, note]) => (
+                  <div key={time} className="flex gap-3 rounded-xl border border-white/25 bg-white/18 p-3 text-sm backdrop-blur">
+                    <span className="font-black text-[#c6ff4a]">{time}</span>
+                    <span className="text-white/90">{note}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
