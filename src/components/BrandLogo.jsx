@@ -1,12 +1,21 @@
 import { Link } from "react-router-dom";
 
-export default function BrandLogo({ className = "", imageClassName = "" }) {
+export default function BrandLogo({
+  className = "",
+  imageClassName = "",
+  compact = false,
+  to = "/",
+}) {
   return (
-    <Link to="/" className={`inline-flex items-center ${className}`} aria-label="GOOD Coaching home">
+    <Link
+      to={to}
+      className={`inline-flex items-center rounded-full bg-[#073d2f] px-4 py-2 shadow-lg shadow-[#12372a]/20 ring-1 ring-white/25 ${className}`}
+      aria-label="GOOD Coaching home"
+    >
       <img
         src="/brand/good_coaching_logo.png"
         alt="GOOD Coaching"
-        className={`h-12 w-auto object-contain ${imageClassName}`}
+        className={`w-auto object-contain ${compact ? "h-9" : "h-12"} ${imageClassName}`}
       />
     </Link>
   );

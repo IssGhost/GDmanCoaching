@@ -22,12 +22,12 @@ export default function Footer() {
       : "Personalized Requests";
 
   return (
-    <footer className="mt-0 border-t border-[#12372a]/10 bg-[#fff8e7] text-[#5f746c]">
+    <footer className="mt-0 border-t border-[#12372a]/10 bg-[#fff8e7] text-[#40584f]">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-6 py-12 md:grid-cols-4">
         <div>
-          <BrandLogo imageClassName="mb-4 h-16 drop-shadow-md" />
+          <BrandLogo imageClassName="h-12" />
 
-          <p className="max-w-xs text-sm leading-relaxed">
+          <p className="mt-4 max-w-xs text-sm leading-relaxed text-[#40584f]">
             Online pickleball coaching with private video submissions, timestamped feedback, coach profiles, DUPR details,
             and player dashboards.
           </p>
@@ -63,7 +63,7 @@ export default function Footer() {
           <ul className="space-y-2 text-sm font-semibold">
             <li>
               <Link to="/signup" className="hover:text-[#00a896]">
-                Player Signup
+                Create Player Account
               </Link>
             </li>
 
@@ -106,7 +106,7 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-[#12372a]/10 px-6 py-5 text-center text-sm text-[#5f746c]">
+      <div className="border-t border-[#12372a]/10 px-6 py-5 text-center text-sm text-[#40584f]">
         Copyright {new Date().getFullYear()} GOOD Coaching. All rights reserved.
       </div>
     </footer>

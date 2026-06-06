@@ -5,12 +5,12 @@ const steps = [
   {
     icon: FaUserGraduate,
     title: "Choose your skill level",
-    text: "Browse coaches for Beginner (2.5–3.0), Intermediate (3.0–4.0), Advanced (4.0–5.0), and Elite (5.0+) players.",
+    text: "Browse coaches for Beginner, Intermediate, Advanced, and Elite players.",
   },
   {
     icon: FaClipboardList,
     title: "Select an online service",
-    text: "Request video analysis, match review, strategy consultation, skill development guidance, or a personalized training plan.",
+    text: "Request video analysis, match review, strategy consultation, skill development guidance, or a personalized plan.",
   },
   {
     icon: FaCloudUploadAlt,
@@ -20,7 +20,7 @@ const steps = [
   {
     icon: FaCommentDots,
     title: "Get coach feedback",
-    text: "Receive notes, priorities, drills, and next-step guidance in your dashboard. Please allow 1–3 business days for coaches to review and respond to inquiries.",
+    text: "Receive notes, priorities, drills, and next-step guidance in your dashboard.",
   },
 ];
 
@@ -32,7 +32,7 @@ const offerings = [
   },
   {
     title: "Match reviews",
-    text: "Ask a coach to break down a full match segment and identify patterns in shot selection, positioning, pace control, and execution.",
+    text: "Ask a coach to break down a match segment and identify patterns in shot selection, positioning, pace control, and execution.",
     items: ["Singles or doubles review", "Point-pattern feedback", "Opponent and partner context", "Dashboard archive"],
   },
   {
@@ -47,8 +47,8 @@ const offerings = [
   },
   {
     title: "Personalized requests",
-    text: "Need something that is not listed? Tell a coach what you need, discuss the details, and receive a custom quote before paying.",
-    items: ["Describe your goals", "Chat with a coach", "Review the custom quote", "Approve before payment"],
+    text: "Need something more specific? Explain your goals, chat with a coach, and receive a custom quote before paying.",
+    items: ["Explain what you need", "Chat with a coach", "Review the custom quote", "Approve before payment"],
     wide: true,
   },
 ];
@@ -104,7 +104,9 @@ export default function Services() {
         {offerings.map((track) => (
           <div
             key={track.title}
-            className={`pp-card-solid rounded-[2rem] p-8 ${track.wide ? "lg:col-span-2 lg:mx-auto lg:w-full lg:max-w-[calc(50%-0.75rem)]" : ""}`}
+            className={`pp-card-solid rounded-[2rem] p-8 ${
+              track.wide ? "lg:col-span-2" : ""
+            }`}
           >
             <div className="mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[#d9f7fb] text-2xl text-[#00a896]">
               <FaCloudUploadAlt />
@@ -114,9 +116,9 @@ export default function Services() {
 
             <p className="mt-3 leading-7 text-[#5f746c]">{track.text}</p>
 
-            <div className="mt-6 grid gap-3">
+            <div className="mt-6 grid gap-3 md:grid-cols-2">
               {track.items.map((item) => (
-                <div key={item} className="flex gap-3 rounded-2xl bg-white/70 p-4 text-[#5f746c]">
+                <div key={item} className="flex gap-3 rounded-2xl bg-white/80 p-4 text-[#40584f]">
                   <FaCheckCircle className="mt-1 shrink-0 text-[#00a896]" />
                   <span className="font-bold">{item}</span>
                 </div>
@@ -131,15 +133,16 @@ export default function Services() {
 
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           {deliverables.map((item) => (
-            <div key={item} className="flex gap-3 rounded-xl bg-white/70 p-4 font-bold text-[#5f746c]">
+            <div key={item} className="flex gap-3 rounded-xl bg-white/80 p-4 font-bold text-[#40584f]">
               <FaCheckCircle className="mt-1 shrink-0 text-[#00a896]" />
               {item}
             </div>
           ))}
         </div>
 
-        <p className="mt-6 rounded-2xl bg-white/75 p-4 text-sm font-bold text-[#5f746c]">
-          Plan prices are entered on coach offerings. Customers can chat first, and coaches can send a revised custom quote for approval when the final scope goes beyond the original request.
+        <p className="mt-6 rounded-2xl bg-white/85 p-4 text-sm font-bold text-[#40584f]">
+          Plan prices are entered on coach offerings. Customers can chat first, and coaches can send a revised custom quote
+          for approval when the final scope goes beyond the original request.
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">

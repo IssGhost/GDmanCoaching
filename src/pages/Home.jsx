@@ -45,7 +45,8 @@ export default function Home() {
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-8 text-[#5f746c]">
-              Players upload match footage. Coaches deliver timestamped notes, drills, and strategy from one bright, easy dashboard.
+              Players upload match footage. Coaches deliver timestamped notes, drills, and strategy from one bright,
+              easy dashboard.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -91,18 +92,17 @@ export default function Home() {
                 </span>
               </div>
 
-              <div className="relative overflow-hidden rounded-2xl border border-white/30 bg-white/15 backdrop-blur">
+              <div className="relative overflow-hidden rounded-2xl border border-white/30 bg-black/30 backdrop-blur">
                 <video
-                  src="/brand/good_coaching_demo.mp4"
+                  src="/brand/good_coaching_demo.mp4#t=0.6"
                   className="aspect-video w-full bg-black object-cover"
                   controls
                   muted
                   playsInline
                   preload="metadata"
-                  poster="/brand/good_coaching_logo.png"
                 />
 
-                <div className="absolute bottom-4 left-4 rounded-full bg-white/90 px-3 py-1 text-xs font-black text-[#12372a] shadow">
+                <div className="pointer-events-none absolute bottom-4 left-4 rounded-full bg-white/90 px-3 py-1 text-xs font-black text-[#12372a] shadow">
                   Coach notes ready
                 </div>
               </div>
@@ -160,7 +160,6 @@ export default function Home() {
         <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div>
             <p className="pp-kicker">How it works</p>
-
             <h2 className="mt-2 text-3xl font-black text-[#12372a] md:text-5xl">
               A complete paid review loop
             </h2>

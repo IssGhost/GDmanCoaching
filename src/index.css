@@ -639,3 +639,238 @@ button:disabled,
 .coach-chat-trigger:not(:disabled) {
   color: #fff !important;
 }
+
+/* ===== GOOD Coaching final readability + logo visibility patch ===== */
+
+/* Keep new logo visible with the dark green oval/pill behind it */
+.good-logo-pill,
+a[aria-label="GOOD Coaching home"] {
+  background: #073d2f !important;
+  color: #ffffff !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 12px 28px rgba(18, 55, 42, 0.18) !important;
+}
+
+a[aria-label="GOOD Coaching home"] img {
+  display: block;
+  object-fit: contain;
+}
+
+/* Light background readability fixes */
+.bg-\[\#fff1c7\],
+.bg-\[\#fff8e7\],
+.bg-\[\#fffef8\],
+.bg-\[\#d9f7fb\],
+.bg-\[\#eaf9f7\],
+.bg-white,
+.bg-white\/60,
+.bg-white\/70,
+.bg-white\/75,
+.bg-white\/78,
+.bg-white\/80,
+.bg-white\/82,
+.bg-white\/84,
+.bg-white\/85,
+.bg-white\/90,
+.bg-white\/95 {
+  color: #12372a !important;
+}
+
+.bg-\[\#fff1c7\] p,
+.bg-\[\#fff8e7\] p,
+.bg-\[\#fffef8\] p,
+.bg-\[\#d9f7fb\] p,
+.bg-\[\#eaf9f7\] p,
+.bg-white p,
+.bg-white\/60 p,
+.bg-white\/70 p,
+.bg-white\/75 p,
+.bg-white\/78 p,
+.bg-white\/80 p,
+.bg-white\/82 p,
+.bg-white\/84 p,
+.bg-white\/85 p,
+.bg-white\/90 p,
+.bg-white\/95 p {
+  color: #40584f !important;
+}
+
+.bg-\[\#fff1c7\] h1,
+.bg-\[\#fff1c7\] h2,
+.bg-\[\#fff1c7\] h3,
+.bg-\[\#fff8e7\] h1,
+.bg-\[\#fff8e7\] h2,
+.bg-\[\#fff8e7\] h3,
+.bg-\[\#d9f7fb\] h1,
+.bg-\[\#d9f7fb\] h2,
+.bg-\[\#d9f7fb\] h3,
+.bg-\[\#eaf9f7\] h1,
+.bg-\[\#eaf9f7\] h2,
+.bg-\[\#eaf9f7\] h3,
+.bg-white h1,
+.bg-white h2,
+.bg-white h3,
+.bg-white\/70 h1,
+.bg-white\/70 h2,
+.bg-white\/70 h3,
+.bg-white\/80 h1,
+.bg-white\/80 h2,
+.bg-white\/80 h3,
+.bg-white\/84 h1,
+.bg-white\/84 h2,
+.bg-white\/84 h3,
+.bg-white\/90 h1,
+.bg-white\/90 h2,
+.bg-white\/90 h3 {
+  color: #12372a !important;
+}
+
+/* Dark background readability fixes */
+.bg-\[\#12372a\],
+.bg-\[\#073d2f\],
+.bg-\[\#087f73\] {
+  color: #ffffff !important;
+}
+
+.bg-\[\#12372a\] p,
+.bg-\[\#073d2f\] p,
+.bg-\[\#087f73\] p {
+  color: rgba(255, 255, 255, 0.84) !important;
+}
+
+.bg-\[\#12372a\] h1,
+.bg-\[\#12372a\] h2,
+.bg-\[\#12372a\] h3,
+.bg-\[\#073d2f\] h1,
+.bg-\[\#073d2f\] h2,
+.bg-\[\#073d2f\] h3,
+.bg-\[\#087f73\] h1,
+.bg-\[\#087f73\] h2,
+.bg-\[\#087f73\] h3 {
+  color: #ffffff !important;
+}
+
+/* Fix admin / coach / contact title visibility */
+.good-readable-light,
+.pp-page .good-readable-light,
+.pp-app-shell .good-readable-light {
+  color: #12372a !important;
+}
+
+.good-readable-muted,
+.pp-page .good-readable-muted,
+.pp-app-shell .good-readable-muted {
+  color: #40584f !important;
+}
+
+.good-readable-dark {
+  color: #ffffff !important;
+}
+
+.good-readable-dark p,
+.good-readable-dark span {
+  color: rgba(255, 255, 255, 0.84) !important;
+}
+
+/* Admin order status pills */
+.order-status-paid {
+  background: #c6ff4a !important;
+  color: #12372a !important;
+  border: 1px solid rgba(140, 198, 63, 0.5) !important;
+}
+
+.order-status-pending,
+.order-status-awaiting_payment {
+  background: #ffd166 !important;
+  color: #5f3b00 !important;
+  border: 1px solid rgba(212, 155, 31, 0.5) !important;
+}
+
+.order-status-canceled,
+.order-status-cancelled,
+.order-status-failed,
+.order-status-declined {
+  background: #ffebe5 !important;
+  color: #7a2b18 !important;
+  border: 1px solid rgba(255, 123, 84, 0.45) !important;
+}
+
+/* Make footer and support text consistently readable */
+footer {
+  color: #40584f !important;
+}
+
+footer h1,
+footer h2,
+footer h3,
+footer h4 {
+  color: #12372a !important;
+}
+
+footer p,
+footer li,
+footer a {
+  color: #40584f !important;
+}
+
+footer a:hover {
+  color: #087f73 !important;
+}
+
+/* Keep button text readable */
+.pp-btn-primary,
+.pp-btn-primary span,
+.pp-btn-primary svg {
+  color: #12372a !important;
+}
+
+.pp-btn-secondary,
+.pp-btn-secondary span,
+.pp-btn-secondary svg {
+  color: #12372a !important;
+}
+
+/* Keep form text readable */
+.pp-input,
+input,
+select,
+textarea {
+  color: #12372a;
+}
+
+.pp-input::placeholder,
+input::placeholder,
+textarea::placeholder {
+  color: rgba(64, 88, 79, 0.65);
+}
+
+/* Fix yellow warning/info boxes with light text */
+.bg-amber-400\/10,
+.bg-yellow-500\/10,
+.bg-\[\#ffd166\],
+.bg-\[\#fff1c7\] {
+  color: #12372a !important;
+}
+
+.bg-amber-400\/10 p,
+.bg-yellow-500\/10 p,
+.bg-\[\#ffd166\] p,
+.bg-\[\#fff1c7\] p {
+  color: #40584f !important;
+}
+
+/* Video demo: no logo poster styling needed */
+video {
+  max-width: 100%;
+  background-color: #000000;
+}
+
+/* Focus visibility */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid rgba(0, 168, 150, 0.45);
+  outline-offset: 3px;
+}
