@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
 import AccountMenu from "./AccountMenu";
+import BrandLogo from "./BrandLogo";
 import { useAuth } from "../context/AuthContext";
 import { portalLabelForRole, portalPathForRole } from "../lib/roles";
 
@@ -29,6 +30,7 @@ export default function Header() {
 
   const navLink = (link) => {
     const active = pathname === link.to || (link.to === "/coaches" && pathname.startsWith("/coaches"));
+
     return (
       <Link
         key={link.to}
@@ -53,13 +55,7 @@ export default function Header() {
       }`}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6">
-        <Link to="/" className="group flex items-center" aria-label="GOOD Coaching home">
-          <img
-            src="/good-coaching-logo.svg"
-            alt="GOOD Coaching"
-            className="h-12 w-auto rounded-2xl shadow-lg shadow-lime-200/40 transition group-hover:-rotate-1 group-hover:scale-[1.02]"
-          />
-        </Link>
+        <BrandLogo imageClassName="h-14 drop-shadow-md" />
 
         <nav className="hidden items-center gap-1 rounded-full border border-[#12372a]/10 bg-white/60 p-1 backdrop-blur lg:flex">
           {links.map(navLink)}
@@ -73,6 +69,7 @@ export default function Header() {
           ) : (
             <AccountMenu />
           )}
+
           <Link to={user ? portalPathForRole(user.role) : "/coaches"} className="pp-btn-primary px-5 py-2.5 text-sm">
             {user ? portalLabelForRole(user.role) : "Request Coaching"}
           </Link>
@@ -91,12 +88,14 @@ export default function Header() {
         <div className="border-t border-[#12372a]/10 bg-[#fff8e7]/98 px-4 py-4 backdrop-blur-xl lg:hidden">
           <nav className="mx-auto grid max-w-7xl gap-2">
             {links.map(navLink)}
+
             <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-[#12372a]/10 pt-4">
               {!user ? (
                 <>
                   <Link to="/signin" className="rounded-full px-3 py-2 text-sm font-extrabold text-[#12372a]/85">
                     Sign In
                   </Link>
+
                   <Link to="/signup" className="rounded-full px-3 py-2 text-sm font-extrabold text-[#12372a]/85">
                     Sign Up
                   </Link>
@@ -104,6 +103,7 @@ export default function Header() {
               ) : (
                 <AccountMenu />
               )}
+
               <Link to={user ? portalPathForRole(user.role) : "/coaches"} className="pp-btn-primary px-5 py-2.5 text-sm">
                 {user ? portalLabelForRole(user.role) : "Request Coaching"}
               </Link>
