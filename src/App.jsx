@@ -1,5 +1,5 @@
 // FILE: src/App.jsx
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import FloatingQuickQuote from "./components/FloatingQuickQuote";
@@ -89,23 +89,33 @@ export default function App() {
                 {/* Coach marketplace/listing routes */}
                 <Route path="/coaches" element={<Marketplace />} />
                 <Route path="/coaches/" element={<Marketplace />} />
+
+                {/* Old/alternate public coach links all go to the marketplace */}
                 <Route path="/marketplace" element={<Navigate to="/coaches" replace />} />
                 <Route path="/coach" element={<Navigate to="/coaches" replace />} />
                 <Route path="/coach/" element={<Navigate to="/coaches" replace />} />
                 <Route path="/find-coach" element={<Navigate to="/coaches" replace />} />
                 <Route path="/find-a-coach" element={<Navigate to="/coaches" replace />} />
+                <Route path="/find-coaches" element={<Navigate to="/coaches" replace />} />
+                <Route path="/find-a-coaches" element={<Navigate to="/coaches" replace />} />
                 <Route path="/browse-coaches" element={<Navigate to="/coaches" replace />} />
                 <Route path="/browse-coach" element={<Navigate to="/coaches" replace />} />
                 <Route path="/coaching" element={<Navigate to="/coaches" replace />} />
                 <Route path="/coach-marketplace" element={<Navigate to="/coaches" replace />} />
                 <Route path="/coach-directory" element={<Navigate to="/coaches" replace />} />
+                <Route path="/request-coaching" element={<Navigate to="/coaches" replace />} />
+                <Route path="/coaching-options" element={<Navigate to="/coaches" replace />} />
 
                 {/* Individual coach public profile */}
                 <Route path="/coaches/:id" element={<CoachProfile />} />
                 <Route path="/coach/:id" element={<NavigateToCoachProfile />} />
 
+                {/* Coach signup aliases */}
                 <Route path="/coach-signup" element={<CoachSignup />} />
                 <Route path="/become-a-coach" element={<Navigate to="/coach-signup" replace />} />
+                <Route path="/apply-coach" element={<Navigate to="/coach-signup" replace />} />
+                <Route path="/coach-application" element={<Navigate to="/coach-signup" replace />} />
+
                 <Route path="/cart" element={<Cart />} />
 
                 {/* Employee/Admin operational pages */}
@@ -302,8 +312,7 @@ export default function App() {
 }
 
 function NavigateToCoachProfile() {
-  const path = window.location.pathname || "";
-  const id = path.split("/").filter(Boolean)[1];
+  const { id } = useParams();
 
   if (!id || id === "dashboard" || id === "submissions") {
     return <Navigate to="/coaches" replace />;
