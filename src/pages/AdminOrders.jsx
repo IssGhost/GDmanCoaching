@@ -15,6 +15,13 @@ import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
 
+const ORDER_ENDPOINTS = [
+  "/admin/orders",
+  "/orders/admin",
+  "/payments/admin/orders",
+  "/orders",
+];
+
 function money(value, currency = "usd") {
   const amount = Number(value || 0);
 
@@ -35,6 +42,15 @@ function formatDate(value) {
   if (Number.isNaN(date.getTime())) return "—";
 
   return date.toLocaleString();
+}
+
+function normalizeRows(result) {
+  if (Array.isArray(result)) return result;
+  if (Array.isArray(result?.orders)) return result.orders;
+  if (Array.isArray(result?.rows)) return result.rows;
+  if (Array.isArray(result?.data)) return result.data;
+  if (Array.isArray(result?.results)) return result.results;
+  return [];
 }
 
 function statusText(status) {
@@ -93,12 +109,33 @@ function nameOf(value, fallback = "—") {
   return value.fullName || value.displayName || value.email || value.name || fallback;
 }
 
+async function loadOrdersFromAnyEndpoint(token) {
+  const errors = [];
+
+  for (const endpoint of ORDER_ENDPOINTS) {
+    try {
+      const result = await api.get(endpoint, token);
+      const rows = normalizeRows(result);
+
+      return {
+        endpoint,
+        rows,
+      };
+    } catch (err) {
+      errors.push(`${endpoint}: ${err.message || "failed"}`);
+    }
+  }
+
+  throw new Error(errors.join(" | "));
+}
+
 export default function AdminOrders() {
   const { token } = useAuth();
   const { push } = useToast();
 
   const [orders, setOrders] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [loadedEndpoint, setLoadedEndpoint] = useState("");
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -109,9 +146,10 @@ export default function AdminOrders() {
     setError("");
 
     try {
-      const result = await api.get("/admin/orders", token);
-      const rows = Array.isArray(result) ? result : result?.orders || result?.rows || [];
+      const result = await loadOrdersFromAnyEndpoint(token);
+      const rows = result.rows || [];
 
+      setLoadedEndpoint(result.endpoint);
       setOrders(rows);
       setSelected((current) => {
         if (!rows.length) return null;
@@ -119,8 +157,13 @@ export default function AdminOrders() {
         return rows.find((row) => row._id === current._id) || rows[0];
       });
     } catch (err) {
-      setError(err.message || "Could not load orders.");
-      push(err.message || "Could not load orders.", "error");
+      setLoadedEndpoint("");
+      setError(
+        `Could not load orders. Checked these endpoints: ${ORDER_ENDPOINTS.join(", ")}. Server response: ${
+          err.message || "unknown error"
+        }`
+      );
+      push("Could not load orders. The admin orders API route may be missing or returning an error.", "error");
       setOrders([]);
       setSelected(null);
     } finally {
@@ -166,7 +209,9 @@ export default function AdminOrders() {
 
   const stats = useMemo(() => {
     const paid = orders.filter((order) => String(order.status || "").toLowerCase() === "paid");
-    const pending = orders.filter((order) => ["pending", "awaiting_payment"].includes(String(order.status || "").toLowerCase()));
+    const pending = orders.filter((order) =>
+      ["pending", "awaiting_payment", "requires_payment"].includes(String(order.status || "").toLowerCase())
+    );
     const canceled = orders.filter((order) =>
       ["canceled", "cancelled", "failed", "declined"].includes(String(order.status || "").toLowerCase())
     );
@@ -197,9 +242,19 @@ export default function AdminOrders() {
               <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-white/80">
                 Review customer payments, order status, Stripe references, platform fees, and linked video submissions.
               </p>
+
+              {loadedEndpoint && (
+                <p className="mt-2 text-xs font-bold text-[#c6ff4a]">
+                  Loaded from API route: {loadedEndpoint}
+                </p>
+              )}
             </div>
 
-            <button onClick={load} disabled={busy} className="rounded-full bg-[#c6ff4a] px-5 py-3 text-sm font-black text-[#12372a] shadow hover:bg-[#dfff71] disabled:opacity-60">
+            <button
+              onClick={load}
+              disabled={busy}
+              className="rounded-full bg-[#c6ff4a] px-5 py-3 text-sm font-black text-[#12372a] shadow hover:bg-[#dfff71] disabled:opacity-60"
+            >
               {busy ? "Refreshing..." : "Refresh Orders"}
             </button>
           </div>

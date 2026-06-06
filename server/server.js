@@ -203,6 +203,9 @@ safeMount("/videos", "./routes/videos");
 safeMount("/reviews", "./routes/reviews");
 safeMount("/inquiries", "./routes/inquiries");
 
+const contactRoutes = require("./routes/contact");
+app.use("/api/contact", contactRoutes);
+
 const distDir = path.resolve(__dirname, "..", "dist");
 const shouldServeClient =
   process.env.NODE_ENV === "production" ||

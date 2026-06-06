@@ -4,7 +4,6 @@ import {
   FaCloudUploadAlt,
   FaCreditCard,
   FaStar,
-  FaSun,
   FaUserTie,
 } from "react-icons/fa";
 
@@ -36,15 +35,15 @@ export default function Home() {
 
         <div className="relative mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
           <div>
-            <div className="pp-pill mb-5 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-black">
-              <FaSun className="text-[#ff7b54]" /> Online pickleball coaching marketplace
+            <div className="pp-pill mb-5 inline-flex rounded-full px-4 py-2 text-sm font-black">
+              Online pickleball coaching marketplace
             </div>
 
             <h1 className="max-w-4xl text-5xl font-black leading-tight text-[#12372a] md:text-7xl">
               Sharpen your pickleball game with coach-reviewed video feedback.
             </h1>
 
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-[#5f746c]">
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-[#40584f]">
               Players upload match footage. Coaches deliver timestamped notes, drills, and strategy from one bright,
               easy dashboard.
             </p>
@@ -59,7 +58,7 @@ export default function Home() {
               </Link>
             </div>
 
-            <div className="mt-10 grid gap-x-8 gap-y-4 text-sm font-bold text-[#5f746c] sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-10 grid gap-x-8 gap-y-4 text-sm font-bold text-[#40584f] sm:grid-cols-2 lg:grid-cols-3">
               {[
                 "Direct coach communication",
                 "Private video submissions",
@@ -84,7 +83,7 @@ export default function Home() {
               <div className="relative mb-4 flex items-center justify-between">
                 <div>
                   <div className="text-sm font-bold text-white/75">Review in progress</div>
-                  <div className="text-xl font-black">Tournament Match Breakdown</div>
+                  <div className="text-xl font-black text-white">Tournament Match Breakdown</div>
                 </div>
 
                 <span className="rounded-full bg-[#c6ff4a] px-3 py-1 text-xs font-black text-[#12372a]">
@@ -150,7 +149,7 @@ export default function Home() {
 
               <h2 className="text-xl font-black text-[#12372a]">{card.title}</h2>
 
-              <p className="mt-2 leading-7 text-[#5f746c]">{card.text}</p>
+              <p className="mt-2 leading-7 text-[#40584f]">{card.text}</p>
             </div>
           ))}
         </div>
@@ -179,7 +178,7 @@ export default function Home() {
 
               <h3 className="text-lg font-black text-[#12372a]">{step.title}</h3>
 
-              <p className="mt-2 text-sm leading-6 text-[#5f746c]">{step.text}</p>
+              <p className="mt-2 text-sm leading-6 text-[#40584f]">{step.text}</p>
             </div>
           ))}
         </div>
@@ -201,7 +200,7 @@ export default function Home() {
                 Built for busy coaches and players who want real online feedback.
               </h2>
 
-              <p className="mt-3 leading-7 text-[#5f746c]">
+              <p className="mt-3 leading-7 text-[#40584f]">
                 Choose a coach, upload your gameplay, and receive clear feedback you can use in your next practice or match.
               </p>
             </div>
