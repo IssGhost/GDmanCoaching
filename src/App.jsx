@@ -54,6 +54,11 @@ import AdminTickets from "./pages/AdminTickets";
 import ScrollToTop from "./components/ScrollToTop";
 import RoleError from "./pages/RoleError";
 
+function NavigateToCoachProfile() {
+  const { id } = useParams();
+  return <Navigate to={`/coaches/${id}`} replace />;
+}
+
 export default function App() {
   return (
     <Router>
