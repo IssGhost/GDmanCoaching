@@ -176,20 +176,6 @@ export default function CoachProfile() {
                 <Social href={coach.socialLinks?.website} icon={<FaGlobe />} label="Website" />
               </div>
             </div>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              {coach.contactEmail && (
-                <a href={`mailto:${coach.contactEmail}`} className="profile-action">
-                  <FaEnvelope /> Email coach
-                </a>
-              )}
-
-              <Social href={coach.socialLinks?.instagram} icon={<FaInstagram />} label="Instagram" />
-              <Social href={coach.socialLinks?.youtube} icon={<FaYoutube />} label="YouTube" />
-              <Social href={coach.socialLinks?.facebook} icon={<FaFacebook />} label="Facebook" />
-              <Social href={coach.socialLinks?.tiktok} icon={<FaTiktok />} label="TikTok" />
-              <Social href={coach.socialLinks?.website} icon={<FaGlobe />} label="Website" />
-            </div>
           </ExpandablePanel>
 
           <ExpandablePanel title="How online coaching works" subtitle="Simple customer steps" defaultOpen={false}>

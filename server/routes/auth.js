@@ -141,10 +141,6 @@ async function handleSignup(req, res, next) {
       return res.status(400).json({ error: "Password must be at least 8 characters and include uppercase, lowercase, and a number." });
     }
 
-    if (password.length < 8 || !/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/\d/.test(password)) {
-      return res.status(400).json({ error: "Password must be at least 8 characters and include uppercase, lowercase, and a number." });
-    }
-
     const existing = await User.findOne({ email });
     if (existing) {
       return res.status(400).json({ error: "Email already registered." });
@@ -194,6 +190,12 @@ async function handleSignin(req, res, next) {
     const ok = await comparePassword(password, user);
     if (!ok) {
       return res.status(400).json({ error: "Invalid credentials." });
+    }
+
+    const normalizedRole = requireRole(user.role);
+    if (user.role !== normalizedRole) {
+      user.role = normalizedRole;
+      await user.save();
     }
 
     const normalizedRole = requireRole(user.role);

@@ -164,28 +164,6 @@ export default function CoachReview() {
 
   if (!data) return <div className="pp-app-shell px-6 pt-32 text-[#5f746c]">{error || "Loading review workspace..."}</div>;
 
-      setReviewForm((f) => ({
-        ...f,
-        attachments: [...(Array.isArray(f.attachments) ? f.attachments : []), attachment],
-      }));
-
-      push("Attachment added. Save the draft or complete the review to store it.", "success");
-    } catch (err) {
-      push(err.message || "Attachment could not be added.", "error");
-    }
-  };
-
-  const removeAttachment = (index) => {
-    setReviewForm((f) => ({
-      ...f,
-      attachments: (Array.isArray(f.attachments) ? f.attachments : []).filter((_, i) => i !== index),
-    }));
-  };
-
-  if (!data) {
-    return <div className="pp-app-shell px-6 pt-32 text-[#5f746c]">{error || "Loading review workspace..."}</div>;
-  }
-
   const { submission, review } = data;
   const phase = normalizePhase(requestedPhase || submission.phase || submission.status);
   const videoSrc = submission.videoUrl || (submission.playbackId ? `https://iframe.videodelivery.net/${submission.playbackId}` : "");
@@ -402,78 +380,6 @@ function CoachReadyReview({
             <div className="mt-3 grid gap-3">
               {[['voiceRecordingUrl','audio','Voice analysis recording','audio/*'],['transcriptPdfUrl','pdf','Transcript PDF','application/pdf'],['drillPlanPdfUrl','pdf','Drill plan PDF','application/pdf']].map(([key,kind,label,accept]) => <label key={key} className="block text-sm font-black text-[#12372a]">{label}<input type="file" accept={accept} onChange={async(e)=>{try{const url=await documentFileToDataUrl(e.target.files?.[0],kind);setReviewForm(f=>({...f,[key]:url}));}catch(err){push(err.message,'error')}}} className="pp-input mt-1 px-4 py-3"/>{reviewForm[key] && <span className="mt-1 block text-xs text-[#087f73]">Ready to save</span>}</label>)}
             </div>
-          </div>
-
-          <div className="rounded-2xl border border-[#12372a]/10 bg-[#fff8e7] p-4">
-            <h3 className="font-black text-[#12372a]">Upload coach deliverables</h3>
-
-            <p className="mt-1 text-sm text-[#5f746c]">
-              Add voice analysis, transcript PDF, drill plan PDF, or another customer-facing attachment. Files must be 3 MB or smaller.
-            </p>
-
-            <div className="mt-3 grid gap-3">
-              {[
-                ["voiceRecordingUrl", "audio", "Voice analysis recording", "audio/*"],
-                ["transcriptPdfUrl", "pdf", "Transcript PDF", "application/pdf"],
-                ["drillPlanPdfUrl", "pdf", "Drill plan PDF", "application/pdf"],
-              ].map(([key, kind, label, accept]) => (
-                <label key={key} className="block text-sm font-black text-[#12372a]">
-                  {label}
-
-                  <input
-                    type="file"
-                    accept={accept}
-                    onChange={async (e) => {
-                      try {
-                        const url = await documentFileToDataUrl(e.target.files?.[0], kind);
-                        setReviewForm((f) => ({ ...f, [key]: url }));
-                      } catch (err) {
-                        alert(err.message || "File could not be added.");
-                      }
-                    }}
-                    className="pp-input mt-1 px-4 py-3"
-                  />
-
-                  {reviewForm[key] && <span className="mt-1 block text-xs text-[#087f73]">Ready to save</span>}
-                </label>
-              ))}
-
-              <label className="block text-sm font-black text-[#12372a]">
-                Additional customer attachment
-
-                <input
-                  type="file"
-                  accept="application/pdf,image/*,text/plain"
-                  onChange={(e) => addAttachment(e.target.files?.[0])}
-                  className="pp-input mt-1 px-4 py-3"
-                />
-              </label>
-            </div>
-
-            {attachments.length > 0 && (
-              <div className="mt-4 rounded-2xl bg-white/75 p-3">
-                <h4 className="font-black text-[#12372a]">Attachments ready to save</h4>
-
-                <div className="mt-2 space-y-2">
-                  {attachments.map((item, index) => (
-                    <div key={`${item.name}-${index}`} className="flex items-center justify-between gap-3 rounded-xl bg-[#eaf9f7] px-3 py-2 text-sm font-bold text-[#40584f]">
-                      <span>
-                        <FaFileAlt className="mr-2 inline text-[#087f73]" />
-                        {item.name || `Attachment ${index + 1}`}
-                      </span>
-
-                      <button
-                        type="button"
-                        onClick={() => removeAttachment(index)}
-                        className="rounded-full bg-white px-3 py-1 text-xs font-black text-[#b94024]"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">

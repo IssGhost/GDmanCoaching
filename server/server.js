@@ -217,9 +217,6 @@ safeMount("/videos", "./routes/videos", { skipHtmlNavigation: true });
 safeMount("/reviews", "./routes/reviews", { skipHtmlNavigation: true });
 safeMount("/inquiries", "./routes/inquiries", { skipHtmlNavigation: true });
 
-const contactRoutes = require("./routes/contact");
-app.use("/api/contact", contactRoutes);
-
 const distDir = path.resolve(__dirname, "..", "dist");
 const shouldServeClient =
   process.env.NODE_ENV === "production" ||

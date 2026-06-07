@@ -404,12 +404,22 @@ export default function CoachDashboard() {
           <section id="offerings" className="scroll-mt-28 rounded-[2rem] border border-[#12372a]/10 bg-white/84 p-5 shadow-sm">
             <h2 className="text-2xl font-black text-[#12372a]">Create online coaching option</h2>
 
-            <p className="mt-2 text-sm font-semibold leading-6 text-[#40584f]">
-              Customers can purchase these plans without messaging you first. If the plan is active, it must have a price greater than $0 before it appears publicly.
-            </p>
+            <form onSubmit={createPackage} className="mt-5 grid gap-3">
+              <input
+                className="pp-input px-4 py-3"
+                placeholder="Package title"
+                value={pkg.title}
+                onChange={(e) => setPkg((p) => ({ ...p, title: e.target.value }))}
+                required
+              />
 
-            <div className="mt-5 rounded-2xl border border-[#12372a]/10 bg-[#fff8e7] p-4">
-              <h3 className="font-black text-[#12372a]">Quick templates with suggested pricing</h3>
+              <textarea
+                className="pp-input px-4 py-3"
+                placeholder="Package description"
+                value={pkg.description}
+                onChange={(e) => setPkg((p) => ({ ...p, description: e.target.value }))}
+                required
+              />
 
               <div className="grid gap-3 sm:grid-cols-1">
                 <select
@@ -536,6 +546,10 @@ export default function CoachDashboard() {
                   max="15"
                   onChange={(e) => setPkg((p) => ({ ...p, maxVideoMinutes: Math.min(Number(e.target.value), 15) }))}
                 />
+
+              <div className="grid gap-2 rounded-2xl border border-[#12372a]/10 bg-white p-4 text-sm font-bold text-[#12372a]">
+                {[['includesVoiceAnalysis','Voice-recorded analysis'],['includesTranscriptPdf','Transcript PDF'],['includesDrillPlanPdf','Downloadable drill-plan PDF']].map(([key,label]) => <label key={key} className="flex items-center gap-2"><input type="checkbox" checked={Boolean(pkg[key])} onChange={(e)=>setPkg((p)=>({...p,[key]:e.target.checked}))}/>{label}</label>)}
+              </div>
 
               <div className="grid gap-2 rounded-2xl border border-[#12372a]/10 bg-white p-4 text-sm font-bold text-[#12372a]">
                 {[['includesVoiceAnalysis','Voice-recorded analysis'],['includesTranscriptPdf','Transcript PDF'],['includesDrillPlanPdf','Downloadable drill-plan PDF']].map(([key,label]) => <label key={key} className="flex items-center gap-2"><input type="checkbox" checked={Boolean(pkg[key])} onChange={(e)=>setPkg((p)=>({...p,[key]:e.target.checked}))}/>{label}</label>)}

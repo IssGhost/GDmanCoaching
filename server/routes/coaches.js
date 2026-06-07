@@ -130,7 +130,7 @@ const handleCoachApplication = asyncHandler(async (req, res) => {
       { upsert: true, new: true }
     );
 
-    const roles = Array.isArray(current.roles) ? current.roles : [];
+    const user = await User.findByIdAndUpdate(req.user._id, { $set: { role: "coach" } }, { new: true }).select("-passwordHash");
 
     const packages = await CoachingPackage.find({ coachId: profile._id }).sort({ price: 1 });
     res.json({ profile, packages, user });
@@ -215,6 +215,38 @@ router.put(
 
     if (!pkg) return res.status(404).json({ error: "Package not found" });
 
+    res.json(pkg);
+  })
+);
+
+router.get(
+  "/dashboard",
+  auth,
+  asyncHandler(async (req, res) => {
+    const profile = await CoachProfile.findOne({ userId: req.user._id });
+    if (!profile && req.user.role !== "admin") {
+      return res.status(404).json({ error: "Coach profile not found" });
+    }
+
+    const filter = req.user.role === "admin" && !profile ? {} : { coachId: profile._id };
+    const [packages, submissions, splits, inquiries] = await Promise.all([
+      profile ? CoachingPackage.find({ coachId: profile._id }).sort({ createdAt: -1 }) : [],
+      VideoSubmission.find(filter).sort({ status: 1, dueAt: 1, createdAt: -1 }).populate("playerId", "fullName email").populate("packageId", "title reviewType turnaroundHours maxVideoMinutes"),
+      PaymentSplit.find({}).sort({ createdAt: -1 }).limit(25),
+      profile ? Inquiry.find({ coachId: profile._id }).sort({ updatedAt: -1 }).limit(25).populate("playerId", "fullName email phone") : [],
+    ]);
+
+    res.json({ profile, packages, submissions, splits, inquiries });
+  })
+);
+
+router.post(
+  "/packages",
+  auth,
+  asyncHandler(async (req, res) => {
+    const profile = await CoachProfile.findOne({ userId: req.user._id });
+    if (!profile) return res.status(404).json({ error: "Coach profile not found" });
+    const pkg = await CoachingPackage.create({ ...packageInput(req.body), coachId: profile._id });
     res.json(pkg);
   })
 );

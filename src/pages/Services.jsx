@@ -34,6 +34,21 @@ const offerings = [
     text: "Need something that is not listed? Tell a coach what you need, discuss the details, and receive a custom quote before paying.",
     items: ["Describe your goals", "Chat with a coach", "Review the custom quote", "Approve before payment"],
   },
+  {
+    title: "Personalized training plans",
+    text: "Coaches can create online development plans based on your goals, DUPR range, practice time, and current limitations.",
+    items: ["Customized monthly program", "Downloadable drill-plan PDF", "2–3 business day delivery target", "Progress checkpoints"],
+  },
+  {
+    title: "Strategy consultations",
+    text: "Use online coaching to discuss tournament preparation, doubles strategy, serve/return choices, or mental-game priorities.",
+    items: ["Strategy questions", "Skill development guidance", "Goal setting", "Clear next steps"],
+  },
+  {
+    title: "Personalized requests",
+    text: "Need something that is not listed? Tell a coach what you need, discuss the details, and receive a custom quote before paying.",
+    items: ["Describe your goals", "Chat with a coach", "Review the custom quote", "Approve before payment"],
+  },
 ];
 
 const deliverables = [

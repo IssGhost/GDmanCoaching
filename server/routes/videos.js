@@ -286,30 +286,6 @@ router.post(
   })
 );
 
-router.post(
-  "/mock-upload/:id",
-  express.raw({ type: "*/*", limit: "250mb" }),
-  asyncHandler(async (req, res) => {
-    if (!mockUploadsEnabled()) return res.status(403).json({ error: "Mock uploads are disabled." });
-
-    const row = await VideoSubmission.findById(req.params.id);
-    if (!row) return res.status(404).json({ error: "Submission not found" });
-
-    row.uploadId = row.uploadId || `mock_${row._id}`;
-    row.assetId = row.uploadId;
-    row.playbackId = row.uploadId;
-    row.status = "processing";
-
-    await row.save();
-
-    res.json({
-      success: true,
-      mock: true,
-      uid: row.uploadId,
-    });
-  })
-);
-
 router.put(
   "/submissions/:id/video",
   auth,

@@ -5,50 +5,6 @@ const { normalizeRole, requireRole } = require("../utils/roles");
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
 if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) throw new Error("JWT_SECRET is required in production.");
 
-const ROLE_PRIORITY = ["admin", "employee", "coach", "user"];
-
-function normalizeRoles(values, fallbackRole = "user") {
-  const rawRoles = Array.isArray(values) ? values : values ? [values] : [];
-  const roles = rawRoles.map((role) => normalizeRole(role)).filter(Boolean);
-
-  if (!roles.length) {
-    const fallback = normalizeRole(fallbackRole, "user");
-    return [fallback];
-  }
-
-  return [...new Set(roles)];
-}
-
-function primaryRole(userOrRole) {
-  if (typeof userOrRole === "string") return requireRole(userOrRole);
-
-  const roles = normalizeRoles(userOrRole?.roles, userOrRole?.role || "user");
-  return requireRole(ROLE_PRIORITY.find((role) => roles.includes(role)) || userOrRole?.role || roles[0]);
-}
-
-async function syncUserRoleFields(user) {
-  if (!user) return user;
-
-  const role = primaryRole(user);
-  const roles = normalizeRoles(user.roles, role);
-  if (!roles.includes(role)) roles.unshift(role);
-
-  const currentRole = normalizeRole(user.role);
-  const currentRoles = normalizeRoles(user.roles, currentRole || role);
-  const needsSave =
-    currentRole !== role ||
-    currentRoles.length !== roles.length ||
-    currentRoles.some((value, index) => value !== roles[index]);
-
-  if (needsSave) {
-    user.role = role;
-    user.roles = roles;
-    await user.save();
-  }
-
-  return user;
-}
-
 const auth = async (req, res, next) => {
   try {
     const hdr = req.headers.authorization || "";

@@ -9,27 +9,6 @@ export default function FAQ() {
     { icon: FaExchangeAlt, label: "Coach responses", desc: "Allow 1–3 business days for coaches to review and respond." },
   ];
 
-  const bottom = [
-    {
-      icon: <FaCalendarCheck />,
-      title: "Request coaching",
-      text: "Schedule online sessions or video-review packages.",
-      to: "/coaches",
-    },
-    {
-      icon: <FaCreditCard />,
-      title: "Plans and custom quotes",
-      text: "Review listed plan prices or message a coach to request a custom quote.",
-      to: "/payments",
-    },
-    {
-      icon: <FaCloudUploadAlt />,
-      title: "Player dashboard",
-      text: "Track bookings, uploads, and completed coach feedback.",
-      to: "/dashboard/submissions",
-    },
-  ];
-
   return (
     <div className="pp-page px-6 pt-32 pb-16">
       <section className="mx-auto max-w-5xl text-center">
