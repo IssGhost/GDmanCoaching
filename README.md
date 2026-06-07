@@ -51,8 +51,11 @@ If Railway MongoDB is used instead of Atlas, provision the MongoDB service insid
 - `STRIPE_WEBHOOK_SECRET`: Activates verified Stripe payment completion webhooks.
 - `CLOUDFLARE_ACCOUNT_ID`: Used with the Stream token to activate customer video uploads.
 - `CLOUDFLARE_STREAM_TOKEN`: Use a restricted Cloudflare API token that can create and manage Stream uploads.
+- `SUPPORT_EMAIL`: Contact-form destination. Production should use `blake@goodmanpickleball.com`.
+- `EMAIL_FROM`: Verified sender address for contact-form email, such as `GOOD Coaching <support@goodmanpickleball.com>`.
+- `RESEND_API_KEY` or `SENDGRID_API_KEY`: Activates the contact support form email delivery. Configure one provider before launch.
 
-If an optional integration is missing, the website still starts and its unrelated pages remain available. A customer who attempts to use that unavailable feature receives a clear setup message instead of the whole deployment failing.
+If an optional integration is missing, the website still starts and its unrelated pages remain available. A customer who attempts to use that unavailable feature receives a clear setup message instead of the whole deployment failing. Contact support submissions are saved only as tickets unless one of the email provider keys is configured; the contact form will not show a false success message if email delivery is unavailable.
 
 Do not put secrets in GitHub files, screenshots, support tickets, or the public website.
 
@@ -82,7 +85,16 @@ The live site intentionally refuses video uploads when Cloudflare Stream is not 
 
 The live site refuses paid checkout when Stripe is missing or when a coach has not completed payment onboarding. This prevents orders from being incorrectly marked as paid.
 
-## 6. Connect the production domain through Cloudflare
+## 6. Configure contact support email
+
+1. Choose either Resend or SendGrid for transactional contact-form email.
+2. Verify the sending domain or sender address with that provider.
+3. Set `SUPPORT_EMAIL=blake@goodmanpickleball.com` in Railway.
+4. Set `EMAIL_FROM` to the verified sender address.
+5. Add either `RESEND_API_KEY` or `SENDGRID_API_KEY` in Railway and redeploy.
+6. Submit a test contact form and confirm Blake receives the message. The API returns an error instead of a success message if the email provider is not configured or rejects the send.
+
+## 7. Connect the production domain through Cloudflare
 
 1. Add the GOOD Coaching domain to Cloudflare and follow Cloudflare’s instructions to update the domain’s nameservers.
 2. In Railway, add the custom domain to the production web service.
@@ -92,7 +104,7 @@ The live site refuses paid checkout when Stripe is missing or when a coach has n
 6. After the domain works, update Railway’s `CLIENT_URL` to the final HTTPS address and redeploy.
 7. Confirm sign-in, coach profiles, Stripe redirects, video uploads, and emails all use the final domain rather than a Railway or localhost address.
 
-## 7. Create the first administrator and approve coaches
+## 8. Create the first administrator and approve coaches
 
 The first administrator must be created deliberately in the production database. Use MongoDB Atlas’s data viewer to locate the intended user and change only that user’s role to admin. Do not share administrator accounts.
 
@@ -104,7 +116,7 @@ After signing in as the administrator:
 4. Confirm that unapproved coaches do not appear publicly.
 5. Keep the database viewer restricted to administrators.
 
-## 8. Replace final business content before launch
+## 9. Replace final business content before launch
 
 Before sending the website to customers, review every public page and confirm:
 
@@ -116,7 +128,7 @@ Before sending the website to customers, review every public page and confirm:
 - Refund, cancellation, privacy, terms of service, and video-retention policies have been reviewed by the business owner and an appropriate legal professional.
 - The footer and all navigation links go to useful pages.
 
-## 9. Final launch test
+## 10. Final launch test
 
 Complete this test from a phone and a desktop browser using brand-new accounts:
 
@@ -132,7 +144,7 @@ Complete this test from a phone and a desktop browser using brand-new accounts:
 
 Do not announce the site until every step succeeds.
 
-## 10. Ongoing operations after launch
+## 11. Ongoing operations after launch
 
 - Check Railway deployment and error logs daily during the first week.
 - Review MongoDB and Cloudflare storage usage weekly.
