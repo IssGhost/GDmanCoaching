@@ -133,6 +133,7 @@ async function handleSignup(req, res, next) {
     const phone = req.body?.phone || "";
     const requestedType = req.body?.accountType || req.body?.role || "user";
     const accountType = requestedType === "coach" ? "coach" : "user";
+    const role = requireRole(accountType);
 
     if (!fullName || !email || !phone || !password) {
       return res.status(400).json({ error: "Full name, email, phone number, and password are required." });
@@ -181,7 +182,7 @@ async function handleSignin(req, res, next) {
       return res.status(400).json({ error: "Email/username and password are required." });
     }
 
-    const user = await User.findOne({ $or: [{ email }, { username: email }] });
+    const user = await User.findOne({ $or: [{ email: emailOrUsername }, { username: emailOrUsername }] });
 
     if (!user) {
       return res.status(400).json({ error: "Invalid credentials." });
@@ -190,12 +191,6 @@ async function handleSignin(req, res, next) {
     const ok = await comparePassword(password, user);
     if (!ok) {
       return res.status(400).json({ error: "Invalid credentials." });
-    }
-
-    const normalizedRole = requireRole(user.role);
-    if (user.role !== normalizedRole) {
-      user.role = normalizedRole;
-      await user.save();
     }
 
     const normalizedRole = requireRole(user.role);
