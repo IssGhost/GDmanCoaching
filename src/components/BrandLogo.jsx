@@ -13,10 +13,10 @@ export default function BrandLogo({
       aria-label="GOOD Coaching home"
     >
       <img
-        src="/brand/good_coaching_logo.png"
+        src="/brand/good_coaching_logo.png?v=real-logo-2"
         alt="GOOD Coaching"
         className={`w-auto object-contain ${compact ? "h-9" : "h-12"} ${imageClassName}`}
       />
     </Link>
   );
-}
+} 

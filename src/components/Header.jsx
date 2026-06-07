@@ -55,17 +55,7 @@ export default function Header() {
       }`}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6">
-        <Link
-          to="/"
-          className="group flex items-center rounded-2xl bg-[#12372a] p-2 shadow-lg shadow-[#12372a]/20"
-          aria-label="GOOD Coaching home"
-        >
-          <img
-            src="/good-coaching-logo.svg"
-            alt="GOOD Coaching"
-            className="h-10 w-auto rounded-xl transition group-hover:-rotate-1 group-hover:scale-[1.02]"
-          />
-        </Link>
+        <BrandLogo imageClassName="h-12" />
 
         <nav className="hidden items-center gap-1 rounded-full border border-[#12372a]/10 bg-white/60 p-1 backdrop-blur lg:flex">
           {links.map(navLink)}
@@ -79,6 +69,7 @@ export default function Header() {
           ) : (
             <AccountMenu />
           )}
+
           <Link to={user ? portalPathForRole(user.role) : "/coaches"} className="pp-btn-primary px-5 py-2.5 text-sm">
             {user ? portalLabelForRole(user.role) : "Request Coaching"}
           </Link>
@@ -112,6 +103,7 @@ export default function Header() {
               ) : (
                 <AccountMenu />
               )}
+
               <Link to={user ? portalPathForRole(user.role) : "/coaches"} className="pp-btn-primary px-5 py-2.5 text-sm">
                 {user ? portalLabelForRole(user.role) : "Request Coaching"}
               </Link>
