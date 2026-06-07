@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { FaBars, FaTimes } from "react-icons/fa";
 import AccountMenu from "./AccountMenu";
+import BrandLogo from "./BrandLogo";
 import { useAuth } from "../context/AuthContext";
 import { portalLabelForRole, portalPathForRole } from "../lib/roles";
 
@@ -29,6 +30,7 @@ export default function Header() {
 
   const navLink = (link) => {
     const active = pathname === link.to || (link.to === "/coaches" && pathname.startsWith("/coaches"));
+
     return (
       <Link
         key={link.to}
@@ -91,12 +93,14 @@ export default function Header() {
         <div className="border-t border-[#12372a]/10 bg-[#fff8e7]/98 px-4 py-4 backdrop-blur-xl lg:hidden">
           <nav className="mx-auto grid max-w-7xl gap-2">
             {links.map(navLink)}
+
             <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-[#12372a]/10 pt-4">
               {!user ? (
                 <>
                   <Link to="/signin" className="rounded-full px-3 py-2 text-sm font-extrabold text-[#12372a]/85">
                     Sign In
                   </Link>
+
                   <Link to="/signup" className="rounded-full px-3 py-2 text-sm font-extrabold text-[#12372a]/85">
                     Sign Up
                   </Link>

@@ -8,7 +8,7 @@ export default function Footer() {
   const supportPath = role === "admin" || role === "employee" ? "/admin/requests" : role === "coach" ? "/messages" : "/dashboard/requests";
   const supportLabel = role === "admin" || role === "employee" ? "Support Inbox" : role === "coach" ? "Client Requests" : "Personalized Requests";
   return (
-    <footer className="mt-0 border-t border-[#12372a]/10 bg-[#fff8e7] text-[#5f746c]">
+    <footer className="mt-0 border-t border-[#12372a]/10 bg-[#fff8e7] text-[#40584f]">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-6 py-12 md:grid-cols-4">
         <div>
           <Link to="/" aria-label="GOOD Coaching home"><img src="/good-coaching-logo.svg" alt="GOOD Coaching" className="mb-4 h-14 w-auto rounded-2xl shadow-lg shadow-lime-200/40" /></Link>
@@ -16,8 +16,10 @@ export default function Footer() {
             Online pickleball coaching with private video submissions, timestamped feedback, coach profiles, DUPR details, and player dashboards.
           </p>
         </div>
+
         <div>
           <h3 className="mb-4 font-black text-[#12372a]">Platform</h3>
+
           <ul className="space-y-2 text-sm font-semibold">
             <li><Link to="/" className="hover:text-[#00a896]">Home</Link></li>
             <li><Link to="/coaches" className="hover:text-[#00a896]">Coaches</Link></li>
@@ -25,14 +27,17 @@ export default function Footer() {
 
           </ul>
         </div>
+
         <div>
           <h3 className="mb-4 font-black text-[#12372a]">Accounts</h3>
+
           <ul className="space-y-2 text-sm font-semibold">
             <li><Link to="/signup" className="hover:text-[#00a896]">Player Signup</Link></li>
             <li><Link to="/coach-signup" className="hover:text-[#00a896]">Coach Signup</Link></li>
             <li><Link to={user ? portalPathForRole(user.role) : "/signin"} className="hover:text-[#00a896]">{user ? portalLabelForRole(user.role) : "Sign In"}</Link></li>
           </ul>
         </div>
+
         <div>
           <h3 className="mb-4 font-black text-[#12372a]">Support</h3>
           <ul className="space-y-2 text-sm font-semibold">

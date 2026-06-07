@@ -56,15 +56,23 @@ router.get(
   asyncHandler(async (req, res) => {
     const showAll = req.query.all === "1";
     const filter = showAll ? {} : { approved: true };
+
     const coaches = await CoachProfile.find(filter).sort({ featured: -1, rating: -1, updatedAt: -1 }).lean();
     const ids = coaches.map((c) => c._id);
-    const packages = await CoachingPackage.find({ coachId: { $in: ids }, active: true }).sort({ price: 1 }).lean();
+
+    const packages = await CoachingPackage.find(
+      paidPublicPackageFilter({ coachId: { $in: ids } })
+    )
+      .sort({ price: 1 })
+      .lean();
+
     const byCoach = packages.reduce((acc, pkg) => {
       const key = String(pkg.coachId);
       acc[key] = acc[key] || [];
       acc[key].push(pkg);
       return acc;
     }, {});
+
     res.json(coaches.map((coach) => publicCoachPayload(coach, byCoach[String(coach._id)] || [])));
   })
 );
@@ -75,8 +83,14 @@ router.get(
   asyncHandler(async (req, res) => {
     const profile = await CoachProfile.findOne({ userId: req.user._id });
     if (!profile) return res.status(404).json({ error: "Coach profile not found" });
+
     const packages = await CoachingPackage.find({ coachId: profile._id }).sort({ createdAt: -1 });
-    res.json({ profile, packages });
+
+    res.json({
+      profile,
+      packages,
+      readiness: coachReadiness(profile, packages),
+    });
   })
 );
 
@@ -132,7 +146,10 @@ router.put(
   asyncHandler(async (req, res) => {
     const body = req.body || {};
     const profile = await CoachProfile.findOne({ userId: req.user._id });
-    if (!profile && req.user.role !== "admin") return res.status(404).json({ error: "Coach profile not found" });
+
+    if (!profile && req.user.role !== "admin") {
+      return res.status(404).json({ error: "Coach profile not found" });
+    }
 
     const update = {
       displayName: body.displayName,
@@ -159,9 +176,15 @@ router.put(
       avatarUrl: body.avatarUrl,
       introVideoUrl: body.introVideoUrl,
     };
+
     Object.keys(update).forEach((key) => update[key] === undefined && delete update[key]);
 
-    const saved = await CoachProfile.findOneAndUpdate({ userId: req.user._id }, { $set: update }, { new: true });
+    const saved = await CoachProfile.findOneAndUpdate(
+      { userId: req.user._id },
+      { $set: update },
+      { new: true }
+    );
+
     res.json(saved);
   })
 );
@@ -183,12 +206,47 @@ router.put(
   asyncHandler(async (req, res) => {
     const profile = await CoachProfile.findOne({ userId: req.user._id });
     if (!profile) return res.status(404).json({ error: "Coach profile not found" });
+
     const pkg = await CoachingPackage.findOneAndUpdate(
       { _id: req.params.packageId, coachId: profile._id },
       { $set: packageInput(req.body) },
       { new: true, runValidators: true }
     );
+
     if (!pkg) return res.status(404).json({ error: "Package not found" });
+
+    res.json(pkg);
+  })
+);
+
+router.get(
+  "/dashboard",
+  auth,
+  asyncHandler(async (req, res) => {
+    const profile = await CoachProfile.findOne({ userId: req.user._id });
+    if (!profile && req.user.role !== "admin") {
+      return res.status(404).json({ error: "Coach profile not found" });
+    }
+
+    const filter = req.user.role === "admin" && !profile ? {} : { coachId: profile._id };
+    const [packages, submissions, splits, inquiries] = await Promise.all([
+      profile ? CoachingPackage.find({ coachId: profile._id }).sort({ createdAt: -1 }) : [],
+      VideoSubmission.find(filter).sort({ status: 1, dueAt: 1, createdAt: -1 }).populate("playerId", "fullName email").populate("packageId", "title reviewType turnaroundHours maxVideoMinutes"),
+      PaymentSplit.find({}).sort({ createdAt: -1 }).limit(25),
+      profile ? Inquiry.find({ coachId: profile._id }).sort({ updatedAt: -1 }).limit(25).populate("playerId", "fullName email phone") : [],
+    ]);
+
+    res.json({ profile, packages, submissions, splits, inquiries });
+  })
+);
+
+router.post(
+  "/packages",
+  auth,
+  asyncHandler(async (req, res) => {
+    const profile = await CoachProfile.findOne({ userId: req.user._id });
+    if (!profile) return res.status(404).json({ error: "Coach profile not found" });
+    const pkg = await CoachingPackage.create({ ...packageInput(req.body), coachId: profile._id });
     res.json(pkg);
   })
 );
@@ -228,10 +286,22 @@ router.post(
 router.get(
   "/:id",
   asyncHandler(async (req, res) => {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(404).json({ error: "Coach not found" });
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ error: "Coach not found" });
+    }
+
     const profile = await CoachProfile.findById(req.params.id).lean();
-    if (!profile || !profile.approved) return res.status(404).json({ error: "Coach not found" });
-    const packages = await CoachingPackage.find({ coachId: profile._id, active: true }).sort({ price: 1 }).lean();
+
+    if (!profile || !profile.approved) {
+      return res.status(404).json({ error: "Coach not found" });
+    }
+
+    const packages = await CoachingPackage.find(
+      paidPublicPackageFilter({ coachId: profile._id })
+    )
+      .sort({ price: 1 })
+      .lean();
+
     res.json(publicCoachPayload(profile, packages));
   })
 );
@@ -243,10 +313,17 @@ router.put(
   asyncHandler(async (req, res) => {
     const profile = await CoachProfile.findByIdAndUpdate(
       req.params.id,
-      { $set: { approved: Boolean(req.body?.approved ?? true), featured: Boolean(req.body?.featured ?? false) } },
+      {
+        $set: {
+          approved: Boolean(req.body?.approved ?? true),
+          featured: Boolean(req.body?.featured ?? false),
+        },
+      },
       { new: true }
     );
+
     if (!profile) return res.status(404).json({ error: "Coach not found" });
+
     res.json(profile);
   })
 );

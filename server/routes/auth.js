@@ -10,8 +10,53 @@ const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
 if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) throw new Error("JWT_SECRET is required in production.");
 const TOKEN_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
+const ROLE_PRIORITY = ["admin", "employee", "coach", "user"];
+
+function normalizeRoles(values, fallbackRole = "user") {
+  const rawRoles = Array.isArray(values) ? values : values ? [values] : [];
+  const roles = rawRoles.map((role) => normalizeRole(role)).filter(Boolean);
+
+  if (!roles.length) {
+    const fallback = normalizeRole(fallbackRole, "user");
+    return [fallback];
+  }
+
+  return [...new Set(roles)];
+}
+
+function primaryRole(userOrRole) {
+  if (typeof userOrRole === "string") return requireRole(userOrRole);
+
+  const roles = normalizeRoles(userOrRole?.roles, userOrRole?.role || "user");
+  return requireRole(ROLE_PRIORITY.find((role) => roles.includes(role)) || userOrRole?.role || roles[0]);
+}
+
+async function syncUserRoleFields(user) {
+  if (!user) return user;
+
+  const role = primaryRole(user);
+  const roles = normalizeRoles(user.roles, role);
+  if (!roles.includes(role)) roles.unshift(role);
+
+  const currentRole = normalizeRole(user.role);
+  const currentRoles = normalizeRoles(user.roles, currentRole || role);
+  const needsSave =
+    currentRole !== role ||
+    currentRoles.length !== roles.length ||
+    currentRoles.some((value, index) => value !== roles[index]);
+
+  if (needsSave) {
+    user.role = role;
+    user.roles = roles;
+    await user.save();
+  }
+
+  return user;
+}
 
 function signToken(user) {
+  const role = primaryRole(user);
+
   return jwt.sign(
     {
       _id: user._id,
@@ -28,6 +73,7 @@ function presentUser(user) {
     _id: user._id,
     id: user._id,
     email: user.email,
+    username: user.username || "",
     fullName: user.fullName || user.name || "",
     name: user.fullName || user.name || "",
     phone: user.phone || "",
@@ -64,11 +110,15 @@ function auth(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
+    const role = requireRole(decoded.role);
+
     req.user = {
       _id: decoded._id || decoded.id,
       id: decoded._id || decoded.id,
-      role: decoded.role,
+      role,
+      roles: normalizeRoles(decoded.roles, role),
     };
+
     return next();
   } catch {
     return res.status(401).json({ error: "Invalid token" });
@@ -98,21 +148,24 @@ async function handleSignup(req, res, next) {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    const user = await User.create({
+    let user = await User.create({
       email,
       passwordHash,
       fullName,
       name: fullName,
       phone,
-      role: normalizeRole(accountType),
+      role,
+      roles: [role],
     });
 
+    user = await syncUserRoleFields(user);
     const token = signToken(user);
 
-    res.json({
+    return res.json({
       token,
+      accessToken: token,
       user: presentUser(user),
-      startPath: startPathForRole(user.role),
+      startPath: startPathForRole(primaryRole(user)),
     });
   } catch (err) {
     next(err);
@@ -121,28 +174,28 @@ async function handleSignup(req, res, next) {
 
 async function handleSignin(req, res, next) {
   try {
-    const email = normalizeLoginEmail(req.body?.email || req.body?.username);
+    const emailOrUsername = normalizeLoginEmail(req.body?.email || req.body?.username);
     const password = String(req.body?.password || "");
 
-    if (!email || !password) {
+    if (!emailOrUsername || !password) {
       return res.status(400).json({ error: "Email/username and password are required." });
     }
 
     const user = await User.findOne({ $or: [{ email }, { username: email }] });
 
     if (!user) {
-      return res.status(400).json({
-        error: "Invalid credentials.",
-        triedEmail: email,
-      });
+      return res.status(400).json({ error: "Invalid credentials." });
     }
 
     const ok = await comparePassword(password, user);
-
     if (!ok) {
-      return res.status(400).json({
-        error: "Invalid credentials.",
-      });
+      return res.status(400).json({ error: "Invalid credentials." });
+    }
+
+    const normalizedRole = requireRole(user.role);
+    if (user.role !== normalizedRole) {
+      user.role = normalizedRole;
+      await user.save();
     }
 
     const normalizedRole = requireRole(user.role);
@@ -153,10 +206,11 @@ async function handleSignin(req, res, next) {
 
     const token = signToken(user);
 
-    res.json({
+    return res.json({
       token,
+      accessToken: token,
       user: presentUser(user),
-      startPath: startPathForRole(user.role),
+      startPath: startPathForRole(primaryRole(user)),
     });
   } catch (err) {
     next(err);
@@ -179,12 +233,14 @@ router.post("/login", handleSignin);
 
 router.get("/me", auth, async (req, res, next) => {
   try {
-    const user = await User.findById(req.user._id || req.user.id);
+    let user = await User.findById(req.user._id || req.user.id);
     if (!user) return res.status(401).json({ error: "Unauthorized" });
 
-    res.json({
+    user = await syncUserRoleFields(user);
+
+    return res.json({
       user: presentUser(user),
-      startPath: startPathForRole(user.role),
+      startPath: startPathForRole(primaryRole(user)),
     });
   } catch (err) {
     next(err);
@@ -195,19 +251,21 @@ router.put("/me", auth, async (req, res, next) => {
   try {
     const updates = {};
 
-    if (typeof req.body?.fullName !== "undefined") updates.fullName = req.body.fullName;
-    if (typeof req.body?.name !== "undefined") updates.name = req.body.name;
-    if (typeof req.body?.phone !== "undefined") updates.phone = req.body.phone;
+    if (typeof req.body?.fullName !== "undefined") updates.fullName = String(req.body.fullName || "").trim();
+    if (typeof req.body?.name !== "undefined") updates.name = String(req.body.name || "").trim();
+    if (typeof req.body?.phone !== "undefined") updates.phone = String(req.body.phone || "").trim();
 
-    const user = await User.findByIdAndUpdate(
+    let user = await User.findByIdAndUpdate(
       req.user._id || req.user.id,
       { $set: updates },
-      { new: true }
+      { new: true, runValidators: true }
     );
 
     if (!user) return res.status(404).json({ error: "User not found." });
 
-    res.json({ user: presentUser(user) });
+    user = await syncUserRoleFields(user);
+
+    return res.json({ user: presentUser(user) });
   } catch (err) {
     next(err);
   }

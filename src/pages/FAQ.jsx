@@ -21,17 +21,21 @@ export default function FAQ() {
         </p>
       </section>
 
-      <section className="mx-auto mt-10 grid max-w-6xl gap-5 md:grid-cols-3">
+      <section className="mx-auto mt-12 grid max-w-6xl gap-6 md:grid-cols-3">
         {quick.map((q) => (
           <div key={q.label} className="pp-card-solid rounded-3xl p-6">
-            <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[#d9f7fb] text-2xl text-[#00a896]"><q.icon /></div>
+            <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[#d9f7fb] text-2xl text-[#00a896]">
+              <q.icon />
+            </div>
+
             <div className="text-lg font-black text-[#12372a]">{q.label}</div>
+
             <div className="mt-2 text-sm leading-6 text-[#5f746c]">{q.desc}</div>
           </div>
         ))}
       </section>
 
-      <section className="mx-auto max-w-5xl">
+      <section className="mx-auto my-14 max-w-5xl">
         <FAQAccordion />
       </section>
 
@@ -42,8 +46,12 @@ export default function FAQ() {
           { icon: <FaCloudUploadAlt />, title: "Player dashboard", text: "Track bookings, uploads, and completed coach feedback.", to: "/dashboard/submissions" },
         ].map((c) => (
           <Link key={c.title} to={c.to} className="pp-card rounded-3xl p-6 text-center transition hover:-translate-y-1">
-            <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-[#c6ff4a] text-xl text-[#12372a]">{c.icon}</div>
+            <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-[#c6ff4a] text-xl text-[#12372a]">
+              {c.icon}
+            </div>
+
             <div className="font-black text-[#12372a]">{c.title}</div>
+
             <div className="mt-1 text-sm leading-6 text-[#5f746c]">{c.text}</div>
           </Link>
         ))}

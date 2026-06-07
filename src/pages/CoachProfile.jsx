@@ -5,11 +5,45 @@ import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
 
+const SKILL_LEVEL_OPTIONS = [
+  "Beginner / newer player",
+  "2.5–3.0 recreational player",
+  "3.0–3.5 intermediate player",
+  "3.5–4.0 competitive player",
+  "4.0–4.5 advanced player",
+  "4.5+ tournament player",
+  "Not sure yet",
+];
+
+function money(value) {
+  return `$${Number(value || 0).toFixed(2)}`;
+}
+
+function readableReviewType(value) {
+  return String(value || "single_video").replaceAll("_", " ");
+}
+
+function includedDeliverables(pkg) {
+  const rows = [];
+
+  if (pkg?.includesVoiceAnalysis) rows.push("Voice-recorded analysis");
+  if (pkg?.includesTranscriptPdf) rows.push("Transcript PDF");
+  if (pkg?.includesDrillPlanPdf) rows.push("Downloadable drill-plan PDF");
+  if (pkg?.includesResponseVideo) rows.push("Response video");
+
+  return rows;
+}
+
+function packageIsPurchasable(pkg) {
+  return Boolean(pkg?._id && pkg?.active !== false && Number(pkg?.price || 0) > 0);
+}
+
 export default function CoachProfile() {
   const { id } = useParams();
   const nav = useNavigate();
   const { user, token } = useAuth();
   const { push } = useToast();
+
   const [coach, setCoach] = useState(null);
   const [selectedPackageId, setSelectedPackageId] = useState("");
   const [form, setForm] = useState({ title: "", goals: "", skillLevel: "", description: "", durationMinutes: "" });
@@ -21,10 +55,21 @@ export default function CoachProfile() {
   const [requestedServices, setRequestedServices] = useState([]);
 
   useEffect(() => {
-    api.get(`/coaches/${id}`)
+    setLoading(true);
+
+    api
+      .get(`/coaches/${id}`)
       .then((row) => {
-        setCoach(row);
-        setSelectedPackageId(row.packages?.[0]?._id || "");
+        const packages = Array.isArray(row?.packages) ? row.packages.filter(packageIsPurchasable) : [];
+
+        setCoach({
+          ...row,
+          packages,
+        });
+
+        setSelectedPackageId(packages?.[0]?._id || "");
+        setOpenPackageId("");
+        setPurchaseOpen(false);
       })
       .catch(() => setCoach(null))
       .finally(() => setLoading(false));
@@ -75,13 +120,14 @@ export default function CoachProfile() {
     if (!user) return nav("/signin", { state: { from: { pathname: `/coaches/${id}` } } });
     if (!selectedPackage) return push("Select a package first.", "error");
     setBusy(true);
+
     try {
       const result = await api.post("/payments/checkout/session", { coachId: coach._id, packageId: selectedPackage._id, ...form }, token);
       push("Booking created. Continue to your video submission.", "success");
       if (result.checkoutUrl?.startsWith("http")) window.location.href = result.checkoutUrl;
       else nav(`/dashboard/submissions/${result.submission._id}`);
     } catch (e) {
-      push(e.message || "Checkout failed", "error");
+      push(e.message || "Checkout failed.", "error");
     } finally {
       setBusy(false);
     }
@@ -130,7 +176,26 @@ export default function CoachProfile() {
                 <Social href={coach.socialLinks?.website} icon={<FaGlobe />} label="Website" />
               </div>
             </div>
-          </div>
+          </ExpandablePanel>
+
+          <ExpandablePanel title="How online coaching works" subtitle="Simple customer steps" defaultOpen={false}>
+            <ol className="space-y-3 text-sm font-semibold leading-6 text-[#40584f]">
+              <li className="flex gap-3">
+                <StepBadge>1</StepBadge>
+                Choose a buy-now plan or send a custom quote request.
+              </li>
+
+              <li className="flex gap-3">
+                <StepBadge>2</StepBadge>
+                After payment, upload a pickleball video up to 15 minutes.
+              </li>
+
+              <li className="flex gap-3">
+                <StepBadge>3</StepBadge>
+                The coach reviews your footage and sends feedback based on the plan.
+              </li>
+            </ol>
+          </ExpandablePanel>
         </aside>
 
         <main className="space-y-5">

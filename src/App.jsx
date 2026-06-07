@@ -1,5 +1,5 @@
 // FILE: src/App.jsx
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import FloatingQuickQuote from "./components/FloatingQuickQuote";
@@ -69,6 +69,8 @@ export default function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/services" element={<Services />} />
+                <Route path="/training-options" element={<Navigate to="/services" replace />} />
+                <Route path="/training" element={<Navigate to="/services" replace />} />
                 <Route path="/faq" element={<FAQ />} />
                 <Route path="/testimonials" element={<Testimonials />} />
                 <Route path="/contact" element={<Contact />} />
@@ -77,6 +79,9 @@ export default function App() {
                 <Route path="/marketplace" element={<Marketplace />} />
                 <Route path="/coaches" element={<Marketplace />} />
                 <Route path="/coaches/:id" element={<CoachProfile />} />
+                <Route path="/coach/:id" element={<NavigateToCoachProfile />} />
+
+                {/* Coach signup aliases */}
                 <Route path="/coach-signup" element={<CoachSignup />} />
                 <Route path="/cart" element={<Cart />} />
 
@@ -146,10 +151,10 @@ export default function App() {
                 />
 
                 <Route
-                  path="/admin/blog"
+                  path="/admin/blog/new"
                   element={
                     <RoleRoute allow={["employee", "admin"]}>
-                      <AdminBlog />
+                      <AdminBlogEditor />
                     </RoleRoute>
                   }
                 />
@@ -164,10 +169,10 @@ export default function App() {
                 />
 
                 <Route
-                  path="/admin/blog/new"
+                  path="/admin/blog"
                   element={
                     <RoleRoute allow={["employee", "admin"]}>
-                      <AdminBlogEditor />
+                      <AdminBlog />
                     </RoleRoute>
                   }
                 />
@@ -191,7 +196,7 @@ export default function App() {
                   }
                 />
 
-                {/* Coach */}
+                {/* Coach private dashboard */}
                 <Route
                   path="/coach/dashboard"
                   element={
@@ -215,6 +220,10 @@ export default function App() {
                 <Route path="/portal" element={<PortalRedirect />} />
                 <Route path="/role-error" element={<PrivateRoute><RoleError /></PrivateRoute>} />
                 <Route path="/signup" element={<SignUp />} />
+                <Route path="/sign-up" element={<Navigate to="/signup" replace />} />
+                <Route path="/create-account" element={<Navigate to="/signup" replace />} />
+                <Route path="/player-signup" element={<Navigate to="/signup" replace />} />
+                <Route path="/create-player-account" element={<Navigate to="/signup" replace />} />
 
                 {/* User Dashboard with nested tabs */}
                 <Route
@@ -243,6 +252,9 @@ export default function App() {
                     </RoleRoute>
                   }
                 />
+
+                {/* Safe fallback */}
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </main>
 

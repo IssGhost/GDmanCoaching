@@ -21,6 +21,102 @@ const initialPackage = {
   includesDrillPlanPdf: true,
 };
 
+const PACKAGE_TEMPLATES = [
+  {
+    title: "Single Video Review",
+    range: "$25–$45",
+    price: 35,
+    reviewType: "single_video",
+    turnaroundHours: 48,
+    description:
+      "One focused review of a short match or drill clip. I will point out the biggest corrections, explain what to work on next, and include drills you can practice immediately.",
+    includesVoiceAnalysis: true,
+    includesTranscriptPdf: false,
+    includesDrillPlanPdf: true,
+    includesResponseVideo: false,
+  },
+  {
+    title: "Full Match Breakdown",
+    range: "$50–$90",
+    price: 75,
+    reviewType: "match_breakdown",
+    turnaroundHours: 72,
+    description:
+      "A deeper breakdown of match footage with notes on shot selection, court positioning, patterns, decision-making, and the main habits costing you points.",
+    includesVoiceAnalysis: true,
+    includesTranscriptPdf: true,
+    includesDrillPlanPdf: true,
+    includesResponseVideo: false,
+  },
+  {
+    title: "Doubles Strategy Review",
+    range: "$35–$75",
+    price: 55,
+    reviewType: "doubles_strategy",
+    turnaroundHours: 72,
+    description:
+      "A doubles-focused review covering partner spacing, movement, stacking, third-shot choices, kitchen pressure, resets, and point construction.",
+    includesVoiceAnalysis: true,
+    includesTranscriptPdf: false,
+    includesDrillPlanPdf: true,
+    includesResponseVideo: false,
+  },
+  {
+    title: "Singles Strategy Review",
+    range: "$35–$75",
+    price: 55,
+    reviewType: "singles_strategy",
+    turnaroundHours: 72,
+    description:
+      "A singles-focused review covering court positioning, patterns, serve and return strategy, shot selection, point construction, and how to create pressure one-on-one.",
+    includesVoiceAnalysis: true,
+    includesTranscriptPdf: false,
+    includesDrillPlanPdf: true,
+    includesResponseVideo: false,
+  },
+  {
+    title: "Personalized Training Plan",
+    range: "$60–$125",
+    price: 95,
+    reviewType: "training_plan",
+    turnaroundHours: 96,
+    description:
+      "A custom improvement plan based on the customer’s goals, current skill level, and uploaded footage. Includes priorities, drills, and a weekly practice structure.",
+    includesVoiceAnalysis: true,
+    includesTranscriptPdf: true,
+    includesDrillPlanPdf: true,
+    includesResponseVideo: false,
+  },
+  {
+    title: "Package Discount Bundle",
+    range: "$100–$180",
+    price: 140,
+    reviewType: "package_discount",
+    turnaroundHours: 120,
+    discountPercent: 10,
+    packageDeal: true,
+    description:
+      "A discounted bundle for multiple short video reviews. Example: four separate 15-minute video reviews purchased together at a lower total price than buying each one individually.",
+    includesVoiceAnalysis: true,
+    includesTranscriptPdf: false,
+    includesDrillPlanPdf: true,
+    includesResponseVideo: false,
+  },
+  {
+    title: "Monthly Coaching Program",
+    range: "$150–$300",
+    price: 225,
+    reviewType: "monthly",
+    turnaroundHours: 120,
+    description:
+      "A monthly remote coaching option for players who want ongoing feedback, structured improvement goals, and repeated review throughout the month.",
+    includesVoiceAnalysis: true,
+    includesTranscriptPdf: true,
+    includesDrillPlanPdf: true,
+    includesResponseVideo: true,
+  },
+];
+
 function phaseMeta(row) {
   const phase = normalizePhase(row.phase || row.status);
 
@@ -48,6 +144,41 @@ function phaseMeta(row) {
     cls: "bg-[#c6ff4a] text-[#12372a]",
     path: `/coach/submissions/${row._id}/review?phase=reviewed`,
   };
+}
+
+function money(value) {
+  return `$${Number(value || 0).toFixed(2)}`;
+}
+
+function packageStatus(item) {
+  const price = Number(item.price || 0);
+
+  if (item.active && price > 0) {
+    return {
+      label: "Public buy-now plan",
+      cls: "bg-[#c6ff4a] text-[#12372a]",
+    };
+  }
+
+  return {
+    label: "Draft / not public",
+    cls: "bg-[#fff0cf] text-[#7a4d00]",
+  };
+}
+
+function readableReviewType(value) {
+  return String(value || "single_video").replaceAll("_", " ");
+}
+
+function includedDeliverables(item) {
+  const rows = [];
+
+  if (item.includesVoiceAnalysis) rows.push("Voice analysis");
+  if (item.includesTranscriptPdf) rows.push("Transcript PDF");
+  if (item.includesDrillPlanPdf) rows.push("Drill-plan PDF");
+  if (item.includesResponseVideo) rows.push("Response video");
+
+  return rows.length ? rows.join(" • ") : "No deliverables selected";
 }
 
 export default function CoachDashboard() {
@@ -86,10 +217,12 @@ export default function CoachDashboard() {
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const stats = useMemo(() => {
     const rows = data?.submissions || [];
+    const packages = data?.packages || [];
 
     return {
       awaiting: rows.filter((r) => normalizePhase(r.phase || r.status) === "awaiting_upload").length,
@@ -146,14 +279,8 @@ export default function CoachDashboard() {
       push("Package created.", "success");
       setPkg(initialPackage);
       load();
-    } catch {
-      setData((current) => ({
-        ...current,
-        packages: [{ _id: `local-${Date.now()}`, ...pkg }, ...(current?.packages || [])],
-      }));
-
-      setPkg(initialPackage);
-      push("Package added.", "success");
+    } catch (err) {
+      push(err.message || "Plan was not saved. Check the required fields and try again.", "error");
     } finally {
       setBusy(false);
     }
@@ -173,6 +300,7 @@ export default function CoachDashboard() {
             <h1 className="mt-2 text-4xl font-black text-[#12372a]">
               {data.profile?.displayName || "Coach"}
             </h1>
+
             <p className="mt-1 text-[#5f746c]">
               Run your coaching business: answer client requests, complete reviews, publish services, and manage payouts.
             </p>
@@ -252,7 +380,8 @@ export default function CoachDashboard() {
                         <h3 className="font-black text-[#12372a]">{row.title}</h3>
 
                         <p className="mt-1 text-sm text-[#5f746c]">
-                          {row.playerId?.fullName || row.playerId?.email || "Player"} • {row.packageId?.title || "Coaching package"}
+                          {row.playerId?.fullName || row.playerId?.email || "Player"} •{" "}
+                          {row.packageId?.title || "Coaching package"}
                         </p>
                       </div>
 
@@ -263,6 +392,12 @@ export default function CoachDashboard() {
                   </Link>
                 );
               })}
+
+              {!data.submissions.length && (
+                <div className="rounded-2xl bg-[#eaf9f7] p-4 text-sm font-semibold text-[#40584f]">
+                  Paid submissions will appear here when customers purchase a plan or approve a custom quote.
+                </div>
+              )}
             </div>
           </section>
 
@@ -290,7 +425,13 @@ export default function CoachDashboard() {
                 <select
                   className="pp-input px-4 py-3"
                   value={pkg.reviewType}
-                  onChange={(e) => setPkg((p) => ({ ...p, reviewType: e.target.value }))}
+                  onChange={(e) =>
+                    setPkg((p) => ({
+                      ...p,
+                      reviewType: e.target.value,
+                      packageDeal: e.target.value === "package_discount" ? true : p.packageDeal,
+                    }))
+                  }
                 >
                   <option value="single_video">Single video review</option>
                   <option value="match_breakdown">Match breakdown</option>
@@ -298,19 +439,106 @@ export default function CoachDashboard() {
                   <option value="training_plan">Personalized training plan</option>
                   <option value="monthly">Customized monthly program</option>
                   <option value="doubles_strategy">Doubles strategy</option>
+                  <option value="singles_strategy">Singles strategy</option>
+                  <option value="strategy_consultation">Strategy consultation</option>
+                  <option value="training_plan">Personalized training plan</option>
+                  <option value="package_discount">Package discount</option>
+                  <option value="monthly">Customized monthly program</option>
                 </select>
+              </label>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block">
+                  <span className="mb-1 block text-sm font-black text-[#12372a]">Price customer pays now</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="pp-input px-4 py-3"
+                    value={pkg.price}
+                    onChange={(e) => setPkg((p) => ({ ...p, price: e.target.value }))}
+                    placeholder="Example: 35"
+                  />
+                  <span className="mt-1 block text-xs font-semibold text-[#40584f]">
+                    Public plans must be greater than $0. Drafts can be saved at $0.
+                  </span>
+                </label>
+
+                <label className="block">
+                  <span className="mb-1 block text-sm font-black text-[#12372a]">Optional package discount percentage</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    className="pp-input px-4 py-3"
+                    value={pkg.discountPercent}
+                    onChange={(e) =>
+                      setPkg((p) => ({
+                        ...p,
+                        discountPercent: e.target.value,
+                        packageDeal: Number(e.target.value) > 0 || p.reviewType === "package_discount",
+                      }))
+                    }
+                    placeholder="Example: 10"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="mb-1 block text-sm font-black text-[#12372a]">Turnaround time in hours</span>
+                  <input
+                    type="number"
+                    min="1"
+                    className="pp-input px-4 py-3"
+                    value={pkg.turnaroundHours}
+                    onChange={(e) => setPkg((p) => ({ ...p, turnaroundHours: Number(e.target.value) }))}
+                    placeholder="Example: 72"
+                  />
+                  <span className="mt-1 block text-xs font-semibold text-[#40584f]">
+                    Example: 48 = two days, 72 = three days.
+                  </span>
+                </label>
+
+                <label className="block">
+                  <span className="mb-1 block text-sm font-black text-[#12372a]">Maximum video upload length</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max="15"
+                    className="pp-input px-4 py-3"
+                    value={pkg.maxVideoMinutes}
+                    onChange={(e) =>
+                      setPkg((p) => ({
+                        ...p,
+                        maxVideoMinutes: Math.min(Number(e.target.value || 15), 15),
+                      }))
+                    }
+                    placeholder="Maximum 15 minutes"
+                  />
+                  <span className="mt-1 block text-xs font-semibold text-[#40584f]">
+                    Current upload limit is 15 minutes.
+                  </span>
+                </label>
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <input type="number" min="0" step="0.01" className="pp-input px-4 py-3" value={pkg.price} onChange={(e) => setPkg((p) => ({ ...p, price: e.target.value }))} placeholder="Price" required />
                 <input type="number" min="0" max="100" className="pp-input px-4 py-3" value={pkg.discountPercent} onChange={(e) => setPkg((p) => ({ ...p, discountPercent: e.target.value, packageDeal: Number(e.target.value) > 0 }))} placeholder="Package discount %" />
                 <input
-                  type="number"
-                  className="pp-input px-4 py-3"
-                  value={pkg.turnaroundHours}
-                  onChange={(e) => setPkg((p) => ({ ...p, turnaroundHours: Number(e.target.value) }))}
+                  type="checkbox"
+                  className="mt-1"
+                  checked={Boolean(pkg.packageDeal || Number(pkg.discountPercent || 0) > 0 || pkg.reviewType === "package_discount")}
+                  onChange={(e) => setPkg((p) => ({ ...p, packageDeal: e.target.checked }))}
                 />
 
+                <span>
+                  Mark this as a package discount
+                  <span className="mt-1 block text-xs font-semibold leading-5 text-[#40584f]">
+                    Use this for bundles such as four video reviews at a lower total price. Explain the bundle details clearly in the description.
+                  </span>
+                </span>
+              </label>
+
+              <label className="flex items-start gap-3 rounded-2xl border border-[#12372a]/10 bg-[#eaf9f7] p-4 font-bold text-[#12372a]">
                 <input
                   type="number"
                   className="pp-input px-4 py-3"
@@ -318,6 +546,9 @@ export default function CoachDashboard() {
                   max="15"
                   onChange={(e) => setPkg((p) => ({ ...p, maxVideoMinutes: Math.min(Number(e.target.value), 15) }))}
                 />
+
+              <div className="grid gap-2 rounded-2xl border border-[#12372a]/10 bg-white p-4 text-sm font-bold text-[#12372a]">
+                {[['includesVoiceAnalysis','Voice-recorded analysis'],['includesTranscriptPdf','Transcript PDF'],['includesDrillPlanPdf','Downloadable drill-plan PDF']].map(([key,label]) => <label key={key} className="flex items-center gap-2"><input type="checkbox" checked={Boolean(pkg[key])} onChange={(e)=>setPkg((p)=>({...p,[key]:e.target.checked}))}/>{label}</label>)}
               </div>
 
               <div className="grid gap-2 rounded-2xl border border-[#12372a]/10 bg-white p-4 text-sm font-bold text-[#12372a]">
@@ -325,11 +556,12 @@ export default function CoachDashboard() {
               </div>
 
               <button className="pp-btn-primary px-4 py-3 disabled:opacity-60" disabled={busy}>
-                <FaPlus className="mr-2" /> Add Package
+                <FaPlus className="mr-2" />
+                {pkg.active !== false ? "Publish Buy-Now Plan" : "Save Draft Plan"}
               </button>
             </form>
 
-            <h3 className="mt-6 font-black text-[#12372a]">Current packages</h3>
+            <h3 className="mt-6 font-black text-[#12372a]">Current coaching plans</h3>
 
             <div className="mt-3 grid gap-3">
               {(data.packages || []).map((pkg) => (
@@ -337,12 +569,14 @@ export default function CoachDashboard() {
                   <div className="font-black text-[#12372a]">
                     {pkg.title} — ${Number(pkg.price || 0).toFixed(2)}{pkg.discountPercent > 0 ? ` (${pkg.discountPercent}% package discount)` : ""}
                   </div>
+                );
+              })}
 
                   <div className="mt-1 text-sm text-[#5f746c]">
                     {String(pkg.reviewType || "").replaceAll("_", " ")} • {pkg.turnaroundHours || 72}h • {Math.min(pkg.maxVideoMinutes || 15, 15)} min max video
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           </section>
         </div>

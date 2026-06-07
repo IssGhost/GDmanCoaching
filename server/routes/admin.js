@@ -78,23 +78,104 @@ router.get("/stats", async (_req, res) => {
     VideoSubmission.countDocuments({ status: { $in: ["ready_for_review", "in_review"] } }),
     PaymentSplit.countDocuments(),
   ]);
-  res.json({ users, products, orders, openTickets: tickets, quotes, coaches, pendingCoaches, submissions, pendingReviews, splits });
+
+  res.json({
+    users,
+    products,
+    orders,
+    openTickets: tickets,
+    quotes,
+    coaches,
+    pendingCoaches,
+    submissions,
+    pendingReviews,
+    splits,
+  });
+});
+
+const ROLE_PRIORITY = ["admin", "employee", "coach", "user"];
+const VALID_ADMIN_ROLES = new Set(ROLE_PRIORITY);
+
+function cleanRole(value, fallback = null) {
+  const role = String(value || "").trim().toLowerCase();
+  if (role === "customer" || role === "player") return "user";
+  return VALID_ADMIN_ROLES.has(role) ? role : fallback;
+}
+
+function cleanRoles(values, fallbackRole = "user") {
+  const raw = Array.isArray(values) ? values : values ? [values] : [];
+  const roles = raw.map((role) => cleanRole(role)).filter(Boolean);
+  if (!roles.length) roles.push(cleanRole(fallbackRole, "user"));
+  return [...new Set(roles)];
+}
+
+function primaryRoleFromRoles(roles, fallbackRole = "user") {
+  const cleaned = cleanRoles(roles, fallbackRole);
+  return ROLE_PRIORITY.find((role) => cleaned.includes(role)) || cleaned[0] || "user";
+}
+
+function presentUser(user) {
+  const obj = serializeDoc(user);
+  const role = primaryRoleFromRoles(obj.roles, obj.role || "user");
+  return { ...obj, role, roles: cleanRoles(obj.roles, role) };
+}
+
+async function saveUserRoles(userId, rolesInput) {
+  const roles = cleanRoles(rolesInput);
+  const role = primaryRoleFromRoles(roles);
+  const user = await User.findById(userId);
+  if (!user) return null;
+
+  user.role = role;
+  user.roles = roles.includes(role) ? roles : [role, ...roles];
+  await user.save();
+
+  return User.findById(userId).select("-passwordHash");
+}
+
+router.put("/users/:id/roles/add", async (req, res) => {
+  const role = cleanRole(req.body?.role);
+  if (!role) return res.status(400).json({ error: "Invalid role" });
+
+  const existing = await User.findById(req.params.id).select("roles role");
+  if (!existing) return res.status(404).json({ error: "User not found" });
+
+  const user = await saveUserRoles(req.params.id, [...cleanRoles(existing.roles, existing.role), role]);
+  res.json(presentUser(user));
+});
+
+router.put("/users/:id/roles/remove", async (req, res) => {
+  const role = cleanRole(req.body?.role);
+  if (!role) return res.status(400).json({ error: "Invalid role" });
+
+  const existing = await User.findById(req.params.id).select("roles role");
+  if (!existing) return res.status(404).json({ error: "User not found" });
+
+  const nextRoles = cleanRoles(existing.roles, existing.role).filter((item) => item !== role);
+  const user = await saveUserRoles(req.params.id, nextRoles.length ? nextRoles : ["user"]);
+  res.json(presentUser(user));
+});
+
+router.put("/users/:id/roles", async (req, res) => {
+  const { roles } = req.body || {};
+  if (!Array.isArray(roles) || !roles.every((role) => cleanRole(role))) {
+    return res.status(400).json({ error: "Invalid roles array" });
+  }
+
+  const user = await saveUserRoles(req.params.id, roles);
+  if (!user) return res.status(404).json({ error: "User not found" });
+
+  res.json(presentUser(user));
 });
 
 router.put("/users/:id/role", async (req, res) => {
-  const { role } = req.body || {};
-  if (!["admin", "employee", "coach", "player", "user"].includes(role)) {
-    return res.status(400).json({ error: "Invalid role" });
-  }
+  const role = cleanRole(req.body?.role);
+  if (!role) return res.status(400).json({ error: "Invalid role" });
 
-  const user = await User.findByIdAndUpdate(
-    req.params.id,
-    { $set: { role } },
-    { new: true }
-  ).select("-passwordHash");
-
+  const user = await saveUserRoles(req.params.id, [role]);
   if (!user) return res.status(404).json({ error: "User not found" });
-  res.json(user);
+
+  res.json(presentUser(user));
 });
 
 router.delete("/users/:id", async (req, res) => {
@@ -103,22 +184,26 @@ router.delete("/users/:id", async (req, res) => {
   res.json({ ok: true });
 });
 
-
 router.get("/coaches", async (_req, res) => {
   const rows = await CoachProfile.find({})
     .sort({ approved: 1, updatedAt: -1 })
-    .populate("userId", "email fullName role");
+    .populate("userId", "email fullName roles");
   res.json(rows);
 });
 
 router.put("/coaches/:id", async (req, res) => {
   const { approved, featured, defaultPlatformFeePercent } = req.body || {};
   const set = {};
+
   if (typeof approved !== "undefined") set.approved = Boolean(approved);
   if (typeof featured !== "undefined") set.featured = Boolean(featured);
-  if (typeof defaultPlatformFeePercent !== "undefined") set.defaultPlatformFeePercent = Number(defaultPlatformFeePercent);
+  if (typeof defaultPlatformFeePercent !== "undefined") {
+    set.defaultPlatformFeePercent = Number(defaultPlatformFeePercent);
+  }
+
   const row = await CoachProfile.findByIdAndUpdate(req.params.id, { $set: set }, { new: true });
   if (!row) return res.status(404).json({ error: "Coach not found" });
+
   res.json(row);
 });
 
@@ -128,6 +213,7 @@ router.get("/submissions", async (_req, res) => {
     .populate("coachId", "displayName")
     .populate("playerId", "fullName email")
     .populate("packageId", "title price");
+
   res.json(rows);
 });
 

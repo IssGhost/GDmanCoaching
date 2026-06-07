@@ -12,8 +12,55 @@ async function getCoachForUser(userId) {
 
 async function assertCoachOwns(req, submission) {
   if (req.user.role === "admin") return true;
+
   const coach = await getCoachForUser(req.user._id);
+
   return coach && String(coach._id) === String(submission.coachId);
+}
+
+function cleanAttachments(value) {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .filter((item) => item && (item.url || item.name))
+    .map((item) => ({
+      name: item.name || "",
+      url: item.url || "",
+      type: item.type || "",
+      size: Number(item.size || 0),
+      label: item.label || item.name || "Coach attachment",
+    }));
+}
+
+function buildReviewSet(body = {}, complete = false) {
+  const audioTranscript =
+    body.audioTranscript ||
+    body.transcript ||
+    body.coachTranscriptNotes ||
+    "";
+
+  const set = {
+    summary: body.summary || "",
+    strengths: body.strengths || "",
+    improvements: body.improvements || "",
+    drills: body.drills || "",
+    finalNotes: body.finalNotes || "",
+    responseVideoUrl: body.responseVideoUrl || "",
+    voiceRecordingUrl: body.voiceRecordingUrl || "",
+    transcriptPdfUrl: body.transcriptPdfUrl || "",
+    drillPlanPdfUrl: body.drillPlanPdfUrl || "",
+    audioTranscript,
+    transcript: body.transcript || audioTranscript,
+    coachTranscriptNotes: body.coachTranscriptNotes || audioTranscript,
+    attachments: cleanAttachments(body.attachments),
+  };
+
+  if (complete) {
+    set.status = "complete";
+    set.completedAt = new Date();
+  }
+
+  return set;
 }
 
 router.get(
@@ -21,11 +68,16 @@ router.get(
   auth,
   asyncHandler(async (req, res) => {
     const submission = await VideoSubmission.findById(req.params.submissionId);
+
     if (!submission) return res.status(404).json({ error: "Submission not found" });
+
     const isPlayer = String(submission.playerId) === String(req.user._id);
     const isCoach = await assertCoachOwns(req, submission);
+
     if (!isPlayer && !isCoach) return res.status(403).json({ error: "Forbidden" });
+
     const review = await VideoReview.findOne({ submissionId: submission._id });
+
     res.json(review || null);
   })
 );
@@ -35,14 +87,18 @@ router.post(
   auth,
   asyncHandler(async (req, res) => {
     const submission = await VideoSubmission.findById(req.params.submissionId);
+
     if (!submission) return res.status(404).json({ error: "Submission not found" });
     if (!(await assertCoachOwns(req, submission))) return res.status(403).json({ error: "Forbidden" });
 
-    const coach = req.user.role === "admin" ? await CoachProfile.findById(submission.coachId) : await getCoachForUser(req.user._id);
     const review = await VideoReview.findOneAndUpdate(
       { submissionId: submission._id },
       {
-        $setOnInsert: { submissionId: submission._id, coachId: submission.coachId, playerId: submission.playerId },
+        $setOnInsert: {
+          submissionId: submission._id,
+          coachId: submission.coachId,
+          playerId: submission.playerId,
+        },
         $push: {
           comments: {
             timestampSeconds: Number(req.body?.timestampSeconds || 0),
@@ -56,6 +112,7 @@ router.post(
 
     submission.status = "in_review";
     await submission.save();
+
     res.json(review);
   })
 );
@@ -65,6 +122,7 @@ router.put(
   auth,
   asyncHandler(async (req, res) => {
     const submission = await VideoSubmission.findById(req.params.submissionId);
+
     if (!submission) return res.status(404).json({ error: "Submission not found" });
     if (!(await assertCoachOwns(req, submission))) return res.status(403).json({ error: "Forbidden" });
 
@@ -82,9 +140,20 @@ router.put(
 
     const review = await VideoReview.findOneAndUpdate(
       { submissionId: submission._id },
-      { $setOnInsert: { submissionId: submission._id, coachId: submission.coachId, playerId: submission.playerId }, $set: set },
+      {
+        $setOnInsert: {
+          submissionId: submission._id,
+          coachId: submission.coachId,
+          playerId: submission.playerId,
+        },
+        $set: {
+          ...buildReviewSet(req.body, false),
+          status: "draft",
+        },
+      },
       { upsert: true, new: true }
     );
+
     res.json(review);
   })
 );
@@ -94,6 +163,7 @@ router.post(
   auth,
   asyncHandler(async (req, res) => {
     const submission = await VideoSubmission.findById(req.params.submissionId);
+
     if (!submission) return res.status(404).json({ error: "Submission not found" });
     if (!(await assertCoachOwns(req, submission))) return res.status(403).json({ error: "Forbidden" });
 
@@ -114,12 +184,14 @@ router.post(
           status: "complete",
           completedAt: new Date(),
         },
+        $set: buildReviewSet(req.body, true),
       },
       { upsert: true, new: true }
     );
 
     submission.status = "reviewed";
     await submission.save();
+
     res.json(review);
   })
 );
@@ -138,8 +210,11 @@ router.get(
   auth,
   asyncHandler(async (req, res) => {
     const coach = await getCoachForUser(req.user._id);
+
     if (!coach) return res.json([]);
+
     const rows = await VideoReview.find({ coachId: coach._id }).sort({ updatedAt: -1 });
+
     res.json(rows);
   })
 );

@@ -34,6 +34,38 @@ const offerings = [
     text: "Need something that is not listed? Tell a coach what you need, discuss the details, and receive a custom quote before paying.",
     items: ["Describe your goals", "Chat with a coach", "Review the custom quote", "Approve before payment"],
   },
+  {
+    title: "Personalized training plans",
+    text: "Coaches can create online development plans based on your goals, DUPR range, practice time, and current limitations.",
+    items: ["Customized monthly program", "Downloadable drill-plan PDF", "2–3 business day delivery target", "Progress checkpoints"],
+  },
+  {
+    title: "Strategy consultations",
+    text: "Use online coaching to discuss tournament preparation, doubles strategy, serve/return choices, or mental-game priorities.",
+    items: ["Strategy questions", "Skill development guidance", "Goal setting", "Clear next steps"],
+  },
+  {
+    title: "Personalized requests",
+    text: "Need something that is not listed? Tell a coach what you need, discuss the details, and receive a custom quote before paying.",
+    items: ["Describe your goals", "Chat with a coach", "Review the custom quote", "Approve before payment"],
+  },
+];
+
+const deliverables = [
+  "Video analysis",
+  "Match reviews",
+  "Personalized training plans",
+  "Strategy consultations",
+  "Skill development guidance",
+  "Strengths and weaknesses",
+  "Voice-recorded analysis",
+  "Transcript PDFs",
+  "Downloadable drill plans",
+  "Monthly customized programs",
+  "Package discounts",
+  "Junior Programs",
+  "Personalized requests and custom quotes",
+  "Player dashboard archive",
 ];
 
 export default function Services() {
@@ -41,9 +73,11 @@ export default function Services() {
     <div className="pp-page px-6 pt-32 pb-16">
       <section className="mx-auto max-w-5xl text-center">
         <p className="pp-kicker">Training options</p>
+
         <h1 className="mx-auto mt-3 max-w-4xl text-4xl font-black text-[#12372a] md:text-6xl">
           Browse Coaching Offerings Across All Skill Levels
         </h1>
+
         <p className="mx-auto mt-4 max-w-3xl text-lg leading-8 text-[#5f746c]">
           GOOD Coaching is an online coaching marketplace for pickleball players who want remote video feedback, match reviews, strategy guidance, and personalized improvement plans.
         </p>
@@ -53,8 +87,11 @@ export default function Services() {
         {steps.map((step, index) => (
           <div key={step.title} className="pp-card rounded-3xl p-6">
             <step.icon className="mb-4 text-3xl text-[#00a896]" />
+
             <div className="text-sm font-black text-[#087f73]">Step {index + 1}</div>
+
             <h2 className="mt-1 text-xl font-black text-[#12372a]">{step.title}</h2>
+
             <p className="mt-2 text-sm leading-6 text-[#5f746c]">{step.text}</p>
           </div>
         ))}
@@ -65,10 +102,15 @@ export default function Services() {
           <div key={track.title} className="pp-card-solid rounded-[2rem] p-8">
             <div className="mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[#d9f7fb] text-2xl text-[#00a896]"><FaCloudUploadAlt /></div>
             <h2 className="text-3xl font-black text-[#12372a]">{track.title}</h2>
+
             <p className="mt-3 leading-7 text-[#5f746c]">{track.text}</p>
-            <div className="mt-6 grid gap-3">
+
+            <div className="mt-6 grid gap-3 md:grid-cols-2">
               {track.items.map((item) => (
-                <div key={item} className="flex gap-3 rounded-2xl bg-white/70 p-4 text-[#5f746c]"><FaCheckCircle className="mt-1 shrink-0 text-[#00a896]" /> <span className="font-bold">{item}</span></div>
+                <div key={item} className="flex gap-3 rounded-2xl bg-white/80 p-4 text-[#40584f]">
+                  <FaCheckCircle className="mt-1 shrink-0 text-[#00a896]" />
+                  <span className="font-bold">{item}</span>
+                </div>
               ))}
             </div>
           </div>

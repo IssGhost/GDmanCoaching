@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
-import { FaCheckCircle, FaClipboardList, FaCloudUploadAlt, FaExternalLinkAlt, FaPlus, FaSave, FaVideo } from "react-icons/fa";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import {
+  FaCheckCircle,
+  FaClipboardList,
+  FaCloudUploadAlt,
+  FaExternalLinkAlt,
+  FaFileAlt,
+  FaPlus,
+  FaSave,
+  FaVideo,
+} from "react-icons/fa";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
@@ -16,9 +25,28 @@ function formatTime(seconds = 0) {
   return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
 }
 
+async function genericAttachmentToDataUrl(file) {
+  if (!file) return null;
+
+  if (file.size > 3 * 1024 * 1024) {
+    throw new Error("Files must be 3 MB or smaller.");
+  }
+
+  const url = await readFileAsDataUrl(file);
+
+  return {
+    name: file.name,
+    url,
+    type: file.type || "application/octet-stream",
+    size: file.size,
+    label: file.name,
+  };
+}
+
 export default function CoachReview() {
   const { id } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const requestedPhase = useMemo(() => new URLSearchParams(location.search).get("phase") || "", [location.search]);
 
   const { token } = useAuth();
@@ -27,21 +55,40 @@ export default function CoachReview() {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [reviewForm, setReviewForm] = useState(blankReview);
-  const [comment, setComment] = useState({ timestampSeconds: 0, category: "General", comment: "" });
+  const [comment, setComment] = useState({
+    timestampSeconds: 0,
+    category: "General",
+    comment: "",
+  });
   const [busy, setBusy] = useState(false);
 
   const load = async () => {
     setError("");
+
     try {
       const result = await api.get(`/videos/submissions/${id}`, token);
       const phase = normalizePhase(requestedPhase || result?.submission?.phase || result?.submission?.status);
       const review = result?.review || null;
 
       setData({
-        submission: { ...(result?.submission || {}), phase, status: result?.submission?.status || phase },
+        submission: {
+          ...(result?.submission || {}),
+          phase,
+          status: result?.submission?.status || phase,
+        },
         review,
       });
-      setReviewForm({ ...blankReview, ...(review || {}) });
+
+      setReviewForm({
+        ...blankReview,
+        ...(review || {}),
+        attachments: Array.isArray(review?.attachments) ? review.attachments : [],
+        audioTranscript:
+          review?.audioTranscript ||
+          review?.transcript ||
+          review?.coachTranscriptNotes ||
+          "",
+      });
     } catch (err) {
       setError(err.message || "Review workspace could not be loaded.");
       setData(null);
@@ -54,9 +101,11 @@ export default function CoachReview() {
 
   const addComment = async (e) => {
     e.preventDefault();
+
     if (!comment.comment.trim()) return push("Write a comment first.", "error");
 
     setBusy(true);
+
     try {
       const saved = await api.post(`/reviews/${id}/comments`, comment, token);
       setData((d) => ({ ...d, review: saved, submission: { ...d.submission, status: "in_review", phase: "ready_for_review" } }));
@@ -69,11 +118,28 @@ export default function CoachReview() {
     }
   };
 
+  const buildPayload = () => ({
+    ...reviewForm,
+    transcript: reviewForm.audioTranscript || reviewForm.transcript || "",
+    coachTranscriptNotes: reviewForm.audioTranscript || reviewForm.coachTranscriptNotes || "",
+    attachments: Array.isArray(reviewForm.attachments) ? reviewForm.attachments : [],
+  });
+
   const saveDraft = async () => {
     setBusy(true);
+
     try {
-      const saved = await api.put(`/reviews/${id}/draft`, reviewForm, token);
+      const saved = await api.put(`/reviews/${id}/draft`, buildPayload(), token);
+
       setData((d) => ({ ...d, review: saved }));
+
+      setReviewForm((f) => ({
+        ...f,
+        ...(saved || {}),
+        attachments: Array.isArray(saved?.attachments) ? saved.attachments : f.attachments,
+        audioTranscript: saved?.audioTranscript || saved?.transcript || f.audioTranscript || "",
+      }));
+
       push("Review draft saved.", "success");
     } catch (err) {
       push(err.message || "Draft could not be saved.", "error");
@@ -84,9 +150,10 @@ export default function CoachReview() {
 
   const completeReview = async () => {
     setBusy(true);
+
     try {
-      const saved = await api.post(`/reviews/${id}/complete`, reviewForm, token);
-      setData((d) => ({ ...d, review: saved, submission: { ...d.submission, status: "reviewed", phase: "reviewed" } }));
+      await api.post(`/reviews/${id}/complete`, buildPayload(), token);
+
       push("Review completed and sent to player dashboard.", "success");
     } catch (err) {
       push(err.message || "Review could not be completed.", "error");
@@ -104,7 +171,11 @@ export default function CoachReview() {
   return (
     <div className="pp-app-shell px-6 pt-32 pb-16">
       <div className="mx-auto max-w-7xl space-y-6">
-        {error && <div className="rounded-2xl border border-[#ffd166]/50 bg-[#fff1c7]/75 p-4 text-sm font-bold text-[#5f746c]">{error}</div>}
+        {error && (
+          <div className="rounded-2xl border border-[#ffd166]/50 bg-[#fff1c7]/75 p-4 text-sm font-bold text-[#5f746c]">
+            {error}
+          </div>
+        )}
 
         <WorkflowHeader phase={phase} submission={submission} />
 
@@ -121,14 +192,14 @@ export default function CoachReview() {
             addComment={addComment}
             saveDraft={saveDraft}
             completeReview={completeReview}
+            addAttachment={addAttachment}
+            removeAttachment={removeAttachment}
             busy={busy}
             videoSrc={videoSrc}
           />
         )}
 
-        {phase === "reviewed" && (
-          <CoachCompletedReview submission={submission} review={review} videoSrc={videoSrc} />
-        )}
+        {phase === "reviewed" && <CoachCompletedReview submission={submission} review={review} videoSrc={videoSrc} />}
       </div>
     </div>
   );
@@ -139,8 +210,8 @@ function WorkflowHeader({ phase, submission }) {
     phase === "awaiting_upload"
       ? "Awaiting Player Upload"
       : phase === "ready_for_review"
-        ? "Ready For Coach Review"
-        : "Completed Review";
+      ? "Ready For Coach Review"
+      : "Completed Review";
 
   const icon =
     phase === "awaiting_upload" ? <FaCloudUploadAlt /> : phase === "ready_for_review" ? <FaClipboardList /> : <FaCheckCircle />;
@@ -151,13 +222,17 @@ function WorkflowHeader({ phase, submission }) {
         <Link to="/coach/dashboard" className="text-sm font-black text-[#087f73] hover:underline">← Coach dashboard</Link>
         <p className="mt-4 font-black uppercase tracking-[0.2em] text-[#087f73]">Coach review</p>
         <h1 className="mt-2 flex items-center gap-3 text-4xl font-black text-[#12372a]">
-          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#d9f7fb] text-2xl text-[#00a896]">{icon}</span>
+          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#d9f7fb] text-2xl text-[#00a896]">
+            {icon}
+          </span>
           {title}
         </h1>
+
         <p className="mt-2 text-[#5f746c]">
           {submission.title} • {submission.playerId?.fullName || submission.playerId?.email || "Player"}
         </p>
       </div>
+
       <Link to={`/dashboard/submissions/${submission._id}?phase=${phase}`} className="pp-btn-secondary px-5 py-3 text-center">
         View Player Page
       </Link>
@@ -170,10 +245,13 @@ function CoachAwaitingUpload({ submission }) {
     <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
       <section className="rounded-[2rem] border border-[#12372a]/10 bg-white/84 p-6 shadow-sm">
         <FaCloudUploadAlt className="text-5xl text-[#00a896]" />
+
         <h2 className="mt-5 text-2xl font-black text-[#12372a]">No video has been submitted yet</h2>
+
         <p className="mt-3 leading-7 text-[#5f746c]">
           This is the coach-side waiting room. The booking is paid, but the coach should not complete a review until the player uploads footage or submits a private video URL.
         </p>
+
         <div className="mt-5 rounded-2xl bg-[#fff1c7]/75 p-4 text-sm leading-6 text-[#5f746c]">
           <b className="text-[#12372a]">Player goal:</b> {submission.goals}
         </div>
@@ -181,6 +259,7 @@ function CoachAwaitingUpload({ submission }) {
 
       <section className="rounded-[2rem] border border-[#12372a]/10 bg-white/84 p-6 shadow-sm">
         <h2 className="text-2xl font-black text-[#12372a]">Coach can do next</h2>
+
         <div className="mt-5 grid gap-3">
           {[
             "Message the player to upload footage.",
@@ -200,7 +279,6 @@ function CoachAwaitingUpload({ submission }) {
 }
 
 function CoachReadyReview({
-  submission,
   review,
   reviewForm,
   setReviewForm,
@@ -209,9 +287,13 @@ function CoachReadyReview({
   addComment,
   saveDraft,
   completeReview,
+  addAttachment,
+  removeAttachment,
   busy,
   videoSrc,
 }) {
+  const attachments = Array.isArray(reviewForm.attachments) ? reviewForm.attachments : [];
+
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_0.85fr]">
       <section className="rounded-[2rem] border border-[#12372a]/10 bg-white/84 p-5 shadow-xl shadow-[#12372a]/8 backdrop-blur">
@@ -237,7 +319,12 @@ function CoachReadyReview({
               className="pp-input px-4 py-3"
               placeholder="Seconds"
             />
-            <select value={comment.category} onChange={(e) => setComment((c) => ({ ...c, category: e.target.value }))} className="pp-input px-4 py-3">
+
+            <select
+              value={comment.category}
+              onChange={(e) => setComment((c) => ({ ...c, category: e.target.value }))}
+              className="pp-input px-4 py-3"
+            >
               <option>General</option>
               <option>Serve</option>
               <option>Return</option>
@@ -247,20 +334,27 @@ function CoachReadyReview({
               <option>Shot selection</option>
               <option>Online coaching request</option>
             </select>
+
             <input
               value={comment.comment}
               onChange={(e) => setComment((c) => ({ ...c, comment: e.target.value }))}
               className="pp-input px-4 py-3"
               placeholder="Write coach feedback for this moment or review segment"
             />
-            <button disabled={busy} className="pp-btn-secondary px-4 py-3"><FaPlus /></button>
+
+            <button disabled={busy} className="pp-btn-secondary px-4 py-3">
+              <FaPlus />
+            </button>
           </div>
         </form>
 
         <div className="mt-5 space-y-3">
           {(review?.comments || []).map((row) => (
             <div key={row._id || `${row.timestampSeconds}-${row.comment}`} className="rounded-2xl border border-[#12372a]/10 bg-white/78 p-4">
-              <div className="font-black text-[#087f73]">{formatTime(row.timestampSeconds)} • {row.category}</div>
+              <div className="font-black text-[#087f73]">
+                {formatTime(row.timestampSeconds)} • {row.category}
+              </div>
+
               <p className="mt-1 text-sm leading-6 text-[#5f746c]">{row.comment}</p>
             </div>
           ))}
@@ -271,9 +365,13 @@ function CoachReadyReview({
         <h2 className="text-xl font-black text-[#12372a]">Written review / review recap</h2>
         <div className="mt-4 grid gap-3">
           <Field label="Summary" value={reviewForm.summary} onChange={(value) => setReviewForm((f) => ({ ...f, summary: value }))} />
+
           <Field label="Strengths" value={reviewForm.strengths} onChange={(value) => setReviewForm((f) => ({ ...f, strengths: value }))} />
+
           <Field label="Needs work" value={reviewForm.improvements} onChange={(value) => setReviewForm((f) => ({ ...f, improvements: value }))} />
+
           <Field label="Recommended drills" value={reviewForm.drills} onChange={(value) => setReviewForm((f) => ({ ...f, drills: value }))} />
+
           <Field label="Final notes" value={reviewForm.finalNotes} onChange={(value) => setReviewForm((f) => ({ ...f, finalNotes: value }))} />
 
           <div className="rounded-2xl border border-[#12372a]/10 bg-[#fff8e7] p-4">
@@ -288,6 +386,7 @@ function CoachReadyReview({
             <button onClick={saveDraft} disabled={busy} className="pp-btn-secondary px-4 py-3 disabled:opacity-60" type="button">
               <FaSave className="mr-2" /> Save Draft
             </button>
+
             <button onClick={completeReview} disabled={busy} className="pp-btn-primary px-4 py-3 disabled:opacity-60" type="button">
               <FaCheckCircle className="mr-2" /> Complete Review
             </button>
@@ -298,12 +397,14 @@ function CoachReadyReview({
   );
 }
 
-function CoachCompletedReview({ submission, review, videoSrc }) {
+function CoachCompletedReview({ review, videoSrc }) {
   return (
     <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
       <section className="rounded-[2rem] border border-[#12372a]/10 bg-white/84 p-5 shadow-sm">
         <h2 className="mb-4 text-xl font-black text-[#12372a]">Completed footage / context</h2>
+
         {videoSrc ? <VideoViewer videoSrc={videoSrc} /> : <p className="text-[#5f746c]">No video attached.</p>}
+
         <div className="mt-5 rounded-2xl bg-[#c6ff4a]/35 p-4 text-sm font-bold text-[#12372a]">
           This review is already complete and is now player-facing.
         </div>
@@ -311,6 +412,7 @@ function CoachCompletedReview({ submission, review, videoSrc }) {
 
       <section className="rounded-[2rem] border border-[#12372a]/10 bg-white/84 p-5 shadow-sm">
         <h2 className="text-xl font-black text-[#12372a]">Completed coach feedback</h2>
+
         <div className="mt-4 space-y-4">
           <Info title="Summary" value={review?.summary} />
           <Info title="Strengths" value={review?.strengths} />
@@ -328,7 +430,13 @@ function VideoViewer({ videoSrc }) {
   return (
     <div className="rounded-2xl border border-[#12372a]/10 bg-[#fff8e7] p-5 text-center">
       {videoSrc.includes("iframe.videodelivery.net") ? (
-        <iframe title="submitted video" src={videoSrc} className="aspect-video w-full rounded-xl" allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture" allowFullScreen />
+        <iframe
+          title="submitted video"
+          src={videoSrc}
+          className="aspect-video w-full rounded-xl"
+          allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
+          allowFullScreen
+        />
       ) : videoSrc.endsWith(".mp4") ? (
         <video className="aspect-video w-full rounded-xl bg-black" src={videoSrc} controls />
       ) : (
@@ -340,11 +448,18 @@ function VideoViewer({ videoSrc }) {
   );
 }
 
-function Field({ label, value, onChange }) {
+function Field({ label, value, onChange, rows = 3, placeholder = "" }) {
   return (
     <label className="block">
       <span className="text-sm font-black text-[#12372a]">{label}</span>
-      <textarea rows={3} value={value || ""} onChange={(e) => onChange(e.target.value)} className="pp-input mt-1 px-4 py-3" />
+
+      <textarea
+        rows={rows}
+        value={value || ""}
+        onChange={(e) => onChange(e.target.value)}
+        className="pp-input mt-1 px-4 py-3"
+        placeholder={placeholder}
+      />
     </label>
   );
 }
@@ -353,6 +468,7 @@ function Info({ title, value }) {
   return (
     <div className="rounded-2xl border border-[#12372a]/10 bg-[#fff8e7] p-4">
       <h3 className="font-black text-[#12372a]">{title}</h3>
+
       <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#5f746c]">{value || "—"}</p>
     </div>
   );

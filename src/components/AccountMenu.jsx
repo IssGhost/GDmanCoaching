@@ -50,6 +50,12 @@ export default function AccountMenu() {
   const links = ROLE_PORTAL_LINKS[role] || [];
   const go = (path) => { setOpen(false); nav(path); };
 
+  const go = (path) => {
+    setOpen(false);
+    nav(path);
+    scrollToHash(path);
+  };
+
   return (
     <div className="relative">
       <button onClick={() => setOpen((s) => !s)} className="relative flex h-11 w-11 items-center justify-center rounded-full border border-[#12372a]/10 bg-white/80 text-[#12372a] shadow-sm transition hover:bg-[#d9f7fb]" title={`${roleLabel} portal`}>

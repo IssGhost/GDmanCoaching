@@ -5,20 +5,92 @@ import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
 
+function safeId(value) {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  if (value._id) return String(value._id);
+  return String(value);
+}
+
+function money(value) {
+  return `$${Number(value || 0).toFixed(2)}`;
+}
+
+function readable(value) {
+  return String(value || "").replaceAll("_", " ");
+}
+
+function getCollection(database, key) {
+  const collection = database?.collections?.find((item) => item.key === key);
+  return Array.isArray(collection?.rows) ? collection.rows : [];
+}
+
+function buildReadiness(coach, packages) {
+  const activePaidPlans = packages.filter((pkg) => pkg.active && Number(pkg.price || 0) > 0);
+  const draftOrFreePlans = packages.filter((pkg) => !pkg.active || Number(pkg.price || 0) <= 0);
+
+  const approved = Boolean(coach.approved);
+  const hasProfileInfo = Boolean(coach.displayName && coach.headline && coach.bio);
+  const hasPublicPaidPlans = activePaidPlans.length > 0;
+  const acceptingInquiries = coach.acceptingInquiries !== false;
+  const payoutSetup = Boolean(coach.stripeAccountId || coach.stripeOnboardingComplete || coach.payoutsEnabled);
+
+  const warnings = [
+    !approved ? "Not approved by admin." : null,
+    !hasProfileInfo ? "Missing display name, headline, or biography." : null,
+    !hasPublicPaidPlans ? "No active paid buy-now plans." : null,
+    !acceptingInquiries ? "Not accepting custom inquiries." : null,
+    !payoutSetup ? "Stripe payout setup incomplete. Mock testing can still continue." : null,
+  ].filter(Boolean);
+
+  return {
+    approved,
+    hasProfileInfo,
+    hasPublicPaidPlans,
+    acceptingInquiries,
+    payoutSetup,
+    activePaidPlans,
+    draftOrFreePlans,
+    readyForPublicSales: approved && hasProfileInfo && hasPublicPaidPlans,
+    warnings,
+  };
+}
+
 export default function AdminCoaching() {
   const { token } = useAuth();
   const { push } = useToast();
+
   const [coaches, setCoaches] = useState(null);
   const [submissions, setSubmissions] = useState(null);
   const [splits, setSplits] = useState(null);
+  const [database, setDatabase] = useState(null);
+  const [openCoachId, setOpenCoachId] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const load = async () => {
-    setCoaches(await api.get("/admin/coaches", token).catch(() => []));
-    setSubmissions(await api.get("/admin/submissions", token).catch(() => []));
-    setSplits(await api.get("/admin/payment-splits", token).catch(() => []));
+    setLoading(true);
+
+    try {
+      const [coachRows, submissionRows, splitRows, databaseRows] = await Promise.all([
+        api.get("/admin/coaches", token).catch(() => []),
+        api.get("/admin/submissions", token).catch(() => []),
+        api.get("/admin/payment-splits", token).catch(() => []),
+        api.get("/admin/database?limit=500", token).catch(() => null),
+      ]);
+
+      setCoaches(Array.isArray(coachRows) ? coachRows : []);
+      setSubmissions(Array.isArray(submissionRows) ? submissionRows : []);
+      setSplits(Array.isArray(splitRows) ? splitRows : []);
+      setDatabase(databaseRows);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { load(); }, [token]);
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   const stats = useMemo(() => ({
     coaches: coaches?.length || 0,
@@ -26,6 +98,37 @@ export default function AdminCoaching() {
     submissions: submissions?.length || 0,
     records: splits?.length || 0,
   }), [coaches, submissions, splits]);
+
+  const coachesWithReadiness = useMemo(() => {
+    const rows = coaches || [];
+
+    return rows.map((coach) => {
+      const packages = packageRows.filter((pkg) => safeId(pkg.coachId) === safeId(coach._id));
+      const readiness = coach.readiness || buildReadiness(coach, packages);
+
+      return {
+        ...coach,
+        packages,
+        readiness,
+      };
+    });
+  }, [coaches, packageRows]);
+
+  const stats = useMemo(() => {
+    const ready = coachesWithReadiness.filter((coach) => coach.readiness?.readyForPublicSales).length;
+    const noPaidPlans = coachesWithReadiness.filter((coach) => !coach.readiness?.hasPublicPaidPlans).length;
+    const payoutMissing = coachesWithReadiness.filter((coach) => !coach.readiness?.payoutSetup).length;
+
+    return {
+      coaches: coachesWithReadiness.length || 0,
+      pending: coachesWithReadiness.filter((c) => !c.approved).length || 0,
+      ready,
+      noPaidPlans,
+      payoutMissing,
+      submissions: submissions?.length || 0,
+      records: splits?.length || 0,
+    };
+  }, [coachesWithReadiness, submissions, splits]);
 
   const updateCoach = async (id, changes) => {
     try {

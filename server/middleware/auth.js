@@ -13,8 +13,12 @@ const auth = async (req, res, next) => {
 
     const payload = jwt.verify(token, JWT_SECRET);
     const userId = payload._id || payload.id;
-    const user = await User.findById(userId).select("-passwordHash");
+
+    let user = await User.findById(userId);
     if (!user) return res.status(401).json({ error: "Invalid token" });
+
+    user = await syncUserRoleFields(user);
+    const role = primaryRole(user);
 
     req.user = user;
     req.user.role = requireRole(user.role);
@@ -24,6 +28,14 @@ const auth = async (req, res, next) => {
     return res.status(401).json({ error: "Unauthorized" });
   }
 };
+
+const hasRole = (user, role) => {
+  const normalized = normalizeRole(role);
+  if (!normalized) return false;
+  return normalizeRoles(user?.roles, user?.role).includes(normalized) || normalizeRole(user?.role) === normalized;
+};
+
+const hasAnyRole = (user, roles) => Array.isArray(roles) && roles.some((role) => hasRole(user, role));
 
 const isAdmin = (req, res, next) => {
   if (normalizeRole(req.user?.role) !== "admin") return res.status(403).json({ error: "Forbidden" });
@@ -53,4 +65,4 @@ const allow = (...roles) => (req, res, next) => {
   next();
 };
 
-module.exports = { auth, isAdmin, isStaff, isEmployee, isCoach, allow };
+module.exports = { auth, isAdmin, isStaff, isEmployee, isCoach, allow, hasRole, hasAnyRole };
