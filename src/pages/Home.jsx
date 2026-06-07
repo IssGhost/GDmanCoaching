@@ -3,8 +3,6 @@ import {
   FaCheckCircle,
   FaCloudUploadAlt,
   FaCreditCard,
-  FaStar,
-  FaSun,
   FaUserTie,
 } from "react-icons/fa";
 
@@ -27,7 +25,7 @@ export default function Home() {
         <div className="relative mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
           <div>
             <div className="pp-pill mb-5 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-black">
-              <FaSun className="text-[#ff7b54]" /> Online pickleball coaching marketplace
+              Online pickleball coaching marketplace
             </div>
 
             <h1 className="max-w-4xl text-5xl font-black leading-tight text-[#12372a] md:text-7xl">
@@ -71,7 +69,7 @@ export default function Home() {
 
               <div className="relative overflow-hidden rounded-2xl border border-white/30 bg-black/30 backdrop-blur">
                 <video
-                  src="/brand/good_coaching_demo.mp4#t=0.6"
+                  src="/brand/good_coaching_demo.mp4#t=2.4"
                   className="aspect-video w-full bg-black object-cover"
                   controls
                   muted
@@ -129,7 +127,7 @@ export default function Home() {
               A complete paid review loop
             </h2>
           </div>
-          <Link to="/coaches" className="pp-btn-secondary px-5 py-3">Browse coaching options</Link>
+          <Link to="/coaches" className="pp-btn-primary px-5 py-3">Browse coaching options</Link>
         </div>
 
         <div className="grid gap-4 md:grid-cols-4">
@@ -151,7 +149,7 @@ export default function Home() {
         <div className="rounded-[2rem] border border-[#12372a]/10 bg-gradient-to-br from-[#fffef8] via-[#d9f7fb] to-[#fff1c7] p-8 shadow-2xl shadow-[#12372a]/10 md:p-10">
           <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
             <div>
-              <div className="flex text-[#ff7b54]"><FaStar /><FaStar /><FaStar /><FaStar /><FaStar /></div>
+              <div className="h-3 w-44 rounded-full bg-gradient-to-r from-[#12372a] via-[#087f73] to-[#c6ff4a]" />
               <h2 className="mt-3 text-3xl font-black text-[#12372a]">Built for busy coaches and players who want real online feedback.</h2>
               <p className="mt-3 leading-7 text-[#5f746c]">Choose a coach, upload your gameplay, and receive clear feedback you can use in your next practice or match.</p>
             </div>

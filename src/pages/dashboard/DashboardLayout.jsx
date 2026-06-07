@@ -1,5 +1,5 @@
 import { FaClipboardCheck, FaComments, FaCreditCard, FaUser, FaVideo } from "react-icons/fa";
-import { NavLink, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 const links = [
@@ -27,6 +27,6 @@ export default function DashboardLayout() {
         </nav>
       </div>
     </header>
-    <main className="rounded-[2rem] border border-[#12372a]/10 bg-white/75 p-5 shadow-xl shadow-[#12372a]/10 backdrop-blur md:p-7"><div className="mb-6 flex flex-wrap gap-3"><a href="/coaches" className="pp-btn-primary px-4 py-2 text-sm">Find a coach</a><a href="/dashboard/requests" className="pp-btn-secondary px-4 py-2 text-sm">View requests</a></div><Outlet/></main>
+    <main className="rounded-[2rem] border border-[#12372a]/10 bg-white/75 p-5 shadow-xl shadow-[#12372a]/10 backdrop-blur md:p-7"><div className="mb-6 flex flex-wrap gap-3"><Link to="/coaches" className="pp-btn-primary px-4 py-2 text-sm">Find a coach</Link><Link to="/dashboard/requests" className="pp-btn-secondary px-4 py-2 text-sm">View requests</Link></div><Outlet/></main>
   </div></div>;
 }

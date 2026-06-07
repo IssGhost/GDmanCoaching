@@ -180,9 +180,9 @@ export default function CoachSignup() {
           </div>
 
           {!user && (
-            <div className="mt-6 rounded-2xl border border-amber-400/20 bg-amber-400/10 p-4 text-sm text-amber-100">
+            <div className="mt-6 rounded-2xl border border-[#d5b450]/30 bg-[#fff1c7] p-4 text-sm font-semibold text-[#12372a]">
               You need an account before applying.{" "}
-              <Link to="/signup" className="font-bold underline">
+              <Link to="/signup" className="font-black text-[#087f73] underline">
                 Create one here
               </Link>
               .

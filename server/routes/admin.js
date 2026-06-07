@@ -93,6 +93,17 @@ router.get("/stats", async (_req, res) => {
   });
 });
 
+router.get("/orders", async (_req, res) => {
+  const rows = await Order.find({})
+    .sort({ createdAt: -1, _id: -1 })
+    .populate("userId", "email fullName role roles")
+    .populate("coachId", "displayName contactEmail userId")
+    .populate("packageId", "title price reviewType")
+    .populate("submissionId", "status phase videoUrl createdAt");
+
+  res.json(rows);
+});
+
 const ROLE_PRIORITY = ["admin", "employee", "coach", "user"];
 const VALID_ADMIN_ROLES = new Set(ROLE_PRIORITY);
 

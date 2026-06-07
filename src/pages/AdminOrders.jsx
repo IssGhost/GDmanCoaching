@@ -15,12 +15,7 @@ import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
 
-const ORDER_ENDPOINTS = [
-  "/admin/orders",
-  "/orders/admin",
-  "/payments/admin/orders",
-  "/orders",
-];
+const ORDER_ENDPOINTS = ["/admin/orders", "/orders"];
 
 function money(value, currency = "usd") {
   const amount = Number(value || 0);
@@ -36,10 +31,10 @@ function money(value, currency = "usd") {
 }
 
 function formatDate(value) {
-  if (!value) return "—";
+  if (!value) return "-";
 
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "-";
 
   return date.toLocaleString();
 }
@@ -102,7 +97,7 @@ function idOf(value) {
   return "";
 }
 
-function nameOf(value, fallback = "—") {
+function nameOf(value, fallback = "-") {
   if (!value) return fallback;
   if (typeof value === "string") return value;
 
@@ -159,11 +154,11 @@ export default function AdminOrders() {
     } catch (err) {
       setLoadedEndpoint("");
       setError(
-        `Could not load orders. Checked these endpoints: ${ORDER_ENDPOINTS.join(", ")}. Server response: ${
+        `Could not load orders. Make sure you are signed in with an admin account. Checked: ${ORDER_ENDPOINTS.join(", ")}. Server response: ${
           err.message || "unknown error"
         }`
       );
-      push("Could not load orders. The admin orders API route may be missing or returning an error.", "error");
+      push("Could not load orders. Please confirm this session is signed in as an admin.", "error");
       setOrders([]);
       setSelected(null);
     } finally {
@@ -411,8 +406,8 @@ export default function AdminOrders() {
                   <h3 className="font-black text-[#12372a]">Stripe References</h3>
 
                   <div className="mt-3 grid gap-3">
-                    <Detail label="Checkout session" value={selected.stripeCheckoutSessionId || "—"} />
-                    <Detail label="Payment intent" value={selected.stripePaymentIntentId || "—"} />
+                    <Detail label="Checkout session" value={selected.stripeCheckoutSessionId || "-"} />
+                    <Detail label="Payment intent" value={selected.stripePaymentIntentId || "-"} />
                     <Detail label="Checkout URL saved" value={selected.stripeCheckoutUrl ? "Yes" : "No"} />
                   </div>
 
@@ -472,10 +467,10 @@ export default function AdminOrders() {
                   <h3 className="font-black text-[#12372a]">Linked Records</h3>
 
                   <div className="mt-3 grid gap-3">
-                    <Detail label="Submission ID" value={idOf(selected.submissionId) || "—"} />
-                    <Detail label="Package ID" value={idOf(selected.packageId) || "—"} />
-                    <Detail label="Coach ID" value={idOf(selected.coachId) || "—"} />
-                    <Detail label="Customer ID" value={idOf(selected.userId || selected.customerId || selected.playerId) || "—"} />
+                    <Detail label="Submission ID" value={idOf(selected.submissionId) || "-"} />
+                    <Detail label="Package ID" value={idOf(selected.packageId) || "-"} />
+                    <Detail label="Coach ID" value={idOf(selected.coachId) || "-"} />
+                    <Detail label="Customer ID" value={idOf(selected.userId || selected.customerId || selected.playerId) || "-"} />
                   </div>
 
                   {idOf(selected.submissionId) && (
@@ -530,7 +525,7 @@ function Detail({ label, value, emphasize = false }) {
     <div className="rounded-xl bg-[#f8fbf9] p-3">
       <div className="text-xs font-black uppercase tracking-wide text-[#087f73]">{label}</div>
       <div className={`mt-1 break-words ${emphasize ? "text-xl font-black text-[#12372a]" : "text-sm font-bold text-[#40584f]"}`}>
-        {value || "—"}
+        {value || "-"}
       </div>
     </div>
   );

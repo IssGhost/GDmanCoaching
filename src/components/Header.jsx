@@ -55,11 +55,15 @@ export default function Header() {
       }`}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6">
-        <Link to="/" className="group flex items-center" aria-label="GOOD Coaching home">
+        <Link
+          to="/"
+          className="group flex items-center rounded-2xl bg-[#12372a] p-2 shadow-lg shadow-[#12372a]/20"
+          aria-label="GOOD Coaching home"
+        >
           <img
             src="/good-coaching-logo.svg"
             alt="GOOD Coaching"
-            className="h-12 w-auto rounded-2xl shadow-lg shadow-lime-200/40 transition group-hover:-rotate-1 group-hover:scale-[1.02]"
+            className="h-10 w-auto rounded-xl transition group-hover:-rotate-1 group-hover:scale-[1.02]"
           />
         </Link>
 

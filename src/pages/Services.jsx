@@ -2,10 +2,10 @@ import { Link } from "react-router-dom";
 import { FaCheckCircle, FaCloudUploadAlt, FaCommentDots, FaClipboardList, FaUserGraduate } from "react-icons/fa";
 
 const steps = [
-  { icon: FaUserGraduate, title: "Choose your skill level", text: "Browse coaches for Beginner (2.5–3.0), Intermediate (3.0–4.0), Advanced (4.0–5.0), and Elite (5.0+) players." },
+  { icon: FaUserGraduate, title: "Choose your skill level", text: "Browse coaches for Beginner (2.5-3.0), Intermediate (3.0-4.0), Advanced (4.0-5.0), and Elite (5.0+) players." },
   { icon: FaClipboardList, title: "Select an online service", text: "Request video analysis, match review, strategy consultation, skill development guidance, or a personalized training plan." },
   { icon: FaCloudUploadAlt, title: "Upload footage", text: "Share match or drill footage up to 15 minutes so your coach can review the details that matter most." },
-  { icon: FaCommentDots, title: "Get coach feedback", text: "Receive notes, priorities, drills, and next-step guidance in your dashboard. Please allow 1–3 business days for coaches to review and respond to inquiries." },
+  { icon: FaCommentDots, title: "Get coach feedback", text: "Receive notes, priorities, drills, and next-step guidance in your dashboard. Please allow 1-3 business days for coaches to review and respond to inquiries." },
 ];
 
 const offerings = [
@@ -22,7 +22,7 @@ const offerings = [
   {
     title: "Personalized training plans",
     text: "Coaches can create online development plans based on your goals, DUPR range, practice time, and current limitations.",
-    items: ["Customized monthly program", "Downloadable drill-plan PDF", "2–3 business day delivery target", "Progress checkpoints"],
+    items: ["Customized monthly program", "Downloadable drill-plan PDF", "2-3 business day delivery target", "Progress checkpoints"],
   },
   {
     title: "Strategy consultations",
@@ -33,21 +33,7 @@ const offerings = [
     title: "Personalized requests",
     text: "Need something that is not listed? Tell a coach what you need, discuss the details, and receive a custom quote before paying.",
     items: ["Describe your goals", "Chat with a coach", "Review the custom quote", "Approve before payment"],
-  },
-  {
-    title: "Personalized training plans",
-    text: "Coaches can create online development plans based on your goals, DUPR range, practice time, and current limitations.",
-    items: ["Customized monthly program", "Downloadable drill-plan PDF", "2–3 business day delivery target", "Progress checkpoints"],
-  },
-  {
-    title: "Strategy consultations",
-    text: "Use online coaching to discuss tournament preparation, doubles strategy, serve/return choices, or mental-game priorities.",
-    items: ["Strategy questions", "Skill development guidance", "Goal setting", "Clear next steps"],
-  },
-  {
-    title: "Personalized requests",
-    text: "Need something that is not listed? Tell a coach what you need, discuss the details, and receive a custom quote before paying.",
-    items: ["Describe your goals", "Chat with a coach", "Review the custom quote", "Approve before payment"],
+    wide: true,
   },
 ];
 
@@ -99,7 +85,7 @@ export default function Services() {
 
       <section className="mx-auto mt-10 grid max-w-7xl gap-6 lg:grid-cols-2">
         {offerings.map((track) => (
-          <div key={track.title} className="pp-card-solid rounded-[2rem] p-8">
+          <div key={track.title} className={`pp-card-solid rounded-[2rem] p-8 ${track.wide ? "lg:col-span-2" : ""}`}>
             <div className="mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[#d9f7fb] text-2xl text-[#00a896]"><FaCloudUploadAlt /></div>
             <h2 className="text-3xl font-black text-[#12372a]">{track.title}</h2>
 
