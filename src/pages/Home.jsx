@@ -3,12 +3,12 @@ import { FaCheckCircle, FaCloudUploadAlt, FaCreditCard, FaPlay, FaStar, FaSun, F
 
 const steps = [
   { title: "Pick a coach", text: "Choose a coach by skill level, specialty, package, and turnaround time." },
-  { title: "Pay securely", text: "Checkout creates the order, coach payout, platform fee, and split-payment record when needed." },
+  { title: "Send a request", text: "Share your goals, skill level, and extra notes so the coach knows what to review." },
   { title: "Upload video", text: "Submit your match footage directly through the site after booking." },
   { title: "Get reviewed", text: "Receive timestamped notes, drills, strengths, and a complete improvement plan." },
 ];
 
-const specialties = ["Doubles rotation", "Third-shot drops", "Serve + return", "Kitchen resets", "Tournament prep", "Beginner fundamentals"];
+const specialties = ["Doubles strategy", "Third-shot selection", "Serve + return", "Resets", "Tournament prep", "Beginner fundamentals", "Singles strategy", "Advanced shots"];
 
 export default function Home() {
   return (
@@ -20,13 +20,13 @@ export default function Home() {
         <div className="relative mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
           <div>
             <div className="pp-pill mb-5 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-black">
-              <FaSun className="text-[#ff7b54]" /> Outdoor video coaching marketplace
+              <FaSun className="text-[#ff7b54]" /> Online pickleball coaching marketplace
             </div>
             <h1 className="max-w-4xl text-5xl font-black leading-tight text-[#12372a] md:text-7xl">
               Sharpen your pickleball game with coach-reviewed video feedback.
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-[#5f746c]">
-              Players upload match footage. Coaches get paid through the platform, split payouts when needed, and deliver timestamped notes, drills, and strategy from one bright, easy dashboard.
+              Players upload match footage. Coaches deliver timestamped notes, drills, and strategy from one bright, easy dashboard.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link to="/coaches" className="pp-btn-primary px-7 py-4 text-center">
@@ -37,8 +37,8 @@ export default function Home() {
               </Link>
             </div>
             <div className="mt-8 grid gap-3 text-sm font-bold text-[#5f746c] sm:grid-cols-3">
-              {["Secure coach payouts", "Private video submissions", "Timestamped improvement plans"].map((item) => (
-                <div key={item} className="flex items-center gap-2"><FaCheckCircle className="text-[#00a896]" /> {item}</div>
+              {["Direct coach communication", "Private video submissions", "Timestamped improvement plans", "Personalized drill plans", "Live coach chat", "Training packages"].map((item) => (
+                <div key={item} className="flex items-center gap-2 whitespace-nowrap"><FaCheckCircle className="shrink-0 text-[#00a896]" /> {item}</div>
               ))}
             </div>
           </div>
@@ -78,9 +78,9 @@ export default function Home() {
       <section className="mx-auto max-w-7xl px-6 py-12">
         <div className="grid gap-5 md:grid-cols-3">
           {[
-            { icon: FaCreditCard, title: "Coach payments", text: "Stripe Connect-ready flow for coach payouts, platform fees, and split-payment records." },
-            { icon: FaCloudUploadAlt, title: "Video submission", text: "Direct upload workflow with a no-key demo fallback for local testing." },
-            { icon: FaUserTie, title: "Coach dashboard", text: "Coaches manage packages, payment onboarding, assigned videos, and completed reviews." },
+            { icon: FaCreditCard, title: "Coach profiles", text: "Profiles support photos, bios, DUPR details, specializations, and social links." },
+            { icon: FaCloudUploadAlt, title: "Video submission", text: "Upload up to 15 minutes of gameplay for your coach to review." },
+            { icon: FaUserTie, title: "Coach dashboard", text: "Coaches manage online options, assigned videos, profile details, and completed reviews." },
           ].map((card) => (
             <div key={card.title} className="pp-card-solid rounded-3xl p-6 transition hover:-translate-y-1 hover:shadow-xl">
               <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-[#d9f7fb] text-2xl text-[#00a896]"><card.icon /></div>
@@ -97,7 +97,7 @@ export default function Home() {
             <p className="pp-kicker">How it works</p>
             <h2 className="mt-2 text-3xl font-black text-[#12372a] md:text-5xl">A complete paid review loop</h2>
           </div>
-          <Link to="/coaches" className="pp-btn-secondary px-5 py-3">Browse coaching packages</Link>
+          <Link to="/coaches" className="pp-btn-secondary px-5 py-3">Browse coaching options</Link>
         </div>
         <div className="grid gap-4 md:grid-cols-4">
           {steps.map((step, i) => (
@@ -115,8 +115,8 @@ export default function Home() {
           <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
             <div>
               <div className="flex text-[#ff7b54]"><FaStar /><FaStar /><FaStar /><FaStar /><FaStar /></div>
-              <h2 className="mt-3 text-3xl font-black text-[#12372a]">Built for sunny courts, busy coaches, and players who want real feedback.</h2>
-              <p className="mt-3 leading-7 text-[#5f746c]">The backend supports coach profiles, coaching packages, payment splits, video submissions, and reviews.</p>
+              <h2 className="mt-3 text-3xl font-black text-[#12372a]">Built for busy coaches and players who want real online feedback.</h2>
+              <p className="mt-3 leading-7 text-[#5f746c]">Choose a coach, upload your gameplay, and receive clear feedback you can use in your next practice or match.</p>
             </div>
             <div className="flex flex-wrap gap-3">
               {specialties.map((item) => (
