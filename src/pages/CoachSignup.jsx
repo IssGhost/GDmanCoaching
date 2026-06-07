@@ -190,7 +190,7 @@ export default function CoachSignup() {
           )}
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link to="/coaches" className="pp-btn-secondary px-6 py-3 text-center">
+            <Link to="/coaches" className="pp-btn-primary px-5 py-3 text-center">
               Browse Coaches
             </Link>
             <Link to="/contact" className="pp-btn-secondary px-6 py-3 text-center">
@@ -280,7 +280,7 @@ export default function CoachSignup() {
 
           <button
             disabled={busy || !user || !requiredComplete}
-            className="mt-8 w-full rounded-xl bg-emerald-400 px-6 py-4 font-black text-black hover:bg-emerald-300 disabled:opacity-60"
+            className="pp-btn-primary mt-8 w-full px-6 py-4 disabled:opacity-60"
           >
             {busy ? "Submitting application..." : user ? "Submit Coach Application" : "Sign in required"}
           </button>

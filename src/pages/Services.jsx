@@ -86,7 +86,10 @@ export default function Services() {
       <section className="mx-auto mt-10 grid max-w-7xl gap-6 lg:grid-cols-2">
         {offerings.map((track) => (
           <div key={track.title} className={`pp-card-solid rounded-[2rem] p-8 ${track.wide ? "lg:col-span-2" : ""}`}>
-            <div className="mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[#d9f7fb] text-2xl text-[#00a896]"><FaCloudUploadAlt /></div>
+            <div className="mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[#d9f7fb] text-2xl text-[#00a896]">
+              <FaCloudUploadAlt />
+            </div>
+
             <h2 className="text-3xl font-black text-[#12372a]">{track.title}</h2>
 
             <p className="mt-3 leading-7 text-[#5f746c]">{track.text}</p>
@@ -105,17 +108,28 @@ export default function Services() {
 
       <section className="mx-auto mt-10 max-w-6xl rounded-[2rem] border border-[#12372a]/10 bg-gradient-to-br from-[#fffef8] via-[#d9f7fb] to-[#fff1c7] p-8 shadow-2xl shadow-[#12372a]/10">
         <h2 className="text-3xl font-black text-[#12372a]">What coaches can deliver</h2>
+
         <div className="mt-6 grid gap-4 md:grid-cols-2">
-          {["Video analysis", "Match reviews", "Personalized training plans", "Strategy consultations", "Skill development guidance", "Strengths and weaknesses", "Voice-recorded analysis", "Transcript PDFs", "Downloadable drill plans", "Monthly customized programs", "Package discounts", "Personalized requests and custom quotes", "Player dashboard archive"].map((item) => (
-            <div key={item} className="flex gap-3 rounded-xl bg-white/70 p-4 font-bold text-[#5f746c]"><FaCheckCircle className="mt-1 text-[#00a896]" /> {item}</div>
+          {deliverables.map((item) => (
+            <div key={item} className="flex gap-3 rounded-xl bg-white/70 p-4 font-bold text-[#5f746c]">
+              <FaCheckCircle className="mt-1 shrink-0 text-[#00a896]" />
+              {item}
+            </div>
           ))}
         </div>
+
         <p className="mt-6 rounded-2xl bg-white/75 p-4 text-sm font-bold text-[#5f746c]">
           Plan prices are entered on coach offerings. Customers can chat first, and coaches can send a revised custom quote for approval when the final scope goes beyond the original request.
         </p>
+
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Link to="/coaches" className="pp-btn-primary px-5 py-3 text-center">Browse Coaches</Link>
-          <Link to="/coach-signup" className="pp-btn-secondary px-5 py-3 text-center">Become a Coach</Link>
+          <Link to="/coaches" className="pp-btn-primary px-5 py-3 text-center">
+            Browse Coaches
+          </Link>
+
+          <Link to="/coach-signup" className="pp-btn-secondary px-5 py-3 text-center">
+            Become a Coach
+          </Link>
         </div>
       </section>
     </div>

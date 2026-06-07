@@ -9,7 +9,7 @@ export default function BrandLogo({
   return (
     <Link
       to={to}
-      className={`inline-flex items-center justify-center rounded-full bg-[#073d2f] px-7 py-2 shadow-lg shadow-[#12372a]/20 ring-1 ring-white/25 ${className}`}
+      className={`inline-flex items-center justify-center rounded-full bg-[#073d2f] px-9 py-2.5 shadow-lg shadow-[#12372a]/20 ring-1 ring-white/25 ${className}`}
       aria-label="GOOD Coaching home"
     >
       <img
