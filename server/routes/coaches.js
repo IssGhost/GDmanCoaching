@@ -27,96 +27,14 @@ function cleanSocialLinks(body = {}) {
   };
 }
 
-function boolFromBody(value, fallback = true) {
-  if (typeof value === "boolean") return value;
-  if (value === "false") return false;
-  if (value === "true") return true;
-  return fallback;
-}
-
-function clampNumber(value, fallback, min, max) {
-  const n = Number(value);
-  const base = Number.isFinite(n) ? n : fallback;
-  return Math.min(Math.max(base, min), max);
-}
-
 function packageInput(body = {}) {
-  const active = boolFromBody(body.active, true);
   const price = Number(body.price);
-
-  // Active packages are public buy-now plans. They must have a real price.
-  // Draft/inactive packages can be saved with $0 while the coach is still working.
-  if (active && (!Number.isFinite(price) || price <= 0)) {
+  if (!Number.isFinite(price) || price <= 0) {
     const error = new Error("Enter a plan price greater than $0 before publishing.");
     error.statusCode = 400;
     throw error;
   }
-
-  const title = String(body.title || "").trim();
-  if (!title) {
-    const error = new Error("Enter a plan name before saving this coaching plan.");
-    error.statusCode = 400;
-    throw error;
-  }
-
-  const description = String(body.description || "").trim();
-  if (!description) {
-    const error = new Error("Enter a customer-facing description so buyers know what this plan includes.");
-    error.statusCode = 400;
-    throw error;
-  }
-
-  return {
-    title,
-    description,
-    price: Number.isFinite(price) ? Math.max(price, 0) : 0,
-    active,
-    reviewType: body.reviewType || "single_video",
-    discountPercent: clampNumber(body.discountPercent, 0, 0, 100),
-    packageDeal: Boolean(body.packageDeal || Number(body.discountPercent || 0) > 0),
-    turnaroundHours: clampNumber(body.turnaroundHours, 72, 1, 720),
-    maxVideoMinutes: clampNumber(body.maxVideoMinutes, 15, 1, 15),
-    includesVoiceAnalysis: Boolean(body.includesVoiceAnalysis),
-    includesTranscriptPdf: Boolean(body.includesTranscriptPdf),
-    includesDrillPlanPdf: Boolean(body.includesDrillPlanPdf),
-    includesResponseVideo: Boolean(body.includesResponseVideo),
-  };
-}
-
-function paidPublicPackageFilter(extra = {}) {
-  return {
-    ...extra,
-    active: true,
-    price: { $gt: 0 },
-  };
-}
-
-function coachReadiness(profile, packages = []) {
-  const publicPaidPackages = packages.filter((pkg) => pkg.active && Number(pkg.price) > 0);
-  const hasDisplayInfo = Boolean(profile?.displayName && profile?.headline && profile?.bio);
-  const approved = Boolean(profile?.approved);
-  const acceptingInquiries = profile?.acceptingInquiries !== false;
-  const payoutSetup = Boolean(
-    profile?.stripeAccountId ||
-    process.env.ENABLE_MOCK_PAYMENTS === "true" ||
-    process.env.PAYMENTS_MODE === "mock"
-  );
-
-  return {
-    approved,
-    hasDisplayInfo,
-    hasPublicPaidPlans: publicPaidPackages.length > 0,
-    acceptingInquiries,
-    payoutSetup,
-    readyForPublicSales: approved && hasDisplayInfo && publicPaidPackages.length > 0,
-    warnings: [
-      !approved ? "Coach profile is not approved by admin yet." : null,
-      !hasDisplayInfo ? "Profile needs display name, headline, and biography." : null,
-      publicPaidPackages.length === 0 ? "Add at least one active paid buy-now plan." : null,
-      !acceptingInquiries ? "Coach is not accepting new custom inquiries." : null,
-      !payoutSetup ? "Stripe payout setup is incomplete. Mock mode can still be used for testing." : null,
-    ].filter(Boolean),
-  };
+  return { ...body, price, discountPercent: Math.min(Math.max(Number(body.discountPercent || 0), 0), 100), maxVideoMinutes: Math.min(Number(body.maxVideoMinutes || 15), 15) };
 }
 
 function duprProfileUrl(duprId) {
@@ -128,7 +46,6 @@ function publicCoachPayload(profile, packages = []) {
   return {
     ...obj,
     packages,
-    readiness: coachReadiness(obj, packages),
     duprProfileUrl: duprProfileUrl(obj.duprId),
     stripeAccountId: undefined,
   };
@@ -177,10 +94,7 @@ router.get(
   })
 );
 
-router.post(
-  "/apply",
-  auth,
-  asyncHandler(async (req, res) => {
+const handleCoachApplication = asyncHandler(async (req, res) => {
     const body = req.body || {};
     const current = await User.findById(req.user._id);
     if (!current) return res.status(401).json({ error: "Unauthorized" });
@@ -218,27 +132,13 @@ router.post(
 
     const roles = Array.isArray(current.roles) ? current.roles : [];
 
-    const user = await User.findByIdAndUpdate(
-      req.user._id,
-      {
-        $set: {
-          role: "coach",
-          roles: [...new Set(["coach", ...roles.filter(Boolean)])],
-        },
-      },
-      { new: true }
-    ).select("-passwordHash");
-
     const packages = await CoachingPackage.find({ coachId: profile._id }).sort({ price: 1 });
+    res.json({ profile, packages, user });
+  });
 
-    res.json({
-      profile,
-      packages,
-      user,
-      readiness: coachReadiness(profile, packages),
-    });
-  })
-);
+router.post("/", auth, handleCoachApplication);
+router.post("/apply", auth, handleCoachApplication);
+router.post("/signup", auth, handleCoachApplication);
 
 router.put(
   "/me",
@@ -269,23 +169,9 @@ router.put(
       playingExperienceYears: body.playingExperienceYears !== undefined ? Number(body.playingExperienceYears) : undefined,
       coachingExperienceYears: body.coachingExperienceYears !== undefined ? Number(body.coachingExperienceYears) : undefined,
       duprId: body.duprId !== undefined ? String(body.duprId || "").trim() : undefined,
-      duprSingles:
-        body.duprSingles !== undefined && body.duprSingles !== ""
-          ? Number(body.duprSingles)
-          : body.duprSingles === ""
-          ? null
-          : undefined,
-      duprDoubles:
-        body.duprDoubles !== undefined && body.duprDoubles !== ""
-          ? Number(body.duprDoubles)
-          : body.duprDoubles === ""
-          ? null
-          : undefined,
-      socialLinks: ["socialLinks", "instagram", "youtube", "facebook", "tiktok", "website"].some((key) =>
-        Object.prototype.hasOwnProperty.call(body, key)
-      )
-        ? cleanSocialLinks(body)
-        : undefined,
+      duprSingles: body.duprSingles !== undefined && body.duprSingles !== "" ? Number(body.duprSingles) : body.duprSingles === "" ? null : undefined,
+      duprDoubles: body.duprDoubles !== undefined && body.duprDoubles !== "" ? Number(body.duprDoubles) : body.duprDoubles === "" ? null : undefined,
+      socialLinks: ["socialLinks", "instagram", "youtube", "facebook", "tiktok", "website"].some((key) => Object.prototype.hasOwnProperty.call(body, key)) ? cleanSocialLinks(body) : undefined,
       turnaroundHours: body.turnaroundHours !== undefined ? Number(body.turnaroundHours) : undefined,
       avatarUrl: body.avatarUrl,
       introVideoUrl: body.introVideoUrl,
@@ -309,12 +195,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const profile = await CoachProfile.findOne({ userId: req.user._id });
     if (!profile) return res.status(404).json({ error: "Coach profile not found" });
-
-    const pkg = await CoachingPackage.create({
-      ...packageInput(req.body),
-      coachId: profile._id,
-    });
-
+    const pkg = await CoachingPackage.create({ ...packageInput(req.body), coachId: profile._id });
     res.json(pkg);
   })
 );
@@ -343,36 +224,19 @@ router.get(
   auth,
   asyncHandler(async (req, res) => {
     const profile = await CoachProfile.findOne({ userId: req.user._id });
-
     if (!profile && req.user.role !== "admin") {
       return res.status(404).json({ error: "Coach profile not found" });
     }
 
     const filter = req.user.role === "admin" && !profile ? {} : { coachId: profile._id };
-
     const [packages, submissions, splits, inquiries] = await Promise.all([
       profile ? CoachingPackage.find({ coachId: profile._id }).sort({ createdAt: -1 }) : [],
-      VideoSubmission.find(filter)
-        .sort({ status: 1, dueAt: 1, createdAt: -1 })
-        .populate("playerId", "fullName email")
-        .populate("packageId", "title reviewType turnaroundHours maxVideoMinutes"),
+      VideoSubmission.find(filter).sort({ status: 1, dueAt: 1, createdAt: -1 }).populate("playerId", "fullName email").populate("packageId", "title reviewType turnaroundHours maxVideoMinutes"),
       PaymentSplit.find({}).sort({ createdAt: -1 }).limit(25),
-      profile
-        ? Inquiry.find({ coachId: profile._id })
-            .sort({ updatedAt: -1 })
-            .limit(25)
-            .populate("playerId", "fullName email phone")
-        : [],
+      profile ? Inquiry.find({ coachId: profile._id }).sort({ updatedAt: -1 }).limit(25).populate("playerId", "fullName email phone") : [],
     ]);
 
-    res.json({
-      profile,
-      packages,
-      submissions,
-      splits,
-      inquiries,
-      readiness: coachReadiness(profile, packages),
-    });
+    res.json({ profile, packages, submissions, splits, inquiries });
   })
 );
 
@@ -382,12 +246,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const profile = await CoachProfile.findOne({ userId: req.user._id });
     if (!profile) return res.status(404).json({ error: "Coach profile not found" });
-
-    const pkg = await CoachingPackage.create({
-      ...packageInput(req.body),
-      coachId: profile._id,
-    });
-
+    const pkg = await CoachingPackage.create({ ...packageInput(req.body), coachId: profile._id });
     res.json(pkg);
   })
 );

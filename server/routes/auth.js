@@ -8,10 +8,7 @@ const { normalizeRole, requireRole } = require("../utils/roles");
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
-if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) {
-  throw new Error("JWT_SECRET is required in production.");
-}
-
+if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) throw new Error("JWT_SECRET is required in production.");
 const TOKEN_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 const ROLE_PRIORITY = ["admin", "employee", "coach", "user"];
 
@@ -64,8 +61,7 @@ function signToken(user) {
     {
       _id: user._id,
       id: user._id,
-      role,
-      roles: normalizeRoles(user.roles, role),
+      role: requireRole(user.role),
     },
     JWT_SECRET,
     { expiresIn: TOKEN_EXPIRES_IN }
@@ -73,8 +69,6 @@ function signToken(user) {
 }
 
 function presentUser(user) {
-  const role = primaryRole(user);
-
   return {
     _id: user._id,
     id: user._id,
@@ -83,8 +77,7 @@ function presentUser(user) {
     fullName: user.fullName || user.name || "",
     name: user.fullName || user.name || "",
     phone: user.phone || "",
-    role,
-    roles: normalizeRoles(user.roles, role),
+    role: requireRole(user.role),
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
@@ -102,10 +95,12 @@ function normalizeLoginEmail(value) {
   return String(value || "").trim().toLowerCase();
 }
 
+
 async function comparePassword(inputPassword, user) {
-  if (!user?.passwordHash || !inputPassword) return false;
+  if (!user?.passwordHash) return false;
   return bcrypt.compare(inputPassword, user.passwordHash);
 }
+
 
 function auth(req, res, next) {
   const hdr = req.headers.authorization || "";
@@ -134,13 +129,16 @@ async function handleSignup(req, res, next) {
   try {
     const email = String(req.body?.email || "").trim().toLowerCase();
     const password = String(req.body?.password || req.body?.pw || "");
-    const fullName = String(req.body?.fullName || req.body?.name || "").trim();
-    const phone = String(req.body?.phone || "").trim();
+    const fullName = req.body?.fullName || req.body?.name || "";
+    const phone = req.body?.phone || "";
     const requestedType = req.body?.accountType || req.body?.role || "user";
-    const role = normalizeRole(requestedType, "user");
+    const accountType = requestedType === "coach" ? "coach" : "user";
 
     if (!fullName || !email || !phone || !password) {
       return res.status(400).json({ error: "Full name, email, phone number, and password are required." });
+    }
+    if (password.length < 8 || !/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/\d/.test(password)) {
+      return res.status(400).json({ error: "Password must be at least 8 characters and include uppercase, lowercase, and a number." });
     }
 
     if (password.length < 8 || !/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/\d/.test(password)) {
@@ -187,9 +185,7 @@ async function handleSignin(req, res, next) {
       return res.status(400).json({ error: "Email/username and password are required." });
     }
 
-    let user = await User.findOne({
-      $or: [{ email: emailOrUsername }, { username: emailOrUsername }],
-    });
+    const user = await User.findOne({ $or: [{ email }, { username: email }] });
 
     if (!user) {
       return res.status(400).json({ error: "Invalid credentials." });
@@ -200,7 +196,12 @@ async function handleSignin(req, res, next) {
       return res.status(400).json({ error: "Invalid credentials." });
     }
 
-    user = await syncUserRoleFields(user);
+    const normalizedRole = requireRole(user.role);
+    if (user.role !== normalizedRole) {
+      user.role = normalizedRole;
+      await user.save();
+    }
+
     const token = signToken(user);
 
     return res.json({

@@ -126,6 +126,18 @@ router.put(
     if (!submission) return res.status(404).json({ error: "Submission not found" });
     if (!(await assertCoachOwns(req, submission))) return res.status(403).json({ error: "Forbidden" });
 
+    const set = {
+      summary: req.body?.summary || "",
+      strengths: req.body?.strengths || "",
+      improvements: req.body?.improvements || "",
+      drills: req.body?.drills || "",
+      finalNotes: req.body?.finalNotes || "",
+      responseVideoUrl: req.body?.responseVideoUrl || "",
+      voiceRecordingUrl: req.body?.voiceRecordingUrl || "",
+      transcriptPdfUrl: req.body?.transcriptPdfUrl || "",
+      drillPlanPdfUrl: req.body?.drillPlanPdfUrl || "",
+    };
+
     const review = await VideoReview.findOneAndUpdate(
       { submissionId: submission._id },
       {
@@ -158,10 +170,19 @@ router.post(
     const review = await VideoReview.findOneAndUpdate(
       { submissionId: submission._id },
       {
-        $setOnInsert: {
-          submissionId: submission._id,
-          coachId: submission.coachId,
-          playerId: submission.playerId,
+        $setOnInsert: { submissionId: submission._id, coachId: submission.coachId, playerId: submission.playerId },
+        $set: {
+          summary: req.body?.summary || "",
+          strengths: req.body?.strengths || "",
+          improvements: req.body?.improvements || "",
+          drills: req.body?.drills || "",
+          finalNotes: req.body?.finalNotes || "",
+          responseVideoUrl: req.body?.responseVideoUrl || "",
+          voiceRecordingUrl: req.body?.voiceRecordingUrl || "",
+          transcriptPdfUrl: req.body?.transcriptPdfUrl || "",
+          drillPlanPdfUrl: req.body?.drillPlanPdfUrl || "",
+          status: "complete",
+          completedAt: new Date(),
         },
         $set: buildReviewSet(req.body, true),
       },

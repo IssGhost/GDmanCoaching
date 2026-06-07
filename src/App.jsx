@@ -58,7 +58,6 @@ export default function App() {
   return (
     <Router>
       <ScrollToTop />
-
       <ToastProvider>
         <AuthProvider>
           <div className="flex min-h-screen flex-col bg-[#fff8e7] text-[#12372a]">
@@ -76,46 +75,14 @@ export default function App() {
                 <Route path="/testimonials" element={<Testimonials />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/payments" element={<Payments />} />
-
-                <Route
-                  path="/messages"
-                  element={
-                    <PrivateRoute>
-                      <Messages />
-                    </PrivateRoute>
-                  }
-                />
-
-                {/* Coach marketplace/listing routes */}
+                <Route path="/messages" element={<PrivateRoute><Messages /></PrivateRoute>} />
+                <Route path="/marketplace" element={<Marketplace />} />
                 <Route path="/coaches" element={<Marketplace />} />
-                <Route path="/coaches/" element={<Marketplace />} />
-
-                {/* Old/alternate public coach links all go to the marketplace */}
-                <Route path="/marketplace" element={<Navigate to="/coaches" replace />} />
-                <Route path="/coach" element={<Navigate to="/coaches" replace />} />
-                <Route path="/coach/" element={<Navigate to="/coaches" replace />} />
-                <Route path="/find-coach" element={<Navigate to="/coaches" replace />} />
-                <Route path="/find-a-coach" element={<Navigate to="/coaches" replace />} />
-                <Route path="/find-coaches" element={<Navigate to="/coaches" replace />} />
-                <Route path="/find-a-coaches" element={<Navigate to="/coaches" replace />} />
-                <Route path="/browse-coaches" element={<Navigate to="/coaches" replace />} />
-                <Route path="/browse-coach" element={<Navigate to="/coaches" replace />} />
-                <Route path="/coaching" element={<Navigate to="/coaches" replace />} />
-                <Route path="/coach-marketplace" element={<Navigate to="/coaches" replace />} />
-                <Route path="/coach-directory" element={<Navigate to="/coaches" replace />} />
-                <Route path="/request-coaching" element={<Navigate to="/coaches" replace />} />
-                <Route path="/coaching-options" element={<Navigate to="/coaches" replace />} />
-
-                {/* Individual coach public profile */}
                 <Route path="/coaches/:id" element={<CoachProfile />} />
                 <Route path="/coach/:id" element={<NavigateToCoachProfile />} />
 
                 {/* Coach signup aliases */}
                 <Route path="/coach-signup" element={<CoachSignup />} />
-                <Route path="/become-a-coach" element={<Navigate to="/coach-signup" replace />} />
-                <Route path="/apply-coach" element={<Navigate to="/coach-signup" replace />} />
-                <Route path="/coach-application" element={<Navigate to="/coach-signup" replace />} />
-
                 <Route path="/cart" element={<Cart />} />
 
                 {/* Employee/Admin operational pages */}
@@ -250,19 +217,8 @@ export default function App() {
 
                 {/* Auth */}
                 <Route path="/signin" element={<SignIn />} />
-                <Route path="/login" element={<Navigate to="/signin" replace />} />
-                <Route path="/sign-in" element={<Navigate to="/signin" replace />} />
                 <Route path="/portal" element={<PortalRedirect />} />
-
-                <Route
-                  path="/role-error"
-                  element={
-                    <PrivateRoute>
-                      <RoleError />
-                    </PrivateRoute>
-                  }
-                />
-
+                <Route path="/role-error" element={<PrivateRoute><RoleError /></PrivateRoute>} />
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/sign-up" element={<Navigate to="/signup" replace />} />
                 <Route path="/create-account" element={<Navigate to="/signup" replace />} />
@@ -309,14 +265,4 @@ export default function App() {
       </ToastProvider>
     </Router>
   );
-}
-
-function NavigateToCoachProfile() {
-  const { id } = useParams();
-
-  if (!id || id === "dashboard" || id === "submissions") {
-    return <Navigate to="/coaches" replace />;
-  }
-
-  return <Navigate to={`/coaches/${id}`} replace />;
 }

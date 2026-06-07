@@ -1,11 +1,9 @@
-const express = require("express");
-const router = express.Router();
+const router = require("express").Router();
 const { auth, allow } = require("../middleware/auth");
 const CoachProfile = require("../models/CoachProfile");
 const VideoSubmission = require("../models/VideoSubmission");
 const VideoReview = require("../models/VideoReview");
-const Order = require("../models/Order");
-const { configuredClientOrigins, publicBaseUrl, envFlag } = require("../utils/runtimeConfig");
+const { configuredClientOrigins } = require("../utils/runtimeConfig");
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
@@ -86,7 +84,11 @@ async function createCloudflareUpload(maxDurationSeconds = 900) {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      maxDurationSeconds,
+      requireSignedURLs: false,
+      allowedOrigins: configuredClientOrigins().map((origin) => new URL(origin).hostname),
+    }),
   });
 
   const data = await response.json().catch(() => ({}));
@@ -257,8 +259,8 @@ router.post(
       return res.status(400).json({ error: `Cannot upload while submission is ${row.status}` });
     }
 
-    const allowedMinutes = Math.min(Number(row.packageId?.maxVideoMinutes || maxVideoMinutes()), maxVideoMinutes());
-    const maxDurationSeconds = allowedMinutes * 60;
+    const maxMinutes = Math.min(Number(row.packageId?.maxVideoMinutes || 15), 15);
+    const upload = await createCloudflareUpload(maxMinutes * 60);
 
     if (mockUploadsEnabled()) {
       const base = publicBaseUrl(req) || "";
@@ -280,36 +282,7 @@ router.post(
       });
     }
 
-    if (videoUploadsMode() !== "cloudflare") {
-      return res.status(503).json({
-        error: "Video uploads are disabled.",
-      });
-    }
-
-    if (!cloudflareConfigured()) {
-      return res.status(503).json({
-        error: "Cloudflare Stream is not configured. Add CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_STREAM_TOKEN.",
-      });
-    }
-
-    const upload = await createCloudflareUpload(maxDurationSeconds);
-
-    row.provider = "cloudflare";
-    row.uploadUrl = upload.uploadURL;
-    row.uploadId = upload.uid;
-    row.assetId = upload.uid;
-    row.status = "uploading";
-
-    await row.save();
-
-    return res.json({
-      provider: "cloudflare",
-      uploadUrl: upload.uploadURL,
-      uploadId: upload.uid,
-      assetId: upload.uid,
-      submission: row,
-      mock: false,
-    });
+    return res.status(503).json({ error: "Video uploads are not configured. Please contact support." });
   })
 );
 
@@ -360,19 +333,13 @@ router.put(
     if (assetId !== undefined) row.assetId = assetId;
     if (playbackId !== undefined) row.playbackId = playbackId;
     if (thumbnailUrl !== undefined) row.thumbnailUrl = thumbnailUrl;
-
     if (durationSeconds !== undefined) {
       const duration = Number(durationSeconds);
-
-      if (duration > maxVideoMinutes() * 60) {
-        return res.status(400).json({
-          error: `Videos must be ${maxVideoMinutes()} minutes or shorter. Please trim your clip and upload again.`,
-        });
+      if (duration > 15 * 60) {
+        return res.status(400).json({ error: "Videos must be 15 minutes or shorter. Please trim your clip and upload again." });
       }
-
       row.durationSeconds = duration;
     }
-
     row.status = status || "ready_for_review";
 
     await row.save();

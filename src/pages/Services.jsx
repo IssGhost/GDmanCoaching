@@ -2,26 +2,10 @@ import { Link } from "react-router-dom";
 import { FaCheckCircle, FaCloudUploadAlt, FaCommentDots, FaClipboardList, FaUserGraduate } from "react-icons/fa";
 
 const steps = [
-  {
-    icon: FaUserGraduate,
-    title: "Choose your skill level",
-    text: "Browse coaches for Beginner, Intermediate, Advanced, and Elite players.",
-  },
-  {
-    icon: FaClipboardList,
-    title: "Select an online service",
-    text: "Request video analysis, match review, strategy consultation, skill development guidance, or a personalized plan.",
-  },
-  {
-    icon: FaCloudUploadAlt,
-    title: "Upload footage",
-    text: "Share match or drill footage up to 15 minutes so your coach can review the details that matter most.",
-  },
-  {
-    icon: FaCommentDots,
-    title: "Get coach feedback",
-    text: "Receive notes, priorities, drills, and next-step guidance in your dashboard.",
-  },
+  { icon: FaUserGraduate, title: "Choose your skill level", text: "Browse coaches for Beginner (2.5–3.0), Intermediate (3.0–4.0), Advanced (4.0–5.0), and Elite (5.0+) players." },
+  { icon: FaClipboardList, title: "Select an online service", text: "Request video analysis, match review, strategy consultation, skill development guidance, or a personalized training plan." },
+  { icon: FaCloudUploadAlt, title: "Upload footage", text: "Share match or drill footage up to 15 minutes so your coach can review the details that matter most." },
+  { icon: FaCommentDots, title: "Get coach feedback", text: "Receive notes, priorities, drills, and next-step guidance in your dashboard. Please allow 1–3 business days for coaches to review and respond to inquiries." },
 ];
 
 const offerings = [
@@ -32,7 +16,7 @@ const offerings = [
   },
   {
     title: "Match reviews",
-    text: "Ask a coach to break down a match segment and identify patterns in shot selection, positioning, pace control, and execution.",
+    text: "Ask a coach to break down a full match segment and identify patterns in shot selection, positioning, pace control, and execution.",
     items: ["Singles or doubles review", "Point-pattern feedback", "Opponent and partner context", "Dashboard archive"],
   },
   {
@@ -47,9 +31,8 @@ const offerings = [
   },
   {
     title: "Personalized requests",
-    text: "Need something more specific? Explain your goals, chat with a coach, and receive a custom quote before paying.",
-    items: ["Explain what you need", "Chat with a coach", "Review the custom quote", "Approve before payment"],
-    wide: true,
+    text: "Need something that is not listed? Tell a coach what you need, discuss the details, and receive a custom quote before paying.",
+    items: ["Describe your goals", "Chat with a coach", "Review the custom quote", "Approve before payment"],
   },
 ];
 
@@ -81,8 +64,7 @@ export default function Services() {
         </h1>
 
         <p className="mx-auto mt-4 max-w-3xl text-lg leading-8 text-[#5f746c]">
-          GOOD Coaching is an online coaching marketplace for pickleball players who want remote video feedback,
-          match reviews, strategy guidance, and personalized improvement plans.
+          GOOD Coaching is an online coaching marketplace for pickleball players who want remote video feedback, match reviews, strategy guidance, and personalized improvement plans.
         </p>
       </section>
 
@@ -102,16 +84,8 @@ export default function Services() {
 
       <section className="mx-auto mt-10 grid max-w-7xl gap-6 lg:grid-cols-2">
         {offerings.map((track) => (
-          <div
-            key={track.title}
-            className={`pp-card-solid rounded-[2rem] p-8 ${
-              track.wide ? "lg:col-span-2" : ""
-            }`}
-          >
-            <div className="mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[#d9f7fb] text-2xl text-[#00a896]">
-              <FaCloudUploadAlt />
-            </div>
-
+          <div key={track.title} className="pp-card-solid rounded-[2rem] p-8">
+            <div className="mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[#d9f7fb] text-2xl text-[#00a896]"><FaCloudUploadAlt /></div>
             <h2 className="text-3xl font-black text-[#12372a]">{track.title}</h2>
 
             <p className="mt-3 leading-7 text-[#5f746c]">{track.text}</p>
@@ -130,29 +104,17 @@ export default function Services() {
 
       <section className="mx-auto mt-10 max-w-6xl rounded-[2rem] border border-[#12372a]/10 bg-gradient-to-br from-[#fffef8] via-[#d9f7fb] to-[#fff1c7] p-8 shadow-2xl shadow-[#12372a]/10">
         <h2 className="text-3xl font-black text-[#12372a]">What coaches can deliver</h2>
-
         <div className="mt-6 grid gap-4 md:grid-cols-2">
-          {deliverables.map((item) => (
-            <div key={item} className="flex gap-3 rounded-xl bg-white/80 p-4 font-bold text-[#40584f]">
-              <FaCheckCircle className="mt-1 shrink-0 text-[#00a896]" />
-              {item}
-            </div>
+          {["Video analysis", "Match reviews", "Personalized training plans", "Strategy consultations", "Skill development guidance", "Strengths and weaknesses", "Voice-recorded analysis", "Transcript PDFs", "Downloadable drill plans", "Monthly customized programs", "Package discounts", "Personalized requests and custom quotes", "Player dashboard archive"].map((item) => (
+            <div key={item} className="flex gap-3 rounded-xl bg-white/70 p-4 font-bold text-[#5f746c]"><FaCheckCircle className="mt-1 text-[#00a896]" /> {item}</div>
           ))}
         </div>
-
-        <p className="mt-6 rounded-2xl bg-white/85 p-4 text-sm font-bold text-[#40584f]">
-          Plan prices are entered on coach offerings. Customers can chat first, and coaches can send a revised custom quote
-          for approval when the final scope goes beyond the original request.
+        <p className="mt-6 rounded-2xl bg-white/75 p-4 text-sm font-bold text-[#5f746c]">
+          Plan prices are entered on coach offerings. Customers can chat first, and coaches can send a revised custom quote for approval when the final scope goes beyond the original request.
         </p>
-
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Link to="/coaches" className="pp-btn-primary px-5 py-3 text-center">
-            Browse Coaches
-          </Link>
-
-          <Link to="/coach-signup" className="pp-btn-secondary px-5 py-3 text-center">
-            Become a Coach
-          </Link>
+          <Link to="/coaches" className="pp-btn-primary px-5 py-3 text-center">Browse Coaches</Link>
+          <Link to="/coach-signup" className="pp-btn-secondary px-5 py-3 text-center">Become a Coach</Link>
         </div>
       </section>
     </div>

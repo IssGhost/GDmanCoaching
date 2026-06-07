@@ -121,9 +121,14 @@ if (MONGO_URI) {
   );
 }
 
-const databaseBackedRoute = /^\/(api\/)?(auth|users|admin|orders|quotes|products|posts|tickets|blog|testimonials|coaches|payments|videos|reviews|inquiries)(\/|$)/;
+function wantsHtml(req) {
+  return req.method === "GET" && String(req.headers.accept || "").includes("text/html");
+}
+
+const databaseBackedRoute = /^\/(api\/)?(auth|users|admin|orders|quotes|products|posts|tickets|blog|testimonials|coaches|coach-applications|payments|videos|reviews|inquiries)(\/|$)/;
 
 app.use(async (req, res, next) => {
+  if (wantsHtml(req)) return next();
   if (!databaseBackedRoute.test(req.path)) return next();
 
   if (mongoose.connection.readyState === 1) return next();
@@ -142,7 +147,7 @@ app.use(async (req, res, next) => {
   });
 });
 
-function safeMount(routePath, modulePath) {
+function safeMount(routePath, modulePath, options = {}) {
   try {
     const mod = require(modulePath);
     const router = mod?.default || mod;
@@ -156,7 +161,14 @@ function safeMount(routePath, modulePath) {
       );
     }
 
-    app.use(routePath, router);
+    if (options.skipHtmlNavigation) {
+      app.use(routePath, (req, _res, next) => {
+        if (wantsHtml(req)) return next();
+        return router(req, _res, next);
+      });
+    } else {
+      app.use(routePath, router);
+    }
     console.log(`Mounted ${routePath} from ${modulePath}`);
   } catch (e) {
     console.error(`Failed to mount ${routePath} from ${modulePath}:`, e.message || e);
@@ -177,6 +189,7 @@ safeMount("/api/tickets", "./routes/tickets");
 safeMount("/api/blog", "./routes/blog");
 safeMount("/api/testimonials", "./routes/testimonials");
 safeMount("/api/coaches", "./routes/coaches");
+safeMount("/api/coach-applications", "./routes/coaches");
 safeMount("/api/payments", "./routes/payments");
 safeMount("/api/videos", "./routes/videos");
 safeMount("/api/reviews", "./routes/reviews");
@@ -189,19 +202,20 @@ safeMount("/api/users", "./routes/auth");
 */
 safeMount("/auth", "./routes/auth");
 safeMount("/users", "./routes/auth");
-safeMount("/admin", "./routes/admin");
-safeMount("/orders", "./routes/orders");
-safeMount("/quotes", "./routes/quotes");
-safeMount("/products", "./routes/products");
-safeMount("/posts", "./routes/posts");
-safeMount("/tickets", "./routes/tickets");
-safeMount("/blog", "./routes/blog");
-safeMount("/testimonials", "./routes/testimonials");
-safeMount("/coaches", "./routes/coaches");
-safeMount("/payments", "./routes/payments");
-safeMount("/videos", "./routes/videos");
-safeMount("/reviews", "./routes/reviews");
-safeMount("/inquiries", "./routes/inquiries");
+safeMount("/admin", "./routes/admin", { skipHtmlNavigation: true });
+safeMount("/orders", "./routes/orders", { skipHtmlNavigation: true });
+safeMount("/quotes", "./routes/quotes", { skipHtmlNavigation: true });
+safeMount("/products", "./routes/products", { skipHtmlNavigation: true });
+safeMount("/posts", "./routes/posts", { skipHtmlNavigation: true });
+safeMount("/tickets", "./routes/tickets", { skipHtmlNavigation: true });
+safeMount("/blog", "./routes/blog", { skipHtmlNavigation: true });
+safeMount("/testimonials", "./routes/testimonials", { skipHtmlNavigation: true });
+safeMount("/coaches", "./routes/coaches", { skipHtmlNavigation: true });
+safeMount("/coach-applications", "./routes/coaches", { skipHtmlNavigation: true });
+safeMount("/payments", "./routes/payments", { skipHtmlNavigation: true });
+safeMount("/videos", "./routes/videos", { skipHtmlNavigation: true });
+safeMount("/reviews", "./routes/reviews", { skipHtmlNavigation: true });
+safeMount("/inquiries", "./routes/inquiries", { skipHtmlNavigation: true });
 
 const contactRoutes = require("./routes/contact");
 app.use("/api/contact", contactRoutes);

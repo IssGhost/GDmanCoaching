@@ -13,24 +13,10 @@ import {
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
-import { documentFileToDataUrl, readFileAsDataUrl } from "../lib/uploads";
+import { documentFileToDataUrl } from "../lib/uploads";
 import { normalizePhase } from "../lib/workflow";
 
-const blankReview = {
-  summary: "",
-  strengths: "",
-  improvements: "",
-  drills: "",
-  finalNotes: "",
-  responseVideoUrl: "",
-  voiceRecordingUrl: "",
-  transcriptPdfUrl: "",
-  drillPlanPdfUrl: "",
-  audioTranscript: "",
-  transcript: "",
-  coachTranscriptNotes: "",
-  attachments: [],
-};
+const blankReview = { summary: "", strengths: "", improvements: "", drills: "", finalNotes: "", responseVideoUrl: "", voiceRecordingUrl: "", transcriptPdfUrl: "", drillPlanPdfUrl: "" };
 
 function formatTime(seconds = 0) {
   const s = Math.max(0, Number(seconds || 0));
@@ -122,17 +108,7 @@ export default function CoachReview() {
 
     try {
       const saved = await api.post(`/reviews/${id}/comments`, comment, token);
-
-      setData((d) => ({
-        ...d,
-        review: saved,
-        submission: {
-          ...d.submission,
-          status: "in_review",
-          phase: "ready_for_review",
-        },
-      }));
-
+      setData((d) => ({ ...d, review: saved, submission: { ...d.submission, status: "in_review", phase: "ready_for_review" } }));
       push("Timestamp comment added.", "success");
     } catch (err) {
       push(err.message || "Comment could not be saved.", "error");
@@ -179,10 +155,6 @@ export default function CoachReview() {
       await api.post(`/reviews/${id}/complete`, buildPayload(), token);
 
       push("Review completed and sent to player dashboard.", "success");
-
-      navigate("/coach/dashboard#review-queue", {
-        replace: true,
-      });
     } catch (err) {
       push(err.message || "Review could not be completed.", "error");
     } finally {
@@ -190,10 +162,7 @@ export default function CoachReview() {
     }
   };
 
-  const addAttachment = async (file) => {
-    try {
-      const attachment = await genericAttachmentToDataUrl(file);
-      if (!attachment) return;
+  if (!data) return <div className="pp-app-shell px-6 pt-32 text-[#5f746c]">{error || "Loading review workspace..."}</div>;
 
       setReviewForm((f) => ({
         ...f,
@@ -272,12 +241,8 @@ function WorkflowHeader({ phase, submission }) {
   return (
     <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
       <div>
-        <Link to="/coach/dashboard#review-queue" className="text-sm font-black text-[#087f73] hover:underline">
-          ← Coach dashboard
-        </Link>
-
+        <Link to="/coach/dashboard" className="text-sm font-black text-[#087f73] hover:underline">← Coach dashboard</Link>
         <p className="mt-4 font-black uppercase tracking-[0.2em] text-[#087f73]">Coach review</p>
-
         <h1 className="mt-2 flex items-center gap-3 text-4xl font-black text-[#12372a]">
           <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#d9f7fb] text-2xl text-[#00a896]">
             {icon}
@@ -367,7 +332,6 @@ function CoachReadyReview({
 
         <form onSubmit={addComment} className="mt-5 rounded-2xl border border-[#12372a]/10 bg-[#fff8e7] p-4">
           <h3 className="font-black text-[#12372a]">Add timestamped note or review note</h3>
-
           <div className="mt-3 grid gap-3 sm:grid-cols-[120px_180px_1fr_auto]">
             <input
               type="number"
@@ -421,7 +385,6 @@ function CoachReadyReview({
 
       <section className="rounded-[2rem] border border-[#12372a]/10 bg-white/84 p-5 shadow-xl shadow-[#12372a]/8 backdrop-blur">
         <h2 className="text-xl font-black text-[#12372a]">Written review / review recap</h2>
-
         <div className="mt-4 grid gap-3">
           <Field label="Summary" value={reviewForm.summary} onChange={(value) => setReviewForm((f) => ({ ...f, summary: value }))} />
 
@@ -433,20 +396,13 @@ function CoachReadyReview({
 
           <Field label="Final notes" value={reviewForm.finalNotes} onChange={(value) => setReviewForm((f) => ({ ...f, finalNotes: value }))} />
 
-          <Field
-            label="Audio transcript / voice analysis transcript"
-            value={reviewForm.audioTranscript}
-            rows={5}
-            placeholder="Paste or type the audio transcript here. This will now save with the review and display to the customer."
-            onChange={(value) =>
-              setReviewForm((f) => ({
-                ...f,
-                audioTranscript: value,
-                transcript: value,
-                coachTranscriptNotes: value,
-              }))
-            }
-          />
+          <div className="rounded-2xl border border-[#12372a]/10 bg-[#fff8e7] p-4">
+            <h3 className="font-black text-[#12372a]">Upload coach deliverables</h3>
+            <p className="mt-1 text-sm text-[#5f746c]">Add voice analysis, a transcript PDF, and/or a downloadable drill plan PDF. Files must be 3 MB or smaller.</p>
+            <div className="mt-3 grid gap-3">
+              {[['voiceRecordingUrl','audio','Voice analysis recording','audio/*'],['transcriptPdfUrl','pdf','Transcript PDF','application/pdf'],['drillPlanPdfUrl','pdf','Drill plan PDF','application/pdf']].map(([key,kind,label,accept]) => <label key={key} className="block text-sm font-black text-[#12372a]">{label}<input type="file" accept={accept} onChange={async(e)=>{try{const url=await documentFileToDataUrl(e.target.files?.[0],kind);setReviewForm(f=>({...f,[key]:url}));}catch(err){push(err.message,'error')}}} className="pp-input mt-1 px-4 py-3"/>{reviewForm[key] && <span className="mt-1 block text-xs text-[#087f73]">Ready to save</span>}</label>)}
+            </div>
+          </div>
 
           <div className="rounded-2xl border border-[#12372a]/10 bg-[#fff8e7] p-4">
             <h3 className="font-black text-[#12372a]">Upload coach deliverables</h3>
@@ -557,7 +513,6 @@ function CoachCompletedReview({ review, videoSrc }) {
           <Info title="Needs work" value={review?.improvements} />
           <Info title="Drills" value={review?.drills} />
           <Info title="Final notes" value={review?.finalNotes} />
-          <Info title="Audio transcript" value={review?.audioTranscript || review?.transcript || review?.coachTranscriptNotes} />
           <Deliverables review={review} />
         </div>
       </section>
@@ -612,40 +567,8 @@ function Info({ title, value }) {
     </div>
   );
 }
-
 function Deliverables({ review }) {
-  const standardFiles = [
-    [review?.voiceRecordingUrl, "Download voice analysis", "coach-analysis.webm"],
-    [review?.transcriptPdfUrl, "Download transcript PDF", "coach-transcript.pdf"],
-    [review?.drillPlanPdfUrl, "Download drill plan PDF", "drill-plan.pdf"],
-  ].filter(([url]) => url);
-
-  const attachments = Array.isArray(review?.attachments) ? review.attachments.filter((item) => item?.url) : [];
-
-  if (!standardFiles.length && !attachments.length) return null;
-
-  return (
-    <div className="rounded-2xl border border-[#00a896]/25 bg-[#d9f7fb] p-4">
-      <h3 className="font-black text-[#12372a]">Downloadable deliverables</h3>
-
-      <div className="mt-2 flex flex-wrap gap-2">
-        {standardFiles.map(([url, label, name]) => (
-          <a key={label} href={url} download={name} className="pp-btn-secondary px-3 py-2 text-sm">
-            {label}
-          </a>
-        ))}
-
-        {attachments.map((item, index) => (
-          <a
-            key={`${item.name}-${index}`}
-            href={item.url}
-            download={item.name || `coach-attachment-${index + 1}`}
-            className="pp-btn-secondary px-3 py-2 text-sm"
-          >
-            Download {item.label || item.name || `attachment ${index + 1}`}
-          </a>
-        ))}
-      </div>
-    </div>
-  );
+  const items = [[review?.voiceRecordingUrl,"Download voice analysis","coach-analysis.webm"],[review?.transcriptPdfUrl,"Download transcript PDF","coach-transcript.pdf"],[review?.drillPlanPdfUrl,"Download drill plan PDF","drill-plan.pdf"]].filter(([url])=>url);
+  if (!items.length) return null;
+  return <div className="rounded-2xl border border-[#00a896]/25 bg-[#d9f7fb] p-4"><h3 className="font-black text-[#12372a]">Downloadable deliverables</h3><div className="mt-2 flex flex-wrap gap-2">{items.map(([url,label,name])=><a key={label} href={url} download={name} className="pp-btn-secondary px-3 py-2 text-sm">{label}</a>)}</div></div>;
 }

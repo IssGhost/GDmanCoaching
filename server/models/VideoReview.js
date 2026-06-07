@@ -52,12 +52,6 @@ const videoReviewSchema = new mongoose.Schema(
     voiceRecordingUrl: { type: String, default: "" },
     transcriptPdfUrl: { type: String, default: "" },
     drillPlanPdfUrl: { type: String, default: "" },
-
-    audioTranscript: { type: String, default: "" },
-    transcript: { type: String, default: "" },
-    coachTranscriptNotes: { type: String, default: "" },
-
-    attachments: [attachmentSchema],
     comments: [timestampCommentSchema],
 
     status: {
