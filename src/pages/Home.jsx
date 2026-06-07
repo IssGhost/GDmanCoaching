@@ -4,6 +4,7 @@ import {
   FaCloudUploadAlt,
   FaCreditCard,
   FaStar,
+  FaSun,
   FaUserTie,
 } from "react-icons/fa";
 

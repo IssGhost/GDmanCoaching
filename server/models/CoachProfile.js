@@ -44,9 +44,10 @@ const coachProfileSchema = new mongoose.Schema(
     defaultPlatformFeePercent: { type: Number, default: 10 },
     splitRules: [
       {
-        label: String,
+        label: { type: String, default: "" },
         recipientCoachId: { type: mongoose.Schema.Types.ObjectId, ref: "CoachProfile" },
-        percentage: Number,
+        stripeAccountId: { type: String, default: "" },
+        percentage: { type: Number, min: 0, max: 100 },
       },
     ],
   },

@@ -196,9 +196,12 @@ router.put("/coaches/:id", async (req, res) => {
   const set = {};
 
   if (typeof approved !== "undefined") set.approved = Boolean(approved);
-  if (typeof featured !== "undefined") set.featured = Boolean(featured);
+  if (typeof featured !== "undefined") {
+    set.featured = Boolean(featured);
+    if (featured) set.approved = true;
+  }
   if (typeof defaultPlatformFeePercent !== "undefined") {
-    set.defaultPlatformFeePercent = Number(defaultPlatformFeePercent);
+    set.defaultPlatformFeePercent = 10;
   }
 
   const row = await CoachProfile.findByIdAndUpdate(req.params.id, { $set: set }, { new: true });
