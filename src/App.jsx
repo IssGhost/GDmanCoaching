@@ -83,6 +83,10 @@ export default function App() {
 
                 {/* Coach signup aliases */}
                 <Route path="/coach-signup" element={<CoachSignup />} />
+                <Route path="/coach-applications" element={<CoachSignup />} />
+                <Route path="/coach-applications/apply" element={<CoachSignup />} />
+                <Route path="/coaches/apply" element={<CoachSignup />} />
+                <Route path="/coaches/signup" element={<CoachSignup />} />
                 <Route path="/cart" element={<Cart />} />
 
                 {/* Employee/Admin operational pages */}

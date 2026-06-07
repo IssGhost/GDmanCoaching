@@ -48,12 +48,15 @@ export default function AccountMenu() {
   const role = normalizeRole(user?.role);
   const roleLabel = getRoleLabel(role);
   const links = ROLE_PORTAL_LINKS[role] || [];
-  const go = (path) => { setOpen(false); nav(path); };
 
   const go = (path) => {
     setOpen(false);
     nav(path);
-    scrollToHash(path);
+
+    const hash = String(path || "").split("#")[1];
+    if (hash) {
+      window.setTimeout(() => document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+    }
   };
 
   return (

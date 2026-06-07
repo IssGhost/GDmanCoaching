@@ -7,12 +7,12 @@ const Order = require("../models/Order");
 const PaymentSplit = require("../models/PaymentSplit");
 const VideoSubmission = require("../models/VideoSubmission");
 const Inquiry = require("../models/Inquiry");
-const { publicBaseUrl } = require("../utils/runtimeConfig");
-const { createOrderNumber } = require("../utils/orderNumber");
+const { integrationStatus, publicBaseUrl } = require("../utils/runtimeConfig");
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 const STRIPE_API = "https://api.stripe.com/v1";
+const PLATFORM_FEE_PERCENT = 10;
 const CENTS = (amount) => Math.round(Number(amount || 0) * 100);
 
 function paymentsMode() {
@@ -39,6 +39,10 @@ function stripeConfigured() {
 
 function stripeWebhookConfigured() {
   return Boolean(process.env.STRIPE_WEBHOOK_SECRET);
+}
+
+function stripeReady() {
+  return stripeConfigured() && stripeWebhookConfigured();
 }
 
 function isStripeTestKey() {
@@ -92,11 +96,13 @@ function parseVerifiedStripeEvent(req) {
     error.statusCode = 503;
     throw error;
   }
+
   if (!Buffer.isBuffer(req.body)) {
     const error = new Error("Stripe webhook requires the raw request body.");
     error.statusCode = 400;
     throw error;
   }
+
   const signature = String(req.headers["stripe-signature"] || "");
   const parts = Object.fromEntries(signature.split(",").map((part) => part.split("=", 2)));
   const timestamp = Number(parts.t);
@@ -104,28 +110,82 @@ function parseVerifiedStripeEvent(req) {
   const received = String(parts.v1 || "");
   const recent = Number.isFinite(timestamp) && Math.abs(Date.now() / 1000 - timestamp) <= 300;
   const matches = received.length === expected.length && crypto.timingSafeEqual(Buffer.from(received), Buffer.from(expected));
+
   if (!recent || !matches) {
     const error = new Error("Invalid Stripe webhook signature.");
     error.statusCode = 400;
     throw error;
   }
+
   return JSON.parse(req.body.toString("utf8"));
 }
 
+function safeNumber(value, fallback = 0) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
 
-function buildSplit({ total, platformFeePercent, coach, manualSplits = [] }) {
+function plainRecipient(recipient) {
+  return recipient?.toObject ? recipient.toObject() : { ...(recipient || {}) };
+}
+
+function validObjectId(value) {
+  return /^[a-f0-9]{24}$/i.test(String(value || ""));
+}
+
+async function loadCoachSplitRecipients(coach) {
+  const rules = Array.isArray(coach?.splitRules) ? coach.splitRules : [];
+  const cleaned = rules
+    .map((item) => ({
+      label: String(item?.label || "").trim(),
+      recipientCoachId: String(item?.recipientCoachId || item?.coachId || "").trim(),
+      stripeAccountId: String(item?.stripeAccountId || "").trim(),
+      percentage: safeNumber(item?.percentage, 0),
+    }))
+    .filter((item) => item.percentage > 0 && item.percentage <= 100 && (item.recipientCoachId || item.stripeAccountId));
+
+  if (!cleaned.length) return [];
+
+  const total = cleaned.reduce((sum, item) => sum + item.percentage, 0);
+  if (total > 100) {
+    const error = new Error("Coach split percentages cannot exceed 100% of the coach payout.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const ids = cleaned.map((item) => item.recipientCoachId).filter(validObjectId);
+  const recipientCoaches = ids.length
+    ? await CoachProfile.find({ _id: { $in: ids } }).select("displayName stripeAccountId").lean()
+    : [];
+  const byId = new Map(recipientCoaches.map((item) => [String(item._id), item]));
+
+  return cleaned.map((item, index) => {
+    const recipient = byId.get(item.recipientCoachId);
+    return {
+      coachId: recipient?._id || (validObjectId(item.recipientCoachId) ? item.recipientCoachId : coach._id),
+      stripeAccountId: recipient?.stripeAccountId || item.stripeAccountId || "",
+      label: item.label || recipient?.displayName || `Split recipient ${index + 1}`,
+      role: "coach",
+      percentage: item.percentage,
+    };
+  });
+}
+
+function buildSplit({ total, platformFeePercent = PLATFORM_FEE_PERCENT, coach, manualSplits = [] }) {
   const cleanTotal = safeNumber(total, 0);
-  const cleanPlatformPercent = safeNumber(platformFeePercent, 10);
+  const cleanPlatformPercent = safeNumber(platformFeePercent, PLATFORM_FEE_PERCENT);
   const platformFee = Number(((cleanTotal * cleanPlatformPercent) / 100).toFixed(2));
   const available = Number((cleanTotal - platformFee).toFixed(2));
-  const cleanedSplits = normalizeManualSplits(manualSplits).filter((item) => safeNumber(item?.percentage, 0) > 0);
+  const cleanedSplits = Array.isArray(manualSplits)
+    ? manualSplits.filter((item) => safeNumber(item?.percentage, 0) > 0)
+    : [];
 
   if (cleanedSplits.length) {
-    const recipients = cleanedSplits.map((item, index) => ({
+    const recipients = cleanedSplits.map((item) => ({
       coachId: item.coachId || coach._id,
-      stripeAccountId: item.stripeAccountId || item.connectedAccountId || (index === 0 ? coach.stripeAccountId : ""),
-      label: item.label || (index === 0 ? "Primary coach" : "Split recipient"),
-      role: item.role || (index === 0 ? "main_coach" : "coach"),
+      stripeAccountId: item.stripeAccountId || item.connectedAccountId || "",
+      label: item.label || "Split recipient",
+      role: item.role || "coach",
       percentage: safeNumber(item.percentage, 0),
       amount: Number(((available * safeNumber(item.percentage, 0)) / 100).toFixed(2)),
       status: "pending",
@@ -149,7 +209,7 @@ function buildSplit({ total, platformFeePercent, coach, manualSplits = [] }) {
     return {
       platformFee,
       recipients,
-      chargeType: recipients.length > 1 ? "separate_charges_and_transfers" : "destination_charge",
+      chargeType: "separate_charges_and_transfers",
     };
   }
 
@@ -174,7 +234,7 @@ function requirePublicClientUrl(req) {
   const clientUrl = publicBaseUrl(req);
 
   if (!clientUrl) {
-    const error = new Error("The public website URL is not configured. Set CLIENT_URL to your Railway/Cloudflare site URL.");
+    const error = new Error("The public website URL is not configured. Set CLIENT_URL to your Railway site URL.");
     error.statusCode = 503;
     throw error;
   }
@@ -188,11 +248,12 @@ function providerStatus(req) {
 
   return {
     mode,
+    platformFeePercent: PLATFORM_FEE_PERCENT,
     stripeConfigured: stripeConfigured(),
     stripeWebhookConfigured: stripeWebhookConfigured(),
     stripeTestMode: isStripeTestKey(),
     mockAllowed,
-    usingMock: mode === "mock" || (!stripeConfigured() && mockAllowed),
+    usingMock: mode === "mock" || (!stripeReady() && mockAllowed),
     platformOnlyStripeTest: platformOnlyStripeTestEnabled(),
     publicBaseUrl: publicBaseUrl(req),
     integrations: integrationStatus(),
@@ -201,23 +262,6 @@ function providerStatus(req) {
 
 function shouldUsePlatformOnlyStripe(coach) {
   return paymentsMode() === "stripe" && platformOnlyStripeTestEnabled() && !coach?.stripeAccountId;
-}
-
-async function createSubmissionForOrder({ req, coach, pkg, order, title, description, goals, skillLevel }) {
-  const dueAt = new Date(Date.now() + Number(pkg?.turnaroundHours || coach.turnaroundHours || 48) * 60 * 60 * 1000);
-
-  return VideoSubmission.create({
-    playerId: req.user._id,
-    coachId: coach._id,
-    packageId: pkg?._id,
-    orderId: order._id,
-    title: title || `${pkg?.title || "Coaching review"} with ${coach.displayName}`,
-    description: description || "",
-    goals: goals || "",
-    skillLevel: skillLevel || "",
-    status: "awaiting_payment",
-    dueAt,
-  });
 }
 
 async function markOrderPaid({ orderId, paymentIntentId, sessionId }) {
@@ -289,15 +333,15 @@ async function runAutomaticTransfers({ paymentSplit, paymentIntentId }) {
   paymentSplit.stripePaymentIntentId = paymentIntentId || paymentSplit.stripePaymentIntentId;
 
   await paymentSplit.save();
-
   return paymentSplit;
 }
 
 async function createMockPaidCheckout({ req, order, submission, paymentSplit }) {
+  const clientUrl = requirePublicClientUrl(req);
   order.status = "paid";
   order.paymentMode = "manual";
   order.stripeCheckoutSessionId = `mock_cs_${order._id}`;
-  order.stripeCheckoutUrl = `${publicBaseUrl(req)}/dashboard/submissions/${submission._id}?mockPaid=1`;
+  order.stripeCheckoutUrl = `${clientUrl}/dashboard/submissions/${submission._id}?mockPaid=1`;
 
   submission.status = "awaiting_upload";
 
@@ -316,6 +360,33 @@ async function createMockPaidCheckout({ req, order, submission, paymentSplit }) 
   };
 }
 
+function checkoutSessionBody({ clientUrl, submission, coach, name, description, total, order, split, platformOnly, cancelPath }) {
+  const sessionBody = {
+    mode: "payment",
+    success_url: `${clientUrl}/dashboard/submissions/${submission._id}?paid=1`,
+    cancel_url: `${clientUrl}${cancelPath}`,
+    "line_items[0][price_data][currency]": "usd",
+    "line_items[0][price_data][product_data][name]": name,
+    "line_items[0][price_data][product_data][description]": description,
+    "line_items[0][price_data][unit_amount]": CENTS(total),
+    "line_items[0][quantity]": 1,
+    "metadata[orderId]": String(order._id),
+    "metadata[submissionId]": String(submission._id),
+    "metadata[platformOnlyStripeTest]": platformOnly ? "true" : "false",
+    "payment_intent_data[metadata][orderId]": String(order._id),
+    "payment_intent_data[metadata][submissionId]": String(submission._id),
+    "payment_intent_data[metadata][platformOnlyStripeTest]": platformOnly ? "true" : "false",
+    "payment_intent_data[transfer_group]": `ORDER_${order._id}`,
+  };
+
+  if (!platformOnly && split.chargeType === "destination_charge" && coach.stripeAccountId) {
+    sessionBody["payment_intent_data[application_fee_amount]"] = CENTS(split.platformFee);
+    sessionBody["payment_intent_data[transfer_data][destination]"] = coach.stripeAccountId;
+  }
+
+  return sessionBody;
+}
+
 router.get("/config", (req, res) => {
   res.json(providerStatus(req));
 });
@@ -332,35 +403,31 @@ router.post(
   auth,
   asyncHandler(async (req, res) => {
     const profile = await CoachProfile.findOne({ userId: req.user._id });
+    if (!profile) return res.status(404).json({ error: "Create a coach profile before onboarding payments." });
+    if (!stripeReady()) return res.status(503).json({ error: "Payments are not configured yet. Please contact support." });
 
-    if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) return res.status(503).json({ error: "Payments are not configured yet. Please contact support." });
-    const clientUrl = publicBaseUrl(req);
-    if (!clientUrl) return res.status(503).json({ error: "The public website URL is not configured yet. Please contact support." });
+    const clientUrl = requirePublicClientUrl(req);
     let accountId = profile.stripeAccountId;
-    let onboardingUrl = "";
-    let mode = "stripe";
 
-    {
-      if (!accountId) {
-        const account = await stripeRequest("/accounts", {
-          type: "express",
-          country: "US",
-          email: req.user.email,
-          "capabilities[card_payments][requested]": true,
-          "capabilities[transfers][requested]": true,
-          "business_type": "individual",
-        });
-        accountId = account.id;
-      }
-
-      const link = await stripeRequest("/account_links", {
-        account: accountId,
-        refresh_url: `${clientUrl}/coach/dashboard?stripe=refresh`,
-        return_url: `${clientUrl}/coach/dashboard?stripe=return`,
-        type: "account_onboarding",
+    if (!accountId || accountId.startsWith("acct_mock_")) {
+      const account = await stripeRequest("/accounts", {
+        type: "express",
+        country: "US",
+        email: req.user.email,
+        "capabilities[card_payments][requested]": true,
+        "capabilities[transfers][requested]": true,
+        business_type: "individual",
       });
-      onboardingUrl = link.url;
+
+      accountId = account.id;
     }
+
+    const link = await stripeRequest("/account_links", {
+      account: accountId,
+      refresh_url: `${clientUrl}/coach/dashboard?stripe=refresh`,
+      return_url: `${clientUrl}/coach/dashboard?stripe=return`,
+      type: "account_onboarding",
+    });
 
     profile.stripeAccountId = accountId;
     await profile.save();
@@ -378,23 +445,10 @@ router.post(
   "/checkout/session",
   auth,
   asyncHandler(async (req, res) => {
-    const {
-      coachId,
-      packageId,
-      goals,
-      title,
-      description,
-      skillLevel,
-      splitRecipients = [],
-    } = req.body || {};
-
+    const { coachId, packageId, goals, title, description, skillLevel } = req.body || {};
     const coach = await CoachProfile.findById(coachId);
 
-    if (!coach || !coach.approved) {
-      return res.status(404).json({
-        error: "Coach is not available for booking.",
-      });
-    }
+    if (!coach || !coach.approved) return res.status(404).json({ error: "Coach is not available for booking." });
 
     const pkg = await CoachingPackage.findOne({
       _id: packageId,
@@ -403,26 +457,34 @@ router.post(
       price: { $gt: 0 },
     });
 
-    if (!pkg) {
-      return res.status(404).json({
-        error: "Coaching package not found or does not have a valid public price.",
-      });
-    }
+    if (!pkg) return res.status(404).json({ error: "Coaching package not found or does not have a valid public price." });
 
     const total = Number(pkg.price || 0);
-    if (!Number.isFinite(total) || total <= 0) return res.status(400).json({ error: "This plan does not have a valid price yet. Message the coach for a quote." });
-    if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) return res.status(503).json({ error: "Online payments are temporarily unavailable. Please contact support." });
-    if (!coach.stripeAccountId) return res.status(400).json({ error: "This coach has not finished payment setup yet." });
-    const clientUrl = publicBaseUrl(req);
-    if (!clientUrl) return res.status(503).json({ error: "The public website URL is not configured yet. Please contact support." });
+    if (!Number.isFinite(total) || total <= 0) {
+      return res.status(400).json({ error: "This plan does not have a valid price yet. Message the coach for a quote." });
+    }
+
+    const clientUrl = requirePublicClientUrl(req);
+    const splitRecipients = await loadCoachSplitRecipients(coach);
     const split = buildSplit({
       total,
-      platformFeePercent: 10,
+      platformFeePercent: PLATFORM_FEE_PERCENT,
       coach,
       manualSplits: splitRecipients,
     });
-
     const platformOnly = shouldUsePlatformOnlyStripe(coach);
+
+    if (stripeReady() && !platformOnly && split.chargeType === "destination_charge" && !coach.stripeAccountId) {
+      return res.status(400).json({
+        error: "This coach has not finished payment setup yet. For Stripe testing without coach payouts, set ALLOW_PLATFORM_ONLY_STRIPE_TEST=true.",
+      });
+    }
+
+    if (!stripeReady() && !mockPaymentsEnabled()) {
+      return res.status(503).json({
+        error: "Online payments are not fully configured. Add STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET, or enable mock payments for testing.",
+      });
+    }
 
     const order = await Order.create({
       userId: req.user._id,
@@ -459,75 +521,29 @@ router.post(
 
     const paymentSplit = await PaymentSplit.create({
       orderId: order._id,
-
-      // IMPORTANT:
-      // This must stay inside PaymentSplit.js enum:
-      // ["destination_charge", "separate_charges_and_transfers", "manual"]
       chargeType: platformOnly ? "destination_charge" : split.chargeType,
-
       platformFee: split.platformFee,
       recipients: split.recipients,
       status: "pending",
-      notes: split.chargeType === "separate_charges_and_transfers" ? "Multiple recipient split configured." : "Primary coach payout configured.",
+      notes: split.chargeType === "separate_charges_and_transfers" ? "Multiple coach payout split configured." : "Primary coach payout configured.",
     });
 
-    let checkoutUrl = `${clientUrl}/dashboard/submissions/${submission._id}`;
-    let stripeSession = null;
-
-    {
-      const success = `${clientUrl}/dashboard/submissions/${submission._id}?paid=1`;
-      const cancel = `${clientUrl}/coaches/${coach._id}?canceled=1`;
-      const sessionBody = {
-        mode: "payment",
-        success_url: success,
-        cancel_url: cancel,
-        "line_items[0][price_data][currency]": "usd",
-        "line_items[0][price_data][product_data][name]": pkg.title,
-        "line_items[0][price_data][product_data][description]": pkg.description || "Pickleball video coaching review",
-        "line_items[0][price_data][unit_amount]": CENTS(total),
-        "line_items[0][quantity]": 1,
-        "metadata[orderId]": String(order._id),
-        "metadata[submissionId]": String(submission._id),
-        payment_intent_data_application_fee_amount: CENTS(split.platformFee),
-      };
-
-    if (!stripeConfigured() || !stripeWebhookConfigured()) {
-      return res.status(503).json({
-        error: "Online payments are not fully configured. Add STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET, or enable mock payments for testing.",
-      });
+    if (!stripeReady()) {
+      return res.json(await createMockPaidCheckout({ req, order, submission, paymentSplit }));
     }
 
-    if (!platformOnly && split.chargeType === "destination_charge" && !coach.stripeAccountId) {
-      return res.status(400).json({
-        error: "This coach has not finished payment setup yet. For Stripe testing without coach payouts, set ALLOW_PLATFORM_ONLY_STRIPE_TEST=true.",
-      });
-    }
-
-    const success = `${clientUrl}/dashboard/submissions/${submission._id}?paid=1`;
-    const cancel = `${clientUrl}/coaches/${coach._id}?canceled=1`;
-
-    const sessionBody = {
-      mode: "payment",
-      success_url: success,
-      cancel_url: cancel,
-      "line_items[0][price_data][currency]": "usd",
-      "line_items[0][price_data][product_data][name]": pkg.title,
-      "line_items[0][price_data][product_data][description]": pkg.description || "Pickleball video coaching review",
-      "line_items[0][price_data][unit_amount]": CENTS(total),
-      "line_items[0][quantity]": 1,
-      "metadata[orderId]": String(order._id),
-      "metadata[submissionId]": String(submission._id),
-      "metadata[platformOnlyStripeTest]": platformOnly ? "true" : "false",
-      "payment_intent_data[metadata][orderId]": String(order._id),
-      "payment_intent_data[metadata][submissionId]": String(submission._id),
-      "payment_intent_data[metadata][platformOnlyStripeTest]": platformOnly ? "true" : "false",
-      "payment_intent_data[transfer_group]": `ORDER_${order._id}`,
-    };
-
-    if (!platformOnly && split.chargeType === "destination_charge" && coach.stripeAccountId) {
-      sessionBody["payment_intent_data[application_fee_amount]"] = CENTS(split.platformFee);
-      sessionBody["payment_intent_data[transfer_data][destination]"] = coach.stripeAccountId;
-    }
+    const sessionBody = checkoutSessionBody({
+      clientUrl,
+      submission,
+      coach,
+      name: pkg.title,
+      description: pkg.description || "Pickleball video coaching review",
+      total,
+      order,
+      split,
+      platformOnly,
+      cancelPath: `/coaches/${coach._id}?canceled=1`,
+    });
 
     const stripeSession = await stripeRequest("/checkout/sessions", sessionBody);
 
@@ -553,31 +569,97 @@ router.post(
   "/quotes/:inquiryId/checkout",
   auth,
   asyncHandler(async (req, res) => {
-    if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) return res.status(503).json({ error: "Online payments are temporarily unavailable. Please contact support." });
+    if (!stripeReady() && !mockPaymentsEnabled()) {
+      return res.status(503).json({ error: "Online payments are temporarily unavailable. Please contact support." });
+    }
+
     const inquiry = await Inquiry.findById(req.params.inquiryId).populate("coachId");
     if (!inquiry || String(inquiry.playerId) !== String(req.user._id)) return res.status(404).json({ error: "Approved quote not found." });
     if (inquiry.quote?.status !== "approved") return res.status(400).json({ error: "Approve the quote before checkout." });
+
     const coach = inquiry.coachId;
-    if (!coach?.stripeAccountId) return res.status(400).json({ error: "This coach has not finished payment setup yet." });
-    const clientUrl = publicBaseUrl(req);
-    if (!clientUrl) return res.status(503).json({ error: "The public website URL is not configured yet. Please contact support." });
     const total = Number(inquiry.quote.amount || 0);
     if (!Number.isFinite(total) || total <= 0) return res.status(400).json({ error: "This quote does not have a valid amount." });
-    const existing = await Order.findOne({ userId: req.user._id, "metadata.inquiryId": String(inquiry._id), status: { $in: ["pending", "paid"] } });
+
+    const clientUrl = requirePublicClientUrl(req);
+    const splitRecipients = await loadCoachSplitRecipients(coach);
+    const split = buildSplit({ total, platformFeePercent: PLATFORM_FEE_PERCENT, coach, manualSplits: splitRecipients });
+    const platformOnly = shouldUsePlatformOnlyStripe(coach);
+
+    if (stripeReady() && !platformOnly && split.chargeType === "destination_charge" && !coach?.stripeAccountId) {
+      return res.status(400).json({ error: "This coach has not finished payment setup yet." });
+    }
+
+    const existing = await Order.findOne({
+      userId: req.user._id,
+      "metadata.inquiryId": String(inquiry._id),
+      status: { $in: ["pending", "paid"] },
+    });
+
     if (existing?.stripeCheckoutUrl && existing.status === "pending") return res.json({ checkoutUrl: existing.stripeCheckoutUrl, order: existing });
     if (existing?.status === "paid") return res.status(400).json({ error: "This quote has already been paid." });
 
-    const split = buildSplit({ total, platformFeePercent: 10, coach });
-    const order = await Order.create({ userId: req.user._id, coachId: coach._id, number: createOrderNumber(), orderType: "coaching", items: [{ name: inquiry.subject, price: total, qty: 1, tag: "custom_quote" }], status: "pending", subtotal: total, tax: 0, total, platformFee: split.platformFee, paymentMode: "stripe_destination_charge", metadata: { inquiryId: String(inquiry._id) } });
-    const submission = await VideoSubmission.create({ playerId: req.user._id, coachId: coach._id, orderId: order._id, title: inquiry.subject, description: inquiry.quote.scope || "", status: "awaiting_payment", dueAt: new Date(Date.now() + Number(coach.turnaroundHours || 72) * 60 * 60 * 1000) });
+    const order = await Order.create({
+      userId: req.user._id,
+      coachId: coach._id,
+      number: createOrderNumber(),
+      orderType: "coaching",
+      items: [{ name: inquiry.subject, price: total, qty: 1, tag: "custom_quote" }],
+      status: "pending",
+      subtotal: total,
+      tax: 0,
+      total,
+      platformFee: split.platformFee,
+      paymentMode: split.chargeType === "separate_charges_and_transfers" ? "stripe_separate_transfers" : "stripe_destination_charge",
+      metadata: { inquiryId: String(inquiry._id) },
+    });
+
+    const submission = await VideoSubmission.create({
+      playerId: req.user._id,
+      coachId: coach._id,
+      orderId: order._id,
+      title: inquiry.subject,
+      description: inquiry.quote.scope || "",
+      status: "awaiting_payment",
+      dueAt: new Date(Date.now() + Number(coach.turnaroundHours || 72) * 60 * 60 * 1000),
+    });
+
     order.submissionId = submission._id;
-    const paymentSplit = await PaymentSplit.create({ orderId: order._id, chargeType: split.chargeType, platformFee: split.platformFee, recipients: split.recipients, status: "pending", notes: "Custom quote payment." });
-    const success = `${clientUrl}/dashboard/submissions/${submission._id}?paid=1`;
-    const cancel = `${clientUrl}/messages`;
-    const session = await stripeRequest("/checkout/sessions", { mode: "payment", success_url: success, cancel_url: cancel, "line_items[0][price_data][currency]": "usd", "line_items[0][price_data][product_data][name]": inquiry.subject, "line_items[0][price_data][product_data][description]": inquiry.quote.scope || "Custom coaching quote", "line_items[0][price_data][unit_amount]": CENTS(total), "line_items[0][quantity]": 1, "metadata[orderId]": String(order._id), "metadata[submissionId]": String(submission._id), payment_intent_data_application_fee_amount: CENTS(split.platformFee), "payment_intent_data[transfer_data][destination]": coach.stripeAccountId });
-    order.stripeCheckoutSessionId = session.id; order.stripeCheckoutUrl = session.url; paymentSplit.stripeCheckoutSessionId = session.id;
+
+    const paymentSplit = await PaymentSplit.create({
+      orderId: order._id,
+      chargeType: platformOnly ? "destination_charge" : split.chargeType,
+      platformFee: split.platformFee,
+      recipients: split.recipients,
+      status: "pending",
+      notes: split.chargeType === "separate_charges_and_transfers" ? "Custom quote with multiple coach payout split." : "Custom quote payment.",
+    });
+
+    if (!stripeReady()) {
+      return res.json(await createMockPaidCheckout({ req, order, submission, paymentSplit }));
+    }
+
+    const sessionBody = checkoutSessionBody({
+      clientUrl,
+      submission,
+      coach,
+      name: inquiry.subject,
+      description: inquiry.quote.scope || "Custom coaching quote",
+      total,
+      order,
+      split,
+      platformOnly,
+      cancelPath: "/messages",
+    });
+
+    const session = await stripeRequest("/checkout/sessions", sessionBody);
+    order.stripeCheckoutSessionId = session.id;
+    order.stripeCheckoutUrl = session.url;
+    paymentSplit.stripeCheckoutSessionId = session.id;
+
     await Promise.all([order.save(), paymentSplit.save()]);
-    res.json({ checkoutUrl: session.url, order, submission });
+
+    res.json({ checkoutUrl: session.url, order, submission, paymentSplit });
   })
 );
 
@@ -626,11 +708,7 @@ router.post(
         sessionId: session.id,
       });
 
-      const splitStatus =
-        session.metadata?.platformOnlyStripeTest === "true"
-          ? "requires_manual_review"
-          : "paid";
-
+      const splitStatus = session.metadata?.platformOnlyStripeTest === "true" ? "requires_manual_review" : "paid";
       const paymentSplit = await PaymentSplit.findOneAndUpdate(
         { orderId: session.metadata.orderId },
         {
@@ -663,25 +741,11 @@ router.post(
   "/mock/complete/:orderId",
   auth,
   asyncHandler(async (req, res) => {
-    if (!mockPaymentsEnabled()) {
-      return res.status(403).json({
-        error: "Mock payments are disabled.",
-      });
-    }
+    if (!mockPaymentsEnabled()) return res.status(403).json({ error: "Mock payments are disabled." });
 
     const order = await Order.findById(req.params.orderId);
-
-    if (!order) {
-      return res.status(404).json({
-        error: "Order not found.",
-      });
-    }
-
-    if (String(order.userId) !== String(req.user._id) && req.user.role !== "admin") {
-      return res.status(403).json({
-        error: "Forbidden",
-      });
-    }
+    if (!order) return res.status(404).json({ error: "Order not found." });
+    if (String(order.userId) !== String(req.user._id) && req.user.role !== "admin") return res.status(403).json({ error: "Forbidden" });
 
     const paid = await markOrderPaid({
       orderId: order._id,
@@ -713,7 +777,6 @@ router.get(
   auth,
   asyncHandler(async (req, res) => {
     const coach = await CoachProfile.findOne({ userId: req.user._id });
-
     if (!coach) return res.json([]);
 
     const splits = await PaymentSplit.find({

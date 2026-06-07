@@ -122,7 +122,13 @@ if (MONGO_URI) {
 }
 
 function wantsHtml(req) {
-  return req.method === "GET" && String(req.headers.accept || "").includes("text/html");
+  if (req.method !== "GET") return false;
+
+  const accept = String(req.headers.accept || "");
+  const fetchDest = String(req.headers["sec-fetch-dest"] || "");
+  const fetchMode = String(req.headers["sec-fetch-mode"] || "");
+
+  return accept.includes("text/html") || fetchDest === "document" || fetchMode === "navigate";
 }
 
 const databaseBackedRoute = /^\/(api\/)?(auth|users|admin|orders|quotes|products|posts|tickets|blog|testimonials|coaches|coach-applications|payments|videos|reviews|inquiries)(\/|$)/;

@@ -1,11 +1,17 @@
-const router = require("express").Router();
+const express = require("express");
+const router = express.Router();
 const { auth, allow } = require("../middleware/auth");
 const CoachProfile = require("../models/CoachProfile");
+const Order = require("../models/Order");
 const VideoSubmission = require("../models/VideoSubmission");
 const VideoReview = require("../models/VideoReview");
-const { configuredClientOrigins } = require("../utils/runtimeConfig");
+const { configuredClientOrigins, publicBaseUrl } = require("../utils/runtimeConfig");
 
 const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+
+function envFlag(name) {
+  return ["1", "true", "yes", "on"].includes(String(process.env[name] || "").trim().toLowerCase());
+}
 
 function videoUploadsMode() {
   const raw = String(process.env.VIDEO_UPLOADS_MODE || "").trim().toLowerCase();
