@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { api, API_BASE } from "../lib/api";
+import { normalizeRole } from "../lib/roles";
 
 const ACCESS_KEY = "bpj_access_token";
 const REFRESH_KEY = "bpj_refresh_token";
@@ -31,6 +32,24 @@ function setTokens({ accessToken, refreshToken }) {
 function clearTokens() {
   localStorage.removeItem(ACCESS_KEY);
   localStorage.removeItem(REFRESH_KEY);
+}
+
+
+function roleFromToken(token) {
+  try {
+    const payload = JSON.parse(atob(String(token || "").split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    return payload?.role;
+  } catch {
+    return undefined;
+  }
+}
+
+function normalizeUser(user, token) {
+  if (!user && !token) return null;
+  const nextUser = user || {};
+  const role = normalizeRole(nextUser.role ?? nextUser.accountType ?? nextUser.userRole ?? roleFromToken(token));
+  if (!role) throw new Error("This account does not have a valid role. Ask an admin to set it to user, coach, or admin.");
+  return { ...nextUser, role };
 }
 
 const AuthContext = createContext(null);
@@ -81,12 +100,12 @@ export function AuthProvider({ children }) {
         if (getAccessToken() || getRefreshToken()) {
           try {
             const me = await api.get(AUTH_PATHS.me, getAccessToken());
-            setUser(me?.user || me);
+            setUser(normalizeUser(me?.user || me, getAccessToken()));
           } catch {
             const refreshed = await tryRefresh();
             if (refreshed) {
               const me = await api.get(AUTH_PATHS.me, getAccessToken());
-              setUser(me?.user || me);
+              setUser(normalizeUser(me?.user || me, getAccessToken()));
             } else {
               clearTokens();
               setUser(null);
@@ -103,13 +122,15 @@ export function AuthProvider({ children }) {
 
   const reloadUser = async () => {
     const me = await api.get(AUTH_PATHS.me, getAccessToken());
-    const nextUser = me?.user || me;
+    const nextUser = normalizeUser(me?.user || me, getAccessToken());
     setUser(nextUser);
     return nextUser;
   };
 
   const signin = async ({ email, password }) => {
     setAuthBusy(true);
+    clearTokens();
+    setUser(null);
     const candidates = [AUTH_PATHS.signin, ...SIGNIN_FALLBACKS.filter((p) => p !== AUTH_PATHS.signin)];
 
     console.info("[Auth] API_BASE:", API_BASE);
@@ -120,9 +141,13 @@ export function AuthProvider({ children }) {
         try {
           const data = await api.post(p, { email, password });
           const accessToken = data?.accessToken || data?.token;
-          if (accessToken) setTokens({ accessToken, refreshToken: data.refreshToken });
-          setUser(data?.user || null);
-          return data?.user;
+          if (!accessToken) throw new Error("Sign-in succeeded without an access token.");
+          clearTokens();
+          setTokens({ accessToken, refreshToken: data.refreshToken });
+          const session = await api.get(AUTH_PATHS.me, accessToken);
+          const nextUser = normalizeUser(session?.user || session, accessToken);
+          setUser(nextUser);
+          return nextUser;
         } catch (err) {
           if (!/not\s*found|404/i.test(String(err?.message))) throw err;
         }
@@ -131,19 +156,24 @@ export function AuthProvider({ children }) {
       throw new Error(
         `Sign-in endpoint not found. Tried: ${candidates.map((p) => `${API_BASE}${p}`).join(", ")}.`
       );
+    } catch (error) {
+      clearTokens();
+      setUser(null);
+      throw error;
     } finally {
       setAuthBusy(false);
     }
   };
 
-  const signup = async (email, password, fullName, accountType) => {
+  const signup = async (email, password, fullName, phone, accountType) => {
     setAuthBusy(true);
     try {
-      const data = await api.post(AUTH_PATHS.signup, { email, password, fullName, accountType });
+      const data = await api.post(AUTH_PATHS.signup, { email, password, fullName, phone, accountType });
       const accessToken = data?.accessToken || data?.token;
       if (accessToken) setTokens({ accessToken, refreshToken: data.refreshToken });
-      setUser(data?.user || null);
-      return data?.user;
+      const nextUser = normalizeUser(data?.user, accessToken);
+      setUser(nextUser);
+      return nextUser;
     } finally {
       setAuthBusy(false);
     }
